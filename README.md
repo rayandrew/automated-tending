@@ -1,3 +1,5 @@
+# Automated Tending 
+
 [![Project Status: Active](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![Build Status](https://travis-ci.org/rayandrews/automated-tending.svg?branch=master)](https://travis-ci.org/rayandrews/automated-tending)
 [![Build status](https://ci.appveyor.com/api/projects/status/b91s5ewtlqrcaxt7?svg=true)](https://ci.appveyor.com/project/rayandrew/automated-tending)
@@ -9,8 +11,6 @@
 [![Lines of Code](https://tokei.rs/b1/github/rayandrews/automated-tending)](https://github.com/Aaronepower/tokei).
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/rayandrews/automated-tending.svg)](http://isitmaintained.com/project/rayandrews/automated-tending "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/rayandrews/automated-tending.svg)](http://isitmaintained.com/project/rayandrews/automated-tending "Percentage of issues still open")
-
-# Automated Tending 
 
 WIP
 
