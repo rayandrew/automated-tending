@@ -3,6 +3,12 @@ dist: xenial
 notifications:
   email: false
 
+cache:
+  timeout: 600
+  ccache: true
+  directories:
+    - $HOME/Library/Caches/Homebrew
+
 # Define builds on mulitple OS/compiler combinations. 
 # Feel free to add/remove entries from this list.
 matrix:
@@ -15,24 +21,28 @@ matrix:
           packages:
             - lcov
             - g++-7
-            - doxygen
       env:
         - MATRIX_EVAL="CXX_COMPILER=g++-7; sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-7 90"
 
     - os: osx
       osx_image: xcode10.1
-      addons:
-        homebrew:
-          packages:
-          - lcov
+      # addons:
+      #   homebrew:
+      #     packages:
+      #     - lcov 
       env:
         - MATRIX_EVAL="CXX_COMPILER=clang++"
     
+before_cache:
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 
 before_install:
   - eval "${MATRIX_EVAL}"
   - PARENTDIR=$(pwd)
   - mkdir $PARENTDIR/build
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew pin lcov; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew update; fi 
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install lcov; fi
 
 install: 
   - cd $PARENTDIR/build
