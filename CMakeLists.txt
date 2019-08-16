@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.8.2)
 # Set project name, version and laguages here. (change as needed)
 # Version numbers are available by including "exampleConfig.h" in 
 # the source. See exampleConfig.h.in for some more details.
-project(CPP_BOILERPLATE VERSION 1.2.3.4 LANGUAGES CXX)
+project(AUTOMATED_TENDING_MACHINE VERSION 0.0.1 LANGUAGES CXX)
 
 
 # Options: Things you can set via commandline options to cmake (e.g. -DENABLE_LTO=[ON|OFF])
@@ -37,9 +37,10 @@ find_lto(CXX)
 # --------------------------------------------------------------------------------
 #                         Locate files (change as needed).
 # --------------------------------------------------------------------------------
-set(SOURCES          # All .cpp files in src/
-    src/example.cpp
-)
+file(GLOB_RECURSE SOURCES RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp") # All .cpp files in src/
+# set(SOURCES          # All .cpp files in src/
+#     src/example.cpp
+# )
 set(TESTFILES        # All .cpp files in tests/
     tests/main.cpp
 )
