@@ -34,7 +34,7 @@ before_build:
   - cmake . -Bbuild -A%PLATFORM% -DCMAKE_BUILD_TYPE=%configuration%
 
 build:
-  project: build/AUTOMATED_TENDING_PROJECT.sln
+  project: build/AUTOMATED_TENDING.sln
   parallel: true
   verbosity: minimal
   
