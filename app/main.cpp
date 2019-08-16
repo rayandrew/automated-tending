@@ -17,7 +17,7 @@
  * CMake definitions (here the version number) from source code.
  */
 int main() {
-  std::cout << "C++ Boiler Plate v"
+  std::cout << "Automated Tending Project v"
             << PROJECT_VERSION_MAJOR
             << "."
             << PROJECT_VERSION_MINOR
