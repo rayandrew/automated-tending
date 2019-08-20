@@ -1,31 +1,65 @@
-// Executables must have the following defined if the library contains
-// doctest definitions. For builds with this disabled, e.g. code shipped to
-// users, this can be left out.
+/*
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
+ * SPDX-License-Identifier: MIT
+ *
+ * Copyright (c) 2019 Ray Andrew
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
 #ifdef ENABLE_DOCTEST_IN_LIBRARY
 #define DOCTEST_CONFIG_IMPLEMENT
-#include "doctest.h"
+#include <doctest.h>
 #endif
 
+#include <cassert>
 #include <iostream>
 #include <stdlib.h>
 
-#include "exampleConfig.h"
+#include <boost/di.hpp>
+
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/spdlog.h>
+
+#include "config.h"
 #include "example.h"
+#include "logger.h"
+
+// #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+// #define SPDLOG_TRACE_ON
 
 /*
  * Simple main program that demontrates how access
  * CMake definitions (here the version number) from source code.
  */
-int main() {
-  std::cout << "Automated Tending Project v"
-            << PROJECT_VERSION_MAJOR
-            << "."
-            << PROJECT_VERSION_MINOR
-            << "."
-            << PROJECT_VERSION_PATCH
-            << "."
-            << PROJECT_VERSION_TWEAK
-            << std::endl;
+int
+main()
+{
+  // spdlog::info("Test");
+  SPDLOG_DEBUG("Some trace message with param {}", "test");
+
+  spdlog::info("Automated Tending Project v{}.{}.{}.{}",
+               PROJECT_VERSION_MAJOR,
+               PROJECT_VERSION_MINOR,
+               PROJECT_VERSION_PATCH,
+               PROJECT_VERSION_TWEAK);
   std::system("cat ../LICENSE");
 
   // Bring in the dummy class from the example source,

@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,25 +24,27 @@
  *
  */
 
-#include "example.h"
+#ifndef LOGGER_H_
+#define LOGGER_H_
 
-Dummy::Dummy() {}
+#pragma once
 
-bool
-Dummy::doSomething()
+#include <memory>
+
+// #include <spdlog/sinks/rotatic_file_sink.h>
+#include <spdlog/spdlog.h>
+
+namespace tending {
+class Logger
 {
-  // Do silly things, using some C++17 features to enforce C++17 builds only.
-  spdlog::info("I'd rather be {1} than {0}.", "right", "happy");
+public:
+  Logger();
 
-  constexpr int digits[2] = { 0, 1 };
-  auto [zero, one] = digits;
-  return zero + one;
+  inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
+
+private:
+  const std::shared_ptr<spdlog::logger> _logger;
+};
 }
 
-#ifdef ENABLE_DOCTEST_IN_LIBRARY
-#include <doctest.h>
-TEST_CASE("we can have tests written here, to test impl. details")
-{
-  CHECK(true);
-}
 #endif

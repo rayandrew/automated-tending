@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,25 +24,16 @@
  *
  */
 
-#include "example.h"
+#include "logger.h"
 
-Dummy::Dummy() {}
-
-bool
-Dummy::doSomething()
+namespace tending {
+Logger::Logger()
 {
-  // Do silly things, using some C++17 features to enforce C++17 builds only.
-  spdlog::info("I'd rather be {1} than {0}.", "right", "happy");
-
-  constexpr int digits[2] = { 0, 1 };
-  auto [zero, one] = digits;
-  return zero + one;
+  // _logger = spdlog::rotating_logger_mt(
+  //   "cnc",
+  //   "logs/rotating.txt",
+  //   1048576 * 5,
+  //   3); // Create a file rotating logger with 5mb size max and 3 rotated
+  //   files
 }
-
-#ifdef ENABLE_DOCTEST_IN_LIBRARY
-#include <doctest.h>
-TEST_CASE("we can have tests written here, to test impl. details")
-{
-  CHECK(true);
 }
-#endif

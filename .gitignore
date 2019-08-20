@@ -34,3 +34,9 @@
 
 # Build directory
 build/
+
+# IDE
+.vscode
+
+# OS file
+.DS_Store

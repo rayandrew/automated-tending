@@ -1,0 +1,8 @@
+Language: Cpp
+BasedOnStyle: Mozilla
+AlignConsecutiveDeclarations: true
+AlignOperands: true
+ColumnLimit: 80
+UseTab: Never
+
+

@@ -8,10 +8,9 @@
 cmake_minimum_required(VERSION 3.8.2)
 
 # Set project name, version and laguages here. (change as needed)
-# Version numbers are available by including "exampleConfig.h" in 
-# the source. See exampleConfig.h.in for some more details.
+# Version numbers are available by including "config.h" in 
+# the source. See config.h.in for some more details.
 project(AUTOMATED_TENDING_MACHINE VERSION 0.0.0.1 LANGUAGES CXX)
-
 
 # Options: Things you can set via commandline options to cmake (e.g. -DENABLE_LTO=[ON|OFF])
 option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defines.
@@ -19,6 +18,7 @@ option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defi
 option(ENABLE_LTO "Enable link time optimization" ON)
 option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code.
                         Tests in tests/*.cpp will still be enabled." ON)
+option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work" ON)
 
 # Include stuff. No change needed.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -26,24 +26,37 @@ include(ConfigSafeGuards)
 include(Colors)
 include(CTest)
 include(Doctest)
+include(DI)
 include(Documentation)
+include(Fmt)
 include(LTO)
 include(Misc)
+include(Spdlog)
 include(Warnings)
 
 # Check for LTO support.
 find_lto(CXX)
 
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+
 # --------------------------------------------------------------------------------
 #                         Locate files (change as needed).
 # --------------------------------------------------------------------------------
-# file(GLOB_RECURSE SOURCES RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp") # All .cpp files in src/
-set(SOURCES          # All .cpp files in src/
-    src/example.cpp
-)
+file(GLOB_RECURSE 
+     SOURCES 
+     RELATIVE 
+     ${CMAKE_SOURCE_DIR} "src/*.cpp"
+) # All .cpp files in src/
+
+# set(SOURCES          # All .cpp files in src/
+#     src/logger.cpp
+#     src/example.cpp
+# )
+
 set(TESTFILES        # All .cpp files in tests/
     tests/main.cpp
 )
+
 set(LIBRARY_NAME engine)  # Default name for the library built from src/*.cpp (change if you wish)
 
 # --------------------------------------------------------------------------------
@@ -56,17 +69,26 @@ add_library(${LIBRARY_NAME} OBJECT ${SOURCES})
 target_include_directories(${LIBRARY_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # There's also (probably) doctests within the library, so we need to see this as well.
-target_link_libraries(${LIBRARY_NAME} PUBLIC doctest)
+target_link_libraries(${LIBRARY_NAME} PUBLIC doctest spdlog::spdlog fmt::fmt Boost.DI)
 
 # Set the compile options you want (change as needed).
-target_set_warnings(${LIBRARY_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
-# target_compile_options(${LIBRARY_NAME} ... )  # For setting manually.
+# target_set_warnings(${LIBRARY_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
+# target_compile_definitions(${LIBRARY_NAME} PRIVATE ...)  # For setting manually.
+
+add_compile_definitions(BUILD_SHARED_LIBS
+                        SPDLOG_MASTER_PROJECT
+                        SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG
+                        SPDLOG_FMT_EXTERNAL)
+
+# Create logs directory
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
 
 # Add an executable for the file app/main.cpp.
 # If you add more executables, copy these lines accordingly.
 add_executable(main app/main.cpp)   # Name of exec. and location of file.
-target_link_libraries(main PRIVATE ${LIBRARY_NAME})  # Link the executable to library (if it uses it).
-target_set_warnings(main ENABLE ALL AS_ERROR ALL DISABLE Annoying) # Set warnings (if needed).
+target_link_libraries(main PRIVATE ${LIBRARY_NAME} spdlog::spdlog fmt::fmt Boost.DI)  # Link the executable to library (if it uses it).
+spdlog_enable_warnings(main)
+# target_set_warnings(main DISABLE Annoying) # Set warnings (if needed).
 target_enable_lto(main optimized)  # enable link-time-optimization if available for non-debug configurations
 
 # Set the properties you require, e.g. what C++ standard to use. Here applied to library and main (change as needed).
