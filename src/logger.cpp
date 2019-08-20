@@ -27,13 +27,45 @@
 #include "logger.h"
 
 namespace tending {
-Logger::Logger()
+Logger::Logger(std::string name)
 {
-  // _logger = spdlog::rotating_logger_mt(
-  //   "cnc",
-  //   "logs/rotating.txt",
-  //   1048576 * 5,
-  //   3); // Create a file rotating logger with 5mb size max and 3 rotated
-  //   files
+  _name = std::move(name);
+
+  // Define sinks
+  try {
+    // auto console_sink =
+    // std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    // console_sink->set_level(spdlog::level::warn);
+
+    // auto rotating_sink = spdlog::rotating_logger_mt(
+    //   _name,
+    //   "logs/rotating.txt",
+    //   1048576 * 5,
+    //   3); // Create a file rotating logger with 5mb size max and 3 rotate
+    //   files
+    // rotating_sink->set_level(spdlog::level::trace);
+
+    // _logger = std::make_shared<spdlog::logger>(
+    //   _name, spdlog::sinks_init_list({ console_sink, rotating_sink }));
+    // _logger->info("Hello from here!");
+
+    auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    stdout_sink->set_level(spdlog::level::warn);
+
+    auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+      "logs/rotating.txt", 1024 * 1024 * 10, 3);
+    rotating_sink->set_level(spdlog::level::trace);
+
+    std::vector<spdlog::sink_ptr> sinks{ stdout_sink, rotating_sink };
+
+    _logger = std::make_shared<spdlog::logger>(_name, begin(sinks), end(sinks));
+
+    _logger->trace("Logger has been initialized!");
+
+    spdlog::register_logger(_logger);
+    _logger->debug("Logger has been initialized!");
+  } catch (const spdlog::spdlog_ex& ex) {
+    std::cout << "Log initialization failed: " << ex.what() << std::endl;
+  }
 }
 }

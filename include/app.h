@@ -24,35 +24,18 @@
  *
  */
 
-#ifndef LOGGER_H_
-#define LOGGER_H_
+#ifndef APP_H_
+#define APP_H_
 
 #pragma once
 
-#include <iostream>
-#include <memory>
-
-#include <boost/di.hpp>
-
-#include <spdlog/async.h>
-#include <spdlog/spdlog.h>
-
-#include <spdlog/sinks/rotating_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include "logger.h"
 
 namespace tending {
-auto LoggerName = [] {};
-
-class Logger
+class App
 {
 public:
-  BOOST_DI_INJECT(Logger, (named = LoggerName) std::string);
-
-  inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
-
-private:
-  std::string                     _name;
-  std::shared_ptr<spdlog::logger> _logger;
+  App(Logger&) {}
 };
 }
 

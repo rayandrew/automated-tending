@@ -38,6 +38,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
+#include "app.h"
 #include "config.h"
 #include "example.h"
 #include "logger.h"
@@ -53,17 +54,24 @@ int
 main()
 {
   // spdlog::info("Test");
-  SPDLOG_DEBUG("Some trace message with param {}", "test");
+  const auto injector = boost::di::make_injector(
+    boost::di::bind<std::string>.named(tending::LoggerName).to("Automated Tending"));
 
-  spdlog::info("Automated Tending Project v{}.{}.{}.{}",
-               PROJECT_VERSION_MAJOR,
-               PROJECT_VERSION_MINOR,
-               PROJECT_VERSION_PATCH,
-               PROJECT_VERSION_TWEAK);
-  std::system("cat ../LICENSE");
+  injector.create<tending::App>();
+
+  // SPDLOG_DEBUG("Some trace message with param {}", "test");
+
+  // spdlog::info("Automated Tending Project v{}.{}.{}.{}",
+  //              PROJECT_VERSION_MAJOR,
+  //              PROJECT_VERSION_MINOR,
+  //              PROJECT_VERSION_PATCH,
+  //              PROJECT_VERSION_TWEAK);
+  // std::system("cat ../LICENSE");
 
   // Bring in the dummy class from the example source,
   // just to show that it is accessible from main.cpp.
-  Dummy d = Dummy();
-  return d.doSomething() ? 0 : -1;
+  // Dummy d = Dummy();
+  // return d.doSomething() ? 0 : -1;
+
+  return 0;
 }
