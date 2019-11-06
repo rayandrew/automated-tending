@@ -1,5 +1,5 @@
 Language: Cpp
-BasedOnStyle: Mozilla
+BasedOnStyle: Chromium
 AlignConsecutiveDeclarations: true
 AlignOperands: true
 ColumnLimit: 80

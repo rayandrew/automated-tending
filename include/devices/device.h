@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,29 +24,20 @@
  *
  */
 
-#ifndef APP_H_
-#define APP_H_
+#ifdef DEVICE_H_
+#define DEVICE_H_
 
 #pragma once
 
-#include <QApplication>
-
-#include "logger.h"
-
-#include "windows/main_window.h"
-
 namespace emmerich {
-class App {
- private:
-  const std::unique_ptr<QApplication> _qApp;
-  // Logger& _logger;
-  const std::unique_ptr<MainWindow> _window;
-
- public:
-  App(int argc, char* argv[]);
-
-  int run();
-};
-}  // namespace emmerich_atm
+    class Device {
+    private:
+        
+        
+    public:
+        Device(int, int);
+        virtual ~Device() = 0;
+    }
+}
 
 #endif

@@ -26,9 +26,8 @@
 
 #include "logger.h"
 
-namespace tending {
-Logger::Logger(std::string name)
-{
+namespace emmerich {
+Logger::Logger(std::string name) {
   _name = std::move(name);
 
   // Define sinks
@@ -53,10 +52,10 @@ Logger::Logger(std::string name)
     stdout_sink->set_level(spdlog::level::warn);
 
     auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-      "logs/rotating.txt", 1024 * 1024 * 10, 3);
+        "logs/rotating.txt", 1024 * 1024 * 10, 3);
     rotating_sink->set_level(spdlog::level::trace);
 
-    std::vector<spdlog::sink_ptr> sinks{ stdout_sink, rotating_sink };
+    std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
 
     _logger = std::make_shared<spdlog::logger>(_name, begin(sinks), end(sinks));
 
@@ -68,4 +67,4 @@ Logger::Logger(std::string name)
     std::cout << "Log initialization failed: " << ex.what() << std::endl;
   }
 }
-}
+}  // namespace tending

@@ -24,38 +24,16 @@
  *
  */
 
-#ifndef EXAMPLE_H_
-#define EXAMPLE_H_
+#include "app.h"
 
-#pragma once
-
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/spdlog.h>
-
-/**
- * This is a dummy class to demonstrate features of the boiler plate.
- */
-class Dummy
-{
-public:
-  /**
-   * Default constructor for Dummy (does nothing).
-   */
-  Dummy();
-  /**
-   * Returns a bool.
-   * @return Always True.
-   */
-  bool doSomething();
-};
-
-#ifdef ENABLE_DOCTEST_IN_LIBRARY
-#include <doctest.h>
-TEST_CASE("we can have tests in headers if we want")
-{
-  Dummy d;
-  CHECK(d.doSomething() == true);
+namespace emmerich {
+App::App(int argc, char** argv)
+    : _qApp(std::make_unique<QApplication>(argc, argv)),
+      _window(std::make_unique<MainWindow>()) {
+  _window->show();
 }
-#endif
 
-#endif // EXAMPLE_H_
+int App::run() {
+  return _qApp->exec();
+}
+}  // namespace tending

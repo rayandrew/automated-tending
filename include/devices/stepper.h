@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,25 +24,13 @@
  *
  */
 
-#include "example.h"
+#ifndef DEVICE_STEPPER_H_
+#define DEVICE_STEPPER_H_
 
-Dummy::Dummy() {}
+#pragma once
 
-bool
-Dummy::doSomething()
-{
-  // Do silly things, using some C++17 features to enforce C++17 builds only.
-  spdlog::info("I'd rather be {1} than {0}.", "right", "happy");
-
-  constexpr int digits[2] = { 0, 1 };
-  auto [zero, one] = digits;
-  return zero + one;
+namespace emmerich {
+    
 }
 
-#ifdef ENABLE_DOCTEST_IN_LIBRARY
-#include <doctest.h>
-TEST_CASE("we can have tests written here, to test impl. details")
-{
-  CHECK(true);
-}
 #endif
