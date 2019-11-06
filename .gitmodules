@@ -11,3 +11,7 @@
 [submodule "external/di"]
 	path = external/di
 	url = https://github.com/boost-experimental/di.git
+  branch = cpp14
+[submodule "external/fruit"]
+	path = external/fruit
+	url = https://github.com/google/fruit.git

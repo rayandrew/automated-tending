@@ -32,7 +32,7 @@
 #include <iostream>
 #include <memory>
 
-#include <boost/di.hpp>
+#include <fruit/fruit.h>
 
 #include <spdlog/async.h>
 #include <spdlog/spdlog.h>
@@ -40,20 +40,17 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-namespace tending {
-auto LoggerName = [] {};
-
-class Logger
-{
-public:
-  BOOST_DI_INJECT(Logger, (named = LoggerName) std::string);
-
-  inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
-
-private:
-  std::string                     _name;
-  std::shared_ptr<spdlog::logger> _logger;
-};
-}
+namespace emmerich {
+    class Logger {
+    public:
+        Logger(std::string);
+        
+        inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
+        
+    private:
+        std::string                     _name;
+        std::shared_ptr<spdlog::logger> _logger;
+    };
+}  // namespace tending
 
 #endif

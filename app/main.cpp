@@ -26,52 +26,30 @@
 
 #ifdef ENABLE_DOCTEST_IN_LIBRARY
 #define DOCTEST_CONFIG_IMPLEMENT
+
 #include <doctest.h>
+
 #endif
 
+#include <stdlib.h>
 #include <cassert>
 #include <iostream>
-#include <stdlib.h>
 
-#include <boost/di.hpp>
-
-#include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
 #include "app.h"
 #include "config.h"
-#include "example.h"
 #include "logger.h"
 
 // #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 // #define SPDLOG_TRACE_ON
 
-/*
- * Simple main program that demontrates how access
- * CMake definitions (here the version number) from source code.
- */
-int
-main()
-{
-  // spdlog::info("Test");
-  const auto injector = boost::di::make_injector(
-    boost::di::bind<std::string>.named(tending::LoggerName).to("Automated Tending"));
+int main(int argc, char** argv) {
+  spdlog::info("Automated Tending Project v{}.{}.{}.{}", PROJECT_VERSION_MAJOR,
+               PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
+               PROJECT_VERSION_TWEAK);
 
-  injector.create<tending::App>();
+  emmerich::App app = emmerich::App(argc, argv);
 
-  // SPDLOG_DEBUG("Some trace message with param {}", "test");
-
-  // spdlog::info("Automated Tending Project v{}.{}.{}.{}",
-  //              PROJECT_VERSION_MAJOR,
-  //              PROJECT_VERSION_MINOR,
-  //              PROJECT_VERSION_PATCH,
-  //              PROJECT_VERSION_TWEAK);
-  // std::system("cat ../LICENSE");
-
-  // Bring in the dummy class from the example source,
-  // just to show that it is accessible from main.cpp.
-  // Dummy d = Dummy();
-  // return d.doSomething() ? 0 : -1;
-
-  return 0;
+  return app.run();
 }
