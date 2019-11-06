@@ -30,6 +30,8 @@
 #pragma once
 
 #include <QApplication>
+#include <yaml-cpp/yaml.h>
+#include <fruit/fruit.h>
 
 #include "logger.h"
 
@@ -39,6 +41,7 @@ namespace emmerich {
 class App {
  private:
   const std::unique_ptr<QApplication> _qApp;
+  // const std::shared_ptr<YAML::Node> _config;
   // Logger& _logger;
   const std::unique_ptr<MainWindow> _window;
 
@@ -47,6 +50,6 @@ class App {
 
   int run();
 };
-}  // namespace emmerich_atm
+}  // namespace emmerich
 
 #endif

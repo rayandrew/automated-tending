@@ -24,22 +24,8 @@
  *
  */
 
-#include "app.h"
+#include "devices/stepper.h"
 
-namespace emmerich {
-App::App(int argc, char** argv)
-    : _qApp(std::make_unique<QApplication>(argc, argv)),
-      _window(std::make_unique<MainWindow>()) {
-  _window->show();
-}
-
-int App::run() {
-  return _qApp->exec();
-}
-
-fruit::Component<Incrementer> getSimpleIncrementerComponent() {
-    return fruit::createComponent()
-        .install(getIncrementerImplComponent)
-        .install(getSimpleAdderComponent);
-}
-}  // namespace emmerich
+namespace emmerich::device {
+StepperDevice::StepperDevice(int pin) : Device(pin, device_mode::OUTPUT) {}
+}  // namespace emmerich::device

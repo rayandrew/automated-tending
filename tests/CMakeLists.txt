@@ -5,8 +5,8 @@ set(TESTFILES        # All .cpp files in tests/
     main.cpp
 )
 
-set(TEST_MAIN unit_tests)   # Default name for test executable (change if you wish).
-set(TEST_RUNNER_PARAMS "")  # Any arguemnts to feed the test runner (change as needed).
+set(TEST_MAIN unit_tests)
+set(TEST_RUNNER_PARAMS "")
 
 # --------------------------------------------------------------------------------
 #                         Make Tests (no change needed).

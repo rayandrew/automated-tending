@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,22 +24,34 @@
  *
  */
 
-#include "app.h"
+#ifdef MOCK_GPIO
 
-namespace emmerich {
-App::App(int argc, char** argv)
-    : _qApp(std::make_unique<QApplication>(argc, argv)),
-      _window(std::make_unique<MainWindow>()) {
-  _window->show();
-}
+#define PI_OFF 0
+#define PI_ON 1
 
-int App::run() {
-  return _qApp->exec();
-}
+#define PI_CLEAR 0
+#define PI_SET 1
 
-fruit::Component<Incrementer> getSimpleIncrementerComponent() {
-    return fruit::createComponent()
-        .install(getIncrementerImplComponent)
-        .install(getSimpleAdderComponent);
-}
-}  // namespace emmerich
+#define PI_LOW 0
+#define PI_HIGH 1
+
+#define PI_INPUT 0
+#define PI_OUTPUT 1
+#define PI_ALT0 4
+#define PI_ALT1 5
+#define PI_ALT2 6
+#define PI_ALT3 7
+#define PI_ALT4 3
+#define PI_ALT5 2
+
+int  gpioInitialise(void);
+void gpioTerminate(void);
+int  gpioSetMode(int gpio, int mode);
+int  gpioRead(int gpio);
+int  gpioWrite(int gpio, int level);
+
+#else
+
+#include <pigpio.h>
+
+#endif

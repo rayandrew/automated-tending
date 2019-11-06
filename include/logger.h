@@ -41,16 +41,23 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace emmerich {
-    class Logger {
-    public:
-        Logger(std::string);
-        
-        inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
-        
-    private:
-        std::string                     _name;
-        std::shared_ptr<spdlog::logger> _logger;
-    };
-}  // namespace tending
+class Logger {
+ public:
+  inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
+
+  Logger();
+
+  static Logger& getInstance() {
+    static Logger instance;
+    return instance;
+  }
+
+ private:
+  Logger(Logger const&) = delete;
+  void                            operator=(Logger const&) = delete;
+  const std::string               _name = "Emmerich ATM";
+  std::shared_ptr<spdlog::logger> _logger;
+};
+}  // namespace emmerich
 
 #endif

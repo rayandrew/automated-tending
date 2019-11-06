@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,22 +24,31 @@
  *
  */
 
-#include "app.h"
+#ifdef MOCK_GPIO
 
-namespace emmerich {
-App::App(int argc, char** argv)
-    : _qApp(std::make_unique<QApplication>(argc, argv)),
-      _window(std::make_unique<MainWindow>()) {
-  _window->show();
+#include <spdlog/spdlog.h>
+
+#include "logger.h"
+
+const std::shared_ptr<spdlog::logger> logger =
+    emmerich::Logger::getInstance().getLogger();
+
+int gpioInitialise(void) {
+  return 0;
 }
 
-int App::run() {
-  return _qApp->exec();
+void gpioTerminate(void) {}
+
+int gpioSetMode(int gpio, int mode) {
+  return 0;
 }
 
-fruit::Component<Incrementer> getSimpleIncrementerComponent() {
-    return fruit::createComponent()
-        .install(getIncrementerImplComponent)
-        .install(getSimpleAdderComponent);
+int gpioRead(int gpio) {
+  return 0;
 }
-}  // namespace emmerich
+
+int gpioWrite(int gpio, int level) {
+  return 0;
+}
+
+#endif

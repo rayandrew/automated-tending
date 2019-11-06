@@ -29,8 +29,18 @@
 
 #pragma once
 
-namespace emmerich {
-    
-}
+#include <spdlog/spdlog.h>
+
+#include "devices/device.h"
+
+namespace emmerich::device {
+class StepperDevice : public Device {
+ private:
+  const std::shared_ptr<spdlog::logger> _logger;
+
+ public:
+  StepperDevice(int pin);
+};
+}  // namespace emmerich::device
 
 #endif

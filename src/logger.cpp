@@ -27,9 +27,7 @@
 #include "logger.h"
 
 namespace emmerich {
-Logger::Logger(std::string name) {
-  _name = std::move(name);
-
+Logger::Logger() {
   // Define sinks
   try {
     // auto console_sink =
@@ -67,4 +65,4 @@ Logger::Logger(std::string name) {
     std::cout << "Log initialization failed: " << ex.what() << std::endl;
   }
 }
-}  // namespace tending
+}  // namespace emmerich

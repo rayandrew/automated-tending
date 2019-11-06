@@ -7,9 +7,12 @@ project(AUTOMATED_TENDING_MACHINE VERSION 0.0.0.1 LANGUAGES CXX)
 option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defines.
                                  Set this to OFF if you want to provide your own warning parameters." ON)
 option(ENABLE_LTO "Enable link time optimization" ON)
-option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code.
-                        Tests in tests/*.cpp will still be enabled." ON)
+option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code. Tests in tests/*.cpp will still be enabled." ON)
 option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work" ON)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    add_definitions(-DMOCK_GPIO)
+endif()
 
 # Include stuff. No change needed.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -18,7 +21,6 @@ include(ConfigSafeGuards)
 include(Colors)
 include(CTest)
 include(Doctest)
-include(DI)
 include(Fruit)
 include(Documentation)
 include(Fmt)
@@ -26,46 +28,62 @@ include(LTO)
 include(Misc)
 include(Spdlog)
 include(Warnings)
+include(Yaml)
 
 # Check for LTO support.
 find_lto(CXX)
 
 # find Qt5 and required components
-find_package(Qt5 COMPONENTS REQUIRED Core Gui Widgets) 
+find_package(Qt5 COMPONENTS REQUIRED
+             Core Gui Widgets) 
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
 # --------------------------------------------------------------------------------
 #                         Locate files (change as needed).
 # --------------------------------------------------------------------------------
-file(GLOB_RECURSE 
-     SOURCES 
-     RELATIVE 
-     ${CMAKE_SOURCE_DIR} "src/*.cpp"
-) # All .cpp files in src/
 
-file (GLOB_RECURSE
-      UI_SOURCES
-      RELATIVE
-      ${CMAKE_SOURCE_DIR} "resources/ui/*.ui"
-) # All .ui files in resources/ui
+set(SOURCES                     # All .cpp files in src/
+    src/gpio.cpp
+    src/logger.cpp
+    src/windows/main_window.cpp
+    src/devices/stepper.cpp
+    src/devices/device.cpp
+    src/app.cpp) 
 
-file(GLOB_RECURSE 
-     QT5_SOURCES 
-     RELATIVE 
-     ${CMAKE_SOURCE_DIR} "include/windows/*.h"
-) # All .cpp files in src/
+# file(GLOB_RECURSE 
+#      SOURCES 
+#      RELATIVE 
+#      ${CMAKE_SOURCE_DIR} "src/*.cpp"
+# ) # All .cpp files in src/
 
-# set(SOURCES          # All .cpp files in src/
-#     src/logger.cpp
-#     src/example.cpp
-# )
+set(UI_SOURCES                  # All .ui files in resources/ui
+    resources/ui/main_window.ui)
 
-set(TESTFILES        # All .cpp files in tests/
-    tests/main.cpp
-)
+# file (GLOB_RECURSE
+#       UI_SOURCES
+#       RELATIVE
+#       ${CMAKE_SOURCE_DIR} "resources/ui/*.ui"
+# ) # All .ui files in resources/ui
 
-set(LIBRARY_NAME engine)  # Default name for the library built from src/*.cpp (change if you wish)
+set(QT5_SOURCES                  # All .ui files in resources/ui
+    include/windows/main_window.h)
+
+# file(GLOB_RECURSE 
+#      QT5_SOURCES 
+#      RELATIVE 
+#      ${CMAKE_SOURCE_DIR} "include/windows/*.h"
+# ) # All .cpp files in src/
+
+set(TESTFILES                   # All .cpp files in tests/
+    tests/main.cpp)
+
+set(LIBRARY_NAME engine)
+
+# Copy config files
+configure_file(${PROJECT_SOURCE_DIR}/config.yaml 
+               ${CMAKE_BINARY_DIR}/config.yaml 
+               COPYONLY)
 
 # --------------------------------------------------------------------------------
 #                            Build! (Change as needed)
@@ -76,10 +94,14 @@ qt5_wrap_ui(ui_sources_headers ${UI_SOURCES})
 qt5_wrap_cpp(ui_sources_moc ${QT5_SOURCES})
 
 # Compile all sources into a library.
-add_library(${LIBRARY_NAME} OBJECT ${SOURCES} ${ui_sources_headers} ${ui_sources_moc})
+add_library(${LIBRARY_NAME} OBJECT
+            ${SOURCES}
+            ${ui_sources_headers}
+            ${ui_sources_moc})
 
 # Lib needs its header files, and users of the library must also see these (PUBLIC). (No change needed)
-target_include_directories(${LIBRARY_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(${LIBRARY_NAME} PUBLIC
+                           ${PROJECT_SOURCE_DIR}/include)
 
 # There's also (probably) doctests within the library, so we need to see this as well.
 target_link_libraries(${LIBRARY_NAME} PUBLIC
@@ -87,7 +109,7 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
                       spdlog::spdlog
                       fruit
                       fmt::fmt
-                      Boost.DI
+                      yaml::yaml
                       Qt5::Core
                       Qt5::Widgets)
 
@@ -112,25 +134,24 @@ target_link_libraries(main PRIVATE
                       spdlog::spdlog
                       fmt::fmt
                       fruit
-                      Boost.DI
+                      yaml::yaml
                       Qt5::Core
                       Qt5::Widgets)
 
-# Set warnings (if needed).
+# Set warnings
 spdlog_enable_warnings(main)
 # target_set_warnings(main DISABLE Annoying)
 
 # enable link-time-optimization if available for non-debug configurations
 target_enable_lto(main optimized)
 
-# Set the properties you require, e.g. what C++ standard to use. Here applied to library and main (change as needed).
+# Set the properties that applied to library and main
 set_target_properties(
     ${LIBRARY_NAME} main 
       PROPERTIES 
         CXX_STANDARD 17 
         CXX_STANDARD_REQUIRED YES 
-        CXX_EXTENSIONS NO
-)
+        CXX_EXTENSIONS NO)
 
 # Set up tests (see tests/CMakeLists.txt).
 add_subdirectory(tests)
