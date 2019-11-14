@@ -64,11 +64,10 @@ inline const std::string getOutputModeString(const device_output& output) {
 
 class DeviceException : public std::exception {
  private:
-  const std::string                     _message;
-  const std::shared_ptr<spdlog::logger> _logger;
-  const int                             _pin;
-  const device_mode                     _mode;
-  const device_output                   _output;
+  const std::string   _message;
+  const int           _pin;
+  const device_mode   _mode;
+  const device_output _output;
 
  public:
   DeviceException(const std::string&   message,
@@ -78,20 +77,31 @@ class DeviceException : public std::exception {
   const char* what() const noexcept;
 };
 
-class Device {
- private:
+class AbstractDevice {
+ protected:
   const int   _pin;
   device_mode _mode;
 
- public:
-  Device(int pin);
-  Device(int pin, device_mode mode);
+  AbstractDevice() = default;
+  AbstractDevice(int pin) : _pin(pin) {}
+  AbstractDevice(int pin, const device_mode& mode) : _pin(pin), _mode(mode) {}
+  virtual ~AbstractDevice() = default;
 
-  void               setMode(device_mode mode);
-  void               write(device_output level);
-  device_output      read() const;
-  inline int         getPin() const { return _pin; }
-  inline device_mode getMode() const { return _mode; }
+  virtual AbstractDevice& setMode(const device_mode& mode) = 0;
+  virtual void            write(const device_output& level) = 0;
+  virtual device_output   read() const = 0;
+  inline int              getPin() const { return _pin; }
+  inline device_mode      getMode() const { return _mode; }
+};
+
+class Device : public AbstractDevice {
+ protected:
+  Device(int pin);
+  Device(int pin, const device_mode& mode);
+  virtual ~Device() = default;
+  virtual AbstractDevice& setMode(const device_mode& mode);
+  virtual void            write(const device_output& output);
+  virtual device_output   read() const;
 };
 }  // namespace emmerich::device
 

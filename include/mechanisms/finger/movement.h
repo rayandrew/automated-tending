@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,26 +24,17 @@
  *
  */
 
-#ifdef MOCK_GPIO
+#ifndef MOVEMENT_H_
+#define MOVEMENT_H_
 
-#include <spdlog/spdlog.h>
+#pragma once
 
-int gpioInitialise(void) {
-  return 0;
-}
-
-void gpioTerminate(void) {}
-
-int gpioSetMode(int gpio, int mode) {
-  return 0;
-}
-
-int gpioRead(int gpio) {
-  return 0;
-}
-
-int gpioWrite(int gpio, int level) {
-  return 0;
-}
+namespace emmerich::mechanisms::finger {
+class FingerMovement {
+ public:
+  FingerMovement() = default;
+  virtual ~FingerMovement() = default;
+};
+}  // namespace emmerich::mechanisms::finger
 
 #endif

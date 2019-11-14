@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,26 +24,35 @@
  *
  */
 
-#ifdef MOCK_GPIO
+#ifndef CONFIG_H_
+#define CONFIG_H_
 
-#include <spdlog/spdlog.h>
+#pragma once
 
-int gpioInitialise(void) {
-  return 0;
-}
+#include <iostream>
+#include <memory>
 
-void gpioTerminate(void) {}
+#include <fruit/fruit.h>
+#include <yaml-cpp/yaml.h>
 
-int gpioSetMode(int gpio, int mode) {
-  return 0;
-}
+namespace emmerich {
+class Config {
+ protected:
+  std::shared_ptr<YAML::Node> _config;
 
-int gpioRead(int gpio) {
-  return 0;
-}
+ public:
+  Config() = default;
+  virtual ~Config() = default;
 
-int gpioWrite(int gpio, int level) {
-  return 0;
-}
+  template <typename Key>
+  inline const YAML::Node operator[](const Key& key) const {
+    return _config->operator[](key);
+  }
+
+  inline std::shared_ptr<YAML::Node> getConfig() { return _config; }
+};
+
+fruit::Component<Config> getConfigComponent();
+}  // namespace emmerich
 
 #endif

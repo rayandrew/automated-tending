@@ -29,18 +29,22 @@
 
 #pragma once
 
-#include <spdlog/spdlog.h>
+#include <fruit/fruit.h>
 
 #include "devices/device.h"
+#include "logger.h"
 
 namespace emmerich::device {
-class StepperDevice : public Device {
- private:
-  const std::shared_ptr<spdlog::logger> _logger;
-
+class Stepper : public Device {
  public:
-  StepperDevice(int pin);
+  Stepper(int pin) : Device(pin, emmerich::device::device_mode::OUTPUT){};
+  virtual int step(int n) = 0;
+  virtual ~Stepper() = default;
 };
+
+using StepperFactory = std::function<std::unique_ptr<Stepper>(int)>;
+
+fruit::Component<StepperFactory> getStepperComponent();
 }  // namespace emmerich::device
 
 #endif

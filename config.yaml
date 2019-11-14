@@ -1,3 +1,6 @@
+general:
+  name: "Emmerich Tending App"
+  debug: true
 finger:
   positioning:
     sleep_pin: 16

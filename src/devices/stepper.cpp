@@ -27,5 +27,22 @@
 #include "devices/stepper.h"
 
 namespace emmerich::device {
-StepperDevice::StepperDevice(int pin) : Device(pin, device_mode::OUTPUT) {}
+class StepperImpl : public Stepper {
+ private:
+  std::unique_ptr<Logger>             _logger;
+
+ public:
+  INJECT(StepperImpl(ASSISTED(int) pin, LoggerFactory loggerFactory))
+      : Stepper(pin), _logger(loggerFactory("Stepper")) {
+    _logger->info("Stepper initialized!");
+  }
+
+  virtual int step(int n) override { return 0; }
+};
+
+fruit::Component<StepperFactory> getStepperComponent() {
+  return fruit::createComponent().bind<Stepper, StepperImpl>().install(
+      getLoggerComponent);
+  ;
+}
 }  // namespace emmerich::device

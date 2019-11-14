@@ -26,6 +26,11 @@
 
 #ifdef MOCK_GPIO
 
+#include "logger.h"
+
+// const std::shared_ptr<spdlog::logger> logger =
+//     emmerich::Logger::getInstance().getLogger();
+
 #define PI_OFF 0
 #define PI_ON 1
 

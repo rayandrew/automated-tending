@@ -35,21 +35,17 @@
 #include <cassert>
 #include <iostream>
 
+#include <fruit/fruit.h>
 #include <spdlog/spdlog.h>
 
 #include "app.h"
-#include "config.h"
 #include "logger.h"
 
-// #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-// #define SPDLOG_TRACE_ON
-
 int main(int argc, char** argv) {
-  spdlog::info("Automated Tending Project v{}.{}.{}.{}", PROJECT_VERSION_MAJOR,
-               PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
-               PROJECT_VERSION_TWEAK);
+  fruit::Injector<emmerich::AppFactory> injector(emmerich::getAppComponent);
+  emmerich::AppFactory                  appFactory(injector);
 
-  emmerich::App app = emmerich::App(argc, argv);
+  std::unique_ptr<emmerich::App> app = appFactory(argc, argv);
 
-  return app.run();
+  return app->run();
 }

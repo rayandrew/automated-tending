@@ -27,19 +27,39 @@
 #include "app.h"
 
 namespace emmerich {
-App::App(int argc, char** argv)
-    : _qApp(std::make_unique<QApplication>(argc, argv)),
-      _window(std::make_unique<MainWindow>()) {
-  _window->show();
-}
+class AppImpl : public App {
+ private:
+  const std::unique_ptr<QApplication> _qApp;
+  const std::unique_ptr<MainWindow>   _window;
+  std::unique_ptr<Logger>             _logger;
+  Config*                             _config;
+  std::unique_ptr<device::Stepper>    _stepper;
 
-int App::run() {
-  return _qApp->exec();
-}
+ public:
+  INJECT(AppImpl(Config*                config,
+                 LoggerFactory          loggerFactory,
+                 device::StepperFactory stepperFactory,
+                 ASSISTED(int) argc,
+                 ASSISTED(char**) argv))
+      : _config(config),
+        _logger(loggerFactory("App")),
+        _qApp(std::make_unique<QApplication>(argc, argv)),
+        _window(std::make_unique<MainWindow>()),
+        _stepper(stepperFactory(15)) {
+    _logger->info("Automated Tending Project v{}.{}.{}.{}",
+                  PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
+                  PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
+    _window->show();
+  }
 
-fruit::Component<Incrementer> getSimpleIncrementerComponent() {
-    return fruit::createComponent()
-        .install(getIncrementerImplComponent)
-        .install(getSimpleAdderComponent);
+  int run() override { return _qApp->exec(); }
+};
+
+fruit::Component<AppFactory> getAppComponent() {
+  return fruit::createComponent()
+      .bind<App, AppImpl>()
+      .install(getConfigComponent)
+      .install(getLoggerComponent)
+      .install(device::getStepperComponent);
 }
 }  // namespace emmerich

@@ -35,10 +35,9 @@ DeviceException::DeviceException(const std::string&   message,
                                  const device_mode&   mode,
                                  const device_output& output)
     : _message(std::move(message)),
-      _logger(emmerich::Logger::getInstance().getLogger()),
-      _pin(pin),
-      _mode(mode),
-      _output(output) {}
+      _pin(std::move(pin)),
+      _mode(std::move(mode)),
+      _output(std::move(output)) {}
 
 const char* DeviceException::what() const noexcept {
   std::stringstream temp;
@@ -50,18 +49,18 @@ const char* DeviceException::what() const noexcept {
 
   std::string message = temp.str();
 
-  _logger->error(message);
+  // _logger->error(message);
 
   return message.c_str();
 }
 
-Device::Device(int pin) : _pin(pin) {}
+Device::Device(int pin) : AbstractDevice(pin) {}
 
-Device::Device(int pin, device_mode mode) : _pin(pin), _mode(mode) {
+Device::Device(int pin, const device_mode& mode) : AbstractDevice(pin, mode) {
   setMode(mode);
 }
 
-void Device::setMode(device_mode mode) {
+AbstractDevice& Device::setMode(const device_mode& mode) {
   _mode = mode;
 
   if (mode == device_mode::INPUT) {
@@ -69,9 +68,11 @@ void Device::setMode(device_mode mode) {
   } else {
     gpioSetMode(_pin, PI_OUTPUT);
   }
+
+  return *this;
 }
 
-void Device::write(device_output output) {
+void Device::write(const device_output& output) {
   if (_mode == device_mode::INPUT) {
     throw DeviceException("DEVICE_MODE 'INPUT' cannot send output to pin", _pin,
                           _mode, output);
@@ -100,4 +101,56 @@ device_output Device::read() const {
 
   return value == 0 ? device_output::LOW : device_output::HIGH;
 }
+
+// class DeviceImpl : public Device {
+//  public:
+//   DeviceImpl(int pin) : Device(pin) {}
+
+//   DeviceImpl(int pin, const device_mode& mode) : Device(pin, mode) {
+//     setMode(mode);
+//   }
+
+//   virtual Device& setMode(const device_mode& mode) override {
+//     _mode = mode;
+
+//     if (mode == device_mode::INPUT) {
+//       gpioSetMode(_pin, PI_INPUT);
+//     } else {
+//       gpioSetMode(_pin, PI_OUTPUT);
+//     }
+
+//     return *this;
+//   }
+
+//   virtual void write(const device_output& output) override {
+//     if (_mode == device_mode::INPUT) {
+//       throw DeviceException("DEVICE_MODE 'INPUT' cannot send output to pin",
+//                             _pin, _mode, output);
+//     }
+
+//     switch (output) {
+//       case device_output::LOW:
+//         gpioWrite(_pin, PI_LOW);
+//         break;
+//       case device_output::HIGH:
+//         gpioWrite(_pin, PI_HIGH);
+//         break;
+//       default:
+//         throw DeviceException("Device output should not reach here", _pin,
+//                               _mode, output);
+//     }
+//   }
+
+//   device_output read() const override {
+//     if (_mode == device_mode::OUTPUT) {
+//       throw DeviceException(
+//           "DEVICE_MODE 'OUTPUT' cannot get input from the pin", _pin, _mode,
+//           device_output::LOW);
+//     }
+
+//     int value = gpioRead(_pin);
+
+//     return value == 0 ? device_output::LOW : device_output::HIGH;
+//   }
+// };
 }  // namespace emmerich::device

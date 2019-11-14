@@ -7,8 +7,10 @@ project(AUTOMATED_TENDING_MACHINE VERSION 0.0.0.1 LANGUAGES CXX)
 option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defines.
                                  Set this to OFF if you want to provide your own warning parameters." ON)
 option(ENABLE_LTO "Enable link time optimization" ON)
-option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code. Tests in tests/*.cpp will still be enabled." ON)
+option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code. Tests in tests/*.cpp will still be enabled." OFF)
 option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work" ON)
+# option(FRUIT_USES_BOOST "Not using any boost library for Fruit dependencies" OFF)
+# option(SPDLOG_FMT_EXTERNAL "Using external FMT for SPDLOG" OFF)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_definitions(-DMOCK_GPIO)
@@ -44,54 +46,37 @@ find_package(Qt5 COMPONENTS REQUIRED
 # --------------------------------------------------------------------------------
 
 set(SOURCES                     # All .cpp files in src/
-    src/gpio.cpp
+    src/app.cpp
+    src/config.cpp
     src/logger.cpp
+    src/gpio.cpp
     src/windows/main_window.cpp
     src/devices/stepper.cpp
     src/devices/device.cpp
-    src/app.cpp) 
+    src/mechanisms/finger/movement.cpp) 
 
-# file(GLOB_RECURSE 
-#      SOURCES 
-#      RELATIVE 
-#      ${CMAKE_SOURCE_DIR} "src/*.cpp"
-# ) # All .cpp files in src/
+file (GLOB_RECURSE
+      UI_SOURCES
+      RELATIVE
+      ${CMAKE_SOURCE_DIR} "resources/ui/*.ui") # All .ui files in resources/ui
 
-set(UI_SOURCES                  # All .ui files in resources/ui
-    resources/ui/main_window.ui)
-
-# file (GLOB_RECURSE
-#       UI_SOURCES
-#       RELATIVE
-#       ${CMAKE_SOURCE_DIR} "resources/ui/*.ui"
-# ) # All .ui files in resources/ui
-
-set(QT5_SOURCES                  # All .ui files in resources/ui
-    include/windows/main_window.h)
-
-# file(GLOB_RECURSE 
-#      QT5_SOURCES 
-#      RELATIVE 
-#      ${CMAKE_SOURCE_DIR} "include/windows/*.h"
-# ) # All .cpp files in src/
+file(GLOB_RECURSE 
+     QT5_SOURCES 
+     RELATIVE 
+     ${CMAKE_SOURCE_DIR} "include/windows/*.h") # All .cpp files in src/
 
 set(TESTFILES                   # All .cpp files in tests/
     tests/main.cpp)
 
 set(LIBRARY_NAME engine)
 
-# Copy config files
-configure_file(${PROJECT_SOURCE_DIR}/config.yaml 
-               ${CMAKE_BINARY_DIR}/config.yaml 
-               COPYONLY)
+# Qt5 wrapper
+qt5_wrap_ui(ui_sources_headers ${UI_SOURCES})
+qt5_wrap_cpp(ui_sources_moc ${QT5_SOURCES})
 
 # --------------------------------------------------------------------------------
 #                            Build! (Change as needed)
 # --------------------------------------------------------------------------------
-
-# Qt5 wrapper
-qt5_wrap_ui(ui_sources_headers ${UI_SOURCES})
-qt5_wrap_cpp(ui_sources_moc ${QT5_SOURCES})
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT
@@ -126,7 +111,7 @@ add_compile_definitions(BUILD_SHARED_LIBS
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
 
 # Add an executable for the file app/main.cpp.
-add_executable(main app/main.cpp)  
+add_executable(main app/main.cpp)
 
 # Link the executable to libraries
 target_link_libraries(main PRIVATE
