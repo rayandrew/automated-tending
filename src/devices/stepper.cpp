@@ -29,7 +29,7 @@
 namespace emmerich::device {
 class StepperImpl : public Stepper {
  private:
-  std::unique_ptr<Logger>             _logger;
+  std::unique_ptr<Logger> _logger;
 
  public:
   INJECT(StepperImpl(ASSISTED(int) pin, LoggerFactory loggerFactory))
