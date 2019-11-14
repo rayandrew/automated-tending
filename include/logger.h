@@ -47,9 +47,11 @@ namespace emmerich {
 class Logger {
  protected:
   std::shared_ptr<spdlog::logger> _logger;
+  const std::string               _name;
 
  public:
   Logger() = default;
+  Logger(const std::string& name): _name(std::move(name)) {}
   virtual ~Logger() = default;
 
   inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }

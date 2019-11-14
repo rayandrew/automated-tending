@@ -24,17 +24,27 @@
  *
  */
 
-#ifndef MOVEMENT_H_
-#define MOVEMENT_H_
+#ifndef FINGER_MOVEMENT_H_
+#define FINGER_MOVEMENT_H_
 
 #pragma once
+
+#include <fruit/fruit.h>
+
+#include "config.h"
+
+#include "devices/stepper.h"
 
 namespace emmerich::mechanisms::finger {
 class FingerMovement {
  public:
   FingerMovement() = default;
   virtual ~FingerMovement() = default;
+  virtual void moveX(int x) = 0;
+  virtual void moveY(int y) = 0;
 };
+
+fruit::Component<FingerMovement> getFingerMovementComponent();
 }  // namespace emmerich::mechanisms::finger
 
 #endif

@@ -30,14 +30,14 @@ namespace emmerich {
 class LoggerImpl : public Logger {
  public:
   INJECT(LoggerImpl(Config* config, ASSISTED(const std::string&) name))
-      : Logger() {
+      : Logger(name) {
     try {
       bool debug = (*config)["general"]["debug"].as<bool>();
 
       auto stdout_sink =
           std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
       stdout_sink->set_level(debug ? spdlog::level::debug
-                                   : spdlog::level::warn);
+                                   : spdlog::level::info);
 
       auto rotating_sink =
           std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
@@ -54,11 +54,13 @@ class LoggerImpl : public Logger {
                       (*config)["general"]["name"].as<std::string>()));
 
       spdlog::register_logger(_logger);
-      _logger->debug("Logger has been initialized!");
+      _logger->set_level(spdlog::level::trace);
     } catch (const spdlog::spdlog_ex& ex) {
       std::cout << "Log initialization failed: " << ex.what() << std::endl;
     }
   }
+
+  virtual ~LoggerImpl() { spdlog::drop(_name); }
 };
 
 fruit::Component<LoggerFactory> getLoggerComponent() {

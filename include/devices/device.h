@@ -33,6 +33,11 @@
 #include <iostream>
 #include <sstream>
 
+#include <fmt/format.h>
+#include <fruit/fruit.h>
+
+#include "logger.h"
+
 #include "gpio.h"
 
 namespace emmerich::device {
@@ -77,32 +82,38 @@ class DeviceException : public std::exception {
   const char* what() const noexcept;
 };
 
-class AbstractDevice {
+class Device {
  protected:
   const int   _pin;
   device_mode _mode;
 
-  AbstractDevice() = default;
-  AbstractDevice(int pin) : _pin(pin) {}
-  AbstractDevice(int pin, const device_mode& mode) : _pin(pin), _mode(mode) {}
-  virtual ~AbstractDevice() = default;
-
-  virtual AbstractDevice& setMode(const device_mode& mode) = 0;
-  virtual void            write(const device_output& level) = 0;
-  virtual device_output   read() const = 0;
-  inline int              getPin() const { return _pin; }
-  inline device_mode      getMode() const { return _mode; }
-};
-
-class Device : public AbstractDevice {
- protected:
-  Device(int pin);
-  Device(int pin, const device_mode& mode);
+ public:
+  Device() = default;
+  Device(int pin) : _pin(pin) {}
+  Device(int pin, const device_mode& mode) : _pin(pin), _mode(mode) {}
   virtual ~Device() = default;
-  virtual AbstractDevice& setMode(const device_mode& mode);
-  virtual void            write(const device_output& output);
-  virtual device_output   read() const;
+
+  virtual Device&       setMode(const device_mode& mode) = 0;
+  virtual void          write(const device_output& level) = 0;
+  virtual device_output read() const = 0;
+  inline int            getPin() const { return _pin; }
+  inline device_mode    getMode() const { return _mode; }
 };
+
+using DeviceFactory =
+    std::function<std::unique_ptr<Device>(int, const device_mode&)>;
+
+fruit::Component<DeviceFactory> getDeviceComponent();
+
+// class Device : public AbstractDevice {
+//  protected:
+//   Device(int pin);
+//   Device(int pin, const device_mode& mode);
+//   virtual ~Device() = default;
+//   virtual AbstractDevice& setMode(const device_mode& mode);
+//   virtual void            write(const device_output& output);
+//   virtual device_output   read() const;
+// };
 }  // namespace emmerich::device
 
 #endif

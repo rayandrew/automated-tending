@@ -31,26 +31,30 @@ class AppImpl : public App {
  private:
   const std::unique_ptr<QApplication> _qApp;
   const std::unique_ptr<MainWindow>   _window;
-  std::unique_ptr<Logger>             _logger;
   Config*                             _config;
-  std::unique_ptr<device::Stepper>    _stepper;
+  std::unique_ptr<Logger>             _logger;
+
+  mechanisms::finger::FingerMovement* _fingerMovement;
 
  public:
-  INJECT(AppImpl(Config*                config,
-                 LoggerFactory          loggerFactory,
-                 device::StepperFactory stepperFactory,
-                 ASSISTED(int) argc,
-                 ASSISTED(char**) argv))
-      : _config(config),
-        _logger(loggerFactory("App")),
-        _qApp(std::make_unique<QApplication>(argc, argv)),
+  INJECT(AppImpl(ASSISTED(int) argc,
+                 ASSISTED(char**) argv,
+                 Config*                             config,
+                 LoggerFactory                       loggerFactory,
+                 mechanisms::finger::FingerMovement* fingerMovement))
+      : _qApp(std::make_unique<QApplication>(argc, argv)),
         _window(std::make_unique<MainWindow>()),
-        _stepper(stepperFactory(15)) {
+        _config(config),
+        _logger(loggerFactory("App")),
+        _fingerMovement(fingerMovement) {
     _logger->info("Automated Tending Project v{}.{}.{}.{}",
                   PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
                   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
+    _fingerMovement->moveX(10);
     _window->show();
   }
+
+  virtual ~AppImpl() { spdlog::drop_all(); }
 
   int run() override { return _qApp->exec(); }
 };
@@ -60,6 +64,6 @@ fruit::Component<AppFactory> getAppComponent() {
       .bind<App, AppImpl>()
       .install(getConfigComponent)
       .install(getLoggerComponent)
-      .install(device::getStepperComponent);
+      .install(mechanisms::finger::getFingerMovementComponent);
 }
 }  // namespace emmerich

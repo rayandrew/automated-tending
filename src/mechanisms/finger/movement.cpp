@@ -28,8 +28,38 @@
 
 namespace emmerich::mechanisms::finger {
 class FingerMovementImpl : public FingerMovement {
+ private:
+  Config*                          _config;
+  std::unique_ptr<device::Stepper> _stepperX;
+  std::unique_ptr<device::Stepper> _stepperY;
+
  public:
-  FingerMovementImpl() = default;
-  ~FingerMovementImpl() = default;
+  INJECT(FingerMovementImpl(Config*                config,
+                            device::StepperFactory stepperFactory))
+      : _config(config) {
+    _stepperX = stepperFactory(
+        (*config)["finger"]["movement"]["x"]["step_pin"].as<int>(),
+        (*config)["finger"]["movement"]["x"]["direction_pin"].as<int>());
+    _stepperY = stepperFactory(
+        (*config)["finger"]["movement"]["y"]["step_pin"].as<int>(),
+        (*config)["finger"]["movement"]["y"]["direction_pin"].as<int>());
+  }
+
+  virtual ~FingerMovementImpl() = default;
+
+  virtual void moveX(int x) override {
+    _stepperX->step(x);
+  }
+
+  virtual void moveY(int y) override {
+    _stepperX->step(y);
+  }
 };
+
+fruit::Component<FingerMovement> getFingerMovementComponent() {
+  return fruit::createComponent()
+      .bind<FingerMovement, FingerMovementImpl>()
+      .install(getConfigComponent)
+      .install(device::getStepperComponent);
+}
 }  // namespace emmerich::mechanisms::finger

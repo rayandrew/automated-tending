@@ -39,6 +39,7 @@
 #include "logger.h"
 
 #include "devices/stepper.h"
+#include "mechanisms/finger/movement.h"
 
 #include "generalConfig.h"
 

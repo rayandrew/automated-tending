@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.8.2)
 
 # List all files containing tests. (Change as needed)
 set(TESTFILES        # All .cpp files in tests/
-    main.cpp
-)
+    main.cpp)
 
 set(TEST_MAIN unit_tests)
 set(TEST_RUNNER_PARAMS "")
@@ -19,8 +18,7 @@ set_target_properties(${TEST_MAIN} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT
 set_target_properties(${TEST_MAIN} PROPERTIES 
     CXX_STANDARD 17 
     CXX_STANDARD_REQUIRED YES 
-    CXX_EXTENSIONS NO
-)
+    CXX_EXTENSIONS NO)
 
 add_test(
     # Use some per-module/project prefix so that it is easier to run only tests for this module

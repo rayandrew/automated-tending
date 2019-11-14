@@ -2,7 +2,7 @@ general:
   name: "Emmerich Tending App"
   debug: true
 finger:
-  positioning:
+  movement:
     sleep_pin: 16
     x:
       step_pin: 20
