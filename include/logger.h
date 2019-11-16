@@ -32,6 +32,7 @@
 #include <iostream>
 #include <memory>
 
+#include <fmt/format.h>
 #include <fruit/fruit.h>
 
 #include <spdlog/async.h>
@@ -40,17 +41,58 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#include "config.h"
+
 namespace emmerich {
-    class Logger {
-    public:
-        Logger(std::string);
-        
-        inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
-        
-    private:
-        std::string                     _name;
-        std::shared_ptr<spdlog::logger> _logger;
-    };
-}  // namespace tending
+class Logger {
+ protected:
+  std::shared_ptr<spdlog::logger> _logger;
+  const std::string               _name;
+
+ public:
+  Logger() = default;
+  Logger(const std::string& name) : _name(std::move(name)) {}
+  virtual ~Logger() = default;
+
+  inline const std::shared_ptr<spdlog::logger>& getLogger() const {
+    return _logger;
+  }
+
+  template <typename... Args>
+  inline void trace(fmt::basic_string_view<char> fmt, const Args&... args) {
+    _logger->trace(fmt, args...);
+  }
+
+  template <typename... Args>
+  inline void debug(fmt::basic_string_view<char> fmt, const Args&... args) {
+    _logger->debug(fmt, args...);
+  }
+
+  template <typename... Args>
+  inline void info(fmt::basic_string_view<char> fmt, const Args&... args) {
+    _logger->info(fmt, args...);
+  }
+
+  template <typename... Args>
+  inline void warn(fmt::basic_string_view<char> fmt, const Args&... args) {
+    _logger->warn(fmt, args...);
+  }
+
+  template <typename... Args>
+  inline void error(fmt::basic_string_view<char> fmt, const Args&... args) {
+    _logger->error(fmt, args...);
+  }
+
+  template <typename... Args>
+  void critical(fmt::basic_string_view<char> fmt, const Args&... args) {
+    _logger->critical(fmt, args...);
+  }
+};
+
+using LoggerFactory =
+    std::function<std::unique_ptr<Logger>(const std::string&)>;
+
+fruit::Component<LoggerFactory> getLoggerComponent();
+}  // namespace emmerich
 
 #endif

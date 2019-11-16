@@ -29,8 +29,45 @@
 
 #pragma once
 
-namespace emmerich {
-    
+#include <unistd.h>
+
+#include <fmt/format.h>
+#include <fruit/fruit.h>
+
+#include "devices/device.h"
+#include "logger.h"
+
+namespace emmerich::device {
+enum class stepper_direction {
+  FORWARD,
+  BACKWARD,
+};
+
+inline const std::string getStepperDirectionString(
+    const stepper_direction& step_direction) {
+  if (step_direction == stepper_direction::FORWARD) {
+    return "forward";
+  } else {
+    return "backward";
+  }
 }
+
+class Stepper {
+ protected:
+  const int _step_pin;
+  const int _direction_pin;
+
+ public:
+  Stepper(int step_pin, int direction_pin)
+      : _step_pin(step_pin), _direction_pin(direction_pin) {}
+  virtual void     step(int n, useconds_t step_delay = 5000) = 0;
+  virtual Stepper& set_direction(const stepper_direction& step_direction) = 0;
+  virtual ~Stepper() = default;
+};
+
+using StepperFactory = std::function<std::unique_ptr<Stepper>(int, int)>;
+
+fruit::Component<StepperFactory> getStepperComponent();
+}  // namespace emmerich::device
 
 #endif

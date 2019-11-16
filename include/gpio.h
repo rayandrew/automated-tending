@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,35 +24,39 @@
  *
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifdef MOCK_GPIO
 
-#pragma once
+#include "logger.h"
 
-#include <QObject>
-#include <QtWidgets>
+// const std::shared_ptr<spdlog::logger> logger =
+//     emmerich::Logger::getInstance().getLogger();
 
-#include "ui_main_window.h"
+#define PI_OFF 0
+#define PI_ON 1
 
-// namespace Ui {
-// class MainWindow;
-// }
+#define PI_CLEAR 0
+#define PI_SET 1
 
-namespace emmerich::ui {
-class MainWindow : public QMainWindow {
-  Q_OBJECT
+#define PI_LOW 0
+#define PI_HIGH 1
 
- private:
-  std::shared_ptr<Ui::MainWindow> _ui;
+#define PI_INPUT 0
+#define PI_OUTPUT 1
+#define PI_ALT0 4
+#define PI_ALT1 5
+#define PI_ALT2 6
+#define PI_ALT3 7
+#define PI_ALT4 3
+#define PI_ALT5 2
 
- public:
-  explicit MainWindow(QWidget* parent = 0);
-  ~MainWindow();
-  inline const std::shared_ptr<Ui::MainWindow>& getUi() const { return _ui; }
+int  gpioInitialise(void);
+void gpioTerminate(void);
+int  gpioSetMode(int gpio, int mode);
+int  gpioRead(int gpio);
+int  gpioWrite(int gpio, int level);
 
- private slots:
-  void on_actionExit_triggered();
-};
-}  // namespace emmerich::ui
+#else
 
-#endif  // MAINWINDOW_H
+#include <pigpio.h>
+
+#endif

@@ -1,17 +1,16 @@
-
 [submodule "external/doctest"]
-	path = external/doctest
-	url = https://github.com/onqtam/doctest.git
+path = external/doctest
+url = https://github.com/onqtam/doctest.git
 [submodule "external/spdlog"]
-	path = external/spdlog
-	url = https://github.com/gabime/spdlog.git
+path = external/spdlog
+url = https://github.com/gabime/spdlog.git
+branch = v1.x
 [submodule "external/fmt"]
-	path = external/fmt
-	url = https://github.com/fmtlib/fmt.git
-[submodule "external/di"]
-	path = external/di
-	url = https://github.com/boost-experimental/di.git
-  branch = cpp14
+path = external/fmt
+url = https://github.com/fmtlib/fmt.git
 [submodule "external/fruit"]
-	path = external/fruit
-	url = https://github.com/google/fruit.git
+path = external/fruit
+url = https://github.com/google/fruit.git
+[submodule "external/yaml"]
+path = external/yaml
+url = https://github.com/jbeder/yaml-cpp.git

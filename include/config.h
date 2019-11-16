@@ -24,35 +24,37 @@
  *
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef CONFIG_H_
+#define CONFIG_H_
 
 #pragma once
 
-#include <QObject>
-#include <QtWidgets>
+#include <iostream>
+#include <memory>
 
-#include "ui_main_window.h"
+#include <fruit/fruit.h>
+#include <yaml-cpp/yaml.h>
 
-// namespace Ui {
-// class MainWindow;
-// }
-
-namespace emmerich::ui {
-class MainWindow : public QMainWindow {
-  Q_OBJECT
-
- private:
-  std::shared_ptr<Ui::MainWindow> _ui;
+namespace emmerich {
+class Config {
+ protected:
+  std::shared_ptr<YAML::Node> _config;
 
  public:
-  explicit MainWindow(QWidget* parent = 0);
-  ~MainWindow();
-  inline const std::shared_ptr<Ui::MainWindow>& getUi() const { return _ui; }
+  Config() = default;
+  virtual ~Config() = default;
 
- private slots:
-  void on_actionExit_triggered();
+  template <typename Key>
+  inline const YAML::Node operator[](const Key& key) const {
+    return _config->operator[](key);
+  }
+
+  inline const std::shared_ptr<YAML::Node>& getConfig() const {
+    return _config;
+  }
 };
-}  // namespace emmerich::ui
 
-#endif  // MAINWINDOW_H
+fruit::Component<Config> getConfigComponent();
+}  // namespace emmerich
+
+#endif

@@ -27,44 +27,44 @@
 #include "logger.h"
 
 namespace emmerich {
-Logger::Logger(std::string name) {
-  _name = std::move(name);
+class LoggerImpl : public Logger {
+ public:
+  INJECT(LoggerImpl(Config* config, ASSISTED(const std::string&) name))
+      : Logger(name) {
+    try {
+      bool debug = (*config)["general"]["debug"].as<bool>();
 
-  // Define sinks
-  try {
-    // auto console_sink =
-    // std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    // console_sink->set_level(spdlog::level::warn);
+      auto stdout_sink =
+          std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+      stdout_sink->set_level(debug ? spdlog::level::debug
+                                   : spdlog::level::info);
 
-    // auto rotating_sink = spdlog::rotating_logger_mt(
-    //   _name,
-    //   "logs/rotating.txt",
-    //   1048576 * 5,
-    //   3); // Create a file rotating logger with 5mb size max and 3 rotate
-    //   files
-    // rotating_sink->set_level(spdlog::level::trace);
+      auto rotating_sink =
+          std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+              "logs/rotating.txt", 1024 * 1024 * 10, 3);
+      rotating_sink->set_level(spdlog::level::trace);
 
-    // _logger = std::make_shared<spdlog::logger>(
-    //   _name, spdlog::sinks_init_list({ console_sink, rotating_sink }));
-    // _logger->info("Hello from here!");
+      std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
 
-    auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    stdout_sink->set_level(spdlog::level::warn);
+      _logger =
+          std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
 
-    auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-        "logs/rotating.txt", 1024 * 1024 * 10, 3);
-    rotating_sink->set_level(spdlog::level::trace);
+      _logger->set_pattern(
+          fmt::format("[%d/%m/%C %T][{}][%n][%^%l%$] %v",
+                      (*config)["general"]["name"].as<std::string>()));
 
-    std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
-
-    _logger = std::make_shared<spdlog::logger>(_name, begin(sinks), end(sinks));
-
-    _logger->trace("Logger has been initialized!");
-
-    spdlog::register_logger(_logger);
-    _logger->debug("Logger has been initialized!");
-  } catch (const spdlog::spdlog_ex& ex) {
-    std::cout << "Log initialization failed: " << ex.what() << std::endl;
+      spdlog::register_logger(_logger);
+      _logger->set_level(spdlog::level::trace);
+    } catch (const spdlog::spdlog_ex& ex) {
+      std::cout << "Log initialization failed: " << ex.what() << std::endl;
+    }
   }
+
+  virtual ~LoggerImpl() { spdlog::drop(_name); }
+};
+
+fruit::Component<LoggerFactory> getLoggerComponent() {
+  return fruit::createComponent().bind<Logger, LoggerImpl>().install(
+      getConfigComponent);
 }
-}  // namespace tending
+}  // namespace emmerich

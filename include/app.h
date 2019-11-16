@@ -29,24 +29,34 @@
 
 #pragma once
 
+#include <fruit/fruit.h>
+#include <spdlog/spdlog.h>
+#include <yaml-cpp/yaml.h>
+
 #include <QApplication>
 
+#include "config.h"
 #include "logger.h"
+
+#include "state.h"
+
+#include "devices/stepper.h"
+#include "mechanisms/finger/movement.h"
+
+#include "general_config.h"
 
 #include "windows/main_window.h"
 
 namespace emmerich {
 class App {
- private:
-  const std::unique_ptr<QApplication> _qApp;
-  // Logger& _logger;
-  const std::unique_ptr<MainWindow> _window;
-
  public:
-  App(int argc, char* argv[]);
-
-  int run();
+  virtual int run() = 0;
+  virtual ~App() = default;
 };
-}  // namespace emmerich_atm
+
+using AppFactory = std::function<std::unique_ptr<App>(int, char**)>;
+
+fruit::Component<AppFactory> getAppComponent();
+}  // namespace emmerich
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,35 +24,26 @@
  *
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifdef MOCK_GPIO
 
-#pragma once
+#include <spdlog/spdlog.h>
 
-#include <QObject>
-#include <QtWidgets>
+int gpioInitialise(void) {
+  return 0;
+}
 
-#include "ui_main_window.h"
+void gpioTerminate(void) {}
 
-// namespace Ui {
-// class MainWindow;
-// }
+int gpioSetMode(int gpio, int mode) {
+  return 0;
+}
 
-namespace emmerich::ui {
-class MainWindow : public QMainWindow {
-  Q_OBJECT
+int gpioRead(int gpio) {
+  return 0;
+}
 
- private:
-  std::shared_ptr<Ui::MainWindow> _ui;
+int gpioWrite(int gpio, int level) {
+  return 0;
+}
 
- public:
-  explicit MainWindow(QWidget* parent = 0);
-  ~MainWindow();
-  inline const std::shared_ptr<Ui::MainWindow>& getUi() const { return _ui; }
-
- private slots:
-  void on_actionExit_triggered();
-};
-}  // namespace emmerich::ui
-
-#endif  // MAINWINDOW_H
+#endif

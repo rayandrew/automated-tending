@@ -24,35 +24,35 @@
  *
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#include "state.h"
 
-#pragma once
+namespace emmerich {
+StateImpl::StateImpl(LoggerFactory loggerFactory)
+    : _logger(loggerFactory("AppState")) {}
 
-#include <QObject>
-#include <QtWidgets>
-
-#include "ui_main_window.h"
-
-// namespace Ui {
-// class MainWindow;
-// }
-
-namespace emmerich::ui {
-class MainWindow : public QMainWindow {
-  Q_OBJECT
-
- private:
-  std::shared_ptr<Ui::MainWindow> _ui;
-
- public:
-  explicit MainWindow(QWidget* parent = 0);
-  ~MainWindow();
-  inline const std::shared_ptr<Ui::MainWindow>& getUi() const { return _ui; }
-
- private slots:
-  void on_actionExit_triggered();
+void StateImpl::setX(int x) {
+  if (x != _coordinate.x) {
+    _coordinate.x = x;
+    emit xHasChanged(x);
+    _logger->info(fmt::format("Coordinate X has changed into {}", x));
+  }
 };
-}  // namespace emmerich::ui
 
-#endif  // MAINWINDOW_H
+void StateImpl::setY(int y) {
+  if (y != _coordinate.y) {
+    _coordinate.y = y;
+    emit yHasChanged(y);
+    _logger->info(fmt::format("Coordinate Y has changed into {}", y));
+  }
+};
+
+void StateImpl::setCoordinate(const Coordinate& coordinate) {
+  setX(coordinate.x);
+  setY(coordinate.y);
+};
+
+fruit::Component<State> getStateComponent() {
+  return fruit::createComponent().bind<State, StateImpl>().install(
+      getLoggerComponent);
+}
+}  // namespace emmerich
