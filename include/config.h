@@ -49,7 +49,9 @@ class Config {
     return _config->operator[](key);
   }
 
-  inline std::shared_ptr<YAML::Node> getConfig() { return _config; }
+  inline const std::shared_ptr<YAML::Node>& getConfig() const {
+    return _config;
+  }
 };
 
 fruit::Component<Config> getConfigComponent();

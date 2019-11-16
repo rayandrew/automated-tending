@@ -60,7 +60,7 @@ class Stepper {
  public:
   Stepper(int step_pin, int direction_pin)
       : _step_pin(step_pin), _direction_pin(direction_pin) {}
-  virtual void      step(int n, int step_delay = 500000) = 0;
+  virtual void     step(int n, useconds_t step_delay = 5000) = 0;
   virtual Stepper& set_direction(const stepper_direction& step_direction) = 0;
   virtual ~Stepper() = default;
 };

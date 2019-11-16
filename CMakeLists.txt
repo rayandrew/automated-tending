@@ -41,6 +41,9 @@ find_package(Qt5 COMPONENTS REQUIRED
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
+# set(CMAKE_AUTOMOC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 # --------------------------------------------------------------------------------
 #                         Locate files (change as needed).
 # --------------------------------------------------------------------------------
@@ -48,6 +51,7 @@ find_package(Qt5 COMPONENTS REQUIRED
 set(SOURCES                     # All .cpp files in src/
     src/app.cpp
     src/config.cpp
+    src/state.cpp
     src/logger.cpp
     src/gpio.cpp
     src/windows/main_window.cpp
@@ -60,10 +64,21 @@ file (GLOB_RECURSE
       RELATIVE
       ${CMAKE_SOURCE_DIR} "resources/ui/*.ui") # All .ui files in resources/ui
 
-file(GLOB_RECURSE 
-     QT5_SOURCES 
-     RELATIVE 
-     ${CMAKE_SOURCE_DIR} "include/windows/*.h") # All .cpp files in src/
+set(QT5_SOURCES                     # All .h files in include/
+    include/app.h
+    include/config.h
+    include/state.h
+    include/logger.h
+    include/gpio.h
+    include/windows/main_window.h
+    include/devices/stepper.h
+    include/devices/device.h
+    include/mechanisms/finger/movement.h) 
+
+# file(GLOB_RECURSE 
+#      QT5_SOURCES 
+#      RELATIVE 
+#      ${CMAKE_SOURCE_DIR} "include/*.h") # All .cpp files in src/
 
 set(TESTFILES                   # All .cpp files in tests/
     tests/main.cpp)
@@ -86,7 +101,8 @@ add_library(${LIBRARY_NAME} OBJECT
 
 # Lib needs its header files, and users of the library must also see these (PUBLIC). (No change needed)
 target_include_directories(${LIBRARY_NAME} PUBLIC
-                           ${PROJECT_SOURCE_DIR}/include)
+                           ${PROJECT_SOURCE_DIR}/include
+                           ${Qt5Widgets_INCLUDES})
 
 # There's also (probably) doctests within the library, so we need to see this as well.
 target_link_libraries(${LIBRARY_NAME} PUBLIC
@@ -102,6 +118,8 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
 # target_set_warnings(${LIBRARY_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 # target_compile_definitions(${LIBRARY_NAME} PRIVATE ...)  # For setting manually.
 
+add_definitions(${Qt5Widgets_DEFINITIONS})
+set(CMAKE_CXX_FLAGS "${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 add_compile_definitions(BUILD_SHARED_LIBS
                         SPDLOG_MASTER_PROJECT
                         SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG
@@ -114,8 +132,7 @@ file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
 add_executable(main app/main.cpp)
 
 # Link the executable to libraries
-target_link_libraries(main PRIVATE
-                      ${LIBRARY_NAME}
+target_link_libraries(main PRIVATE ${LIBRARY_NAME}
                       spdlog::spdlog
                       fmt::fmt
                       fruit

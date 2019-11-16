@@ -38,10 +38,12 @@
 #include "config.h"
 #include "logger.h"
 
+#include "state.h"
+
 #include "devices/stepper.h"
 #include "mechanisms/finger/movement.h"
 
-#include "generalConfig.h"
+#include "general_config.h"
 
 #include "windows/main_window.h"
 

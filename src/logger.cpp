@@ -50,7 +50,7 @@ class LoggerImpl : public Logger {
           std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
 
       _logger->set_pattern(
-          fmt::format("[%d/%m/%C %T][{0}][%n][%^%l%$] %v",
+          fmt::format("[%d/%m/%C %T][{}][%n][%^%l%$] %v",
                       (*config)["general"]["name"].as<std::string>()));
 
       spdlog::register_logger(_logger);

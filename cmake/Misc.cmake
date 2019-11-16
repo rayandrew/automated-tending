@@ -5,8 +5,8 @@
 # correct definitions. Here only used to make version number available to
 # the source code. Include "config.h" (no .in suffix) in the source.
 configure_file (
-  "${PROJECT_SOURCE_DIR}/include/generalConfig.h.in"
-  "${PROJECT_BINARY_DIR}/generalConfig.h")
+  "${PROJECT_SOURCE_DIR}/include/general_config.h.in"
+  "${PROJECT_BINARY_DIR}/general_config.h")
 
 # Copy config files
 configure_file("${PROJECT_SOURCE_DIR}/config.yaml"

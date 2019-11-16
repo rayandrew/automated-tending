@@ -51,10 +51,12 @@ class Logger {
 
  public:
   Logger() = default;
-  Logger(const std::string& name): _name(std::move(name)) {}
+  Logger(const std::string& name) : _name(std::move(name)) {}
   virtual ~Logger() = default;
 
-  inline std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
+  inline const std::shared_ptr<spdlog::logger>& getLogger() const {
+    return _logger;
+  }
 
   template <typename... Args>
   inline void trace(fmt::basic_string_view<char> fmt, const Args&... args) {

@@ -49,9 +49,9 @@ class StepperImpl : public Stepper {
 
   virtual ~StepperImpl() = default;
 
-  virtual void step(int n, int step_delay = 500000) override {
-    _logger->debug("Initiate step count : {} with step_delay : {}s", n,
-                   step_delay / 1000000);
+  virtual void step(int n, useconds_t step_delay = 5000) override {
+    _logger->debug("Initiate step count : {} with step_delay : {} microseconds",
+                   n, step_delay);
 
     for (int i = 0; i <= n; i++) {
       _step_device->write(device_output::LOW);
