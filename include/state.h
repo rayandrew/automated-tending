@@ -83,10 +83,12 @@ class StateImpl : public State {
   Q_OBJECT
 
  private:
-  std::unique_ptr<Logger> _logger;
+  Logger* _logger;
 
  public:
-  INJECT(StateImpl(LoggerFactory loggerFactory));
+  StateImpl() = default;
+  //  INJECT(StateImpl(Logger* logger));
+  // INJECT(StateImpl(LoggerFactory loggerFactory));
 
   virtual ~StateImpl() = default;
 
@@ -96,7 +98,7 @@ class StateImpl : public State {
   virtual void setCoordinate(const Coordinate& coordinate);
 };
 
-fruit::Component<State> getStateComponent();
+// fruit::Component<fruit::Required<Logger>, State> getStateComponent();
 }  // namespace emmerich
 
 #endif

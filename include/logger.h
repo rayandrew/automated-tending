@@ -89,10 +89,18 @@ class Logger {
   }
 };
 
-using LoggerFactory =
-    std::function<std::unique_ptr<Logger>(const std::string&)>;
+// class LoggerImpl : public Logger {
+//  public:
+//   // INJECT(LoggerImpl(Config* config, ASSISTED(const std::string&) name));
+//   LoggerImpl(const std::string& name);
 
-fruit::Component<LoggerFactory> getLoggerComponent();
+//   virtual ~LoggerImpl() override;
+// };
+
+// using LoggerFactory =
+//     std::function<std::unique_ptr<Logger>(const std::string&)>;
+
+fruit::Component<fruit::Required<Config>, Logger> getLoggerComponent();
 }  // namespace emmerich
 
 #endif

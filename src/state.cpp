@@ -27,8 +27,7 @@
 #include "state.h"
 
 namespace emmerich {
-StateImpl::StateImpl(LoggerFactory loggerFactory)
-    : _logger(loggerFactory("AppState")) {}
+// StateImpl::StateImpl(Logger* logger): _logger(std::move(logger)) {}
 
 void StateImpl::setX(int x) {
   if (x != _coordinate.x) {
@@ -51,8 +50,7 @@ void StateImpl::setCoordinate(const Coordinate& coordinate) {
   setY(coordinate.y);
 };
 
-fruit::Component<State> getStateComponent() {
-  return fruit::createComponent().bind<State, StateImpl>().install(
-      getLoggerComponent);
-}
+// fruit::Component<fruit::Required<Logger>, State> getStateComponent() {
+//   return fruit::createComponent().bind<State, StateImpl>();
+// }
 }  // namespace emmerich

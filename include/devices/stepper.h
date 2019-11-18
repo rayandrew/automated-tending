@@ -34,8 +34,11 @@
 #include <fmt/format.h>
 #include <fruit/fruit.h>
 
-#include "devices/device.h"
+#include "config.h"
 #include "logger.h"
+#include "state.h"
+
+#include "devices/device.h"
 
 namespace emmerich::device {
 enum class stepper_direction {
@@ -65,9 +68,34 @@ class Stepper {
   virtual ~Stepper() = default;
 };
 
+<<<<<<< Updated upstream
+=======
+class StepperImpl : public Stepper {
+ private:
+  std::unique_ptr<Device> _step_device;
+  std::unique_ptr<Device> _direction_device;
+  // std::unique_ptr<Logger> _logger;
+  Logger* _logger;
+
+ public:
+  INJECT(StepperImpl(ASSISTED(int) step_pin,
+                     ASSISTED(int) direction_pin,
+                     DeviceFactory deviceFactory,
+                     Logger*       logger));
+
+  virtual ~StepperImpl() = default;
+
+  virtual void step(int n, useconds_t step_delay) override;
+
+  virtual const Stepper& set_direction(
+      const stepper_direction& step_direction) const override;
+};
+
+>>>>>>> Stashed changes
 using StepperFactory = std::function<std::unique_ptr<Stepper>(int, int)>;
 
-fruit::Component<StepperFactory> getStepperComponent();
+fruit::Component<fruit::Required<Config, Logger, State>, StepperFactory>
+getStepperComponent();
 }  // namespace emmerich::device
 
 #endif

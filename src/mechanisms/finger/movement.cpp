@@ -28,12 +28,26 @@
 
 namespace emmerich::mechanisms::finger {
 FingerMovementImpl::FingerMovementImpl(QObject*               parent,
+<<<<<<< Updated upstream
+=======
+                                       int                    x,
+                                       int                    y,
+                                       Logger*                logger,
+>>>>>>> Stashed changes
                                        Config*                config,
                                        State*                 state,
                                        device::StepperFactory stepperFactory)
     : FingerMovement(parent),
+<<<<<<< Updated upstream
       _config(std::move(config)),
       _state(std::move(state)),
+=======
+      _config(config),
+      _state(state),
+      _logger(logger),
+      _x(x),
+      _y(y),
+>>>>>>> Stashed changes
       _xStepToCm(
           (*config)["finger"]["movement"]["x"]["step_to_cm"].as<float>()),
       _yStepToCm(
@@ -44,6 +58,11 @@ FingerMovementImpl::FingerMovementImpl(QObject*               parent,
   _stepperY = stepperFactory(
       (*config)["finger"]["movement"]["y"]["step_pin"].as<int>(),
       (*config)["finger"]["movement"]["y"]["direction_pin"].as<int>());
+<<<<<<< Updated upstream
+=======
+  _state->moveToThread(this);
+  start();
+>>>>>>> Stashed changes
 }
 
 FingerMovementImpl::~FingerMovementImpl() {
@@ -118,11 +137,10 @@ void FingerMovementImpl::moveY(int y) {
 //   }
 // };
 
-fruit::Component<FingerMovementFactory> getFingerMovementComponent() {
+fruit::Component<fruit::Required<Config, Logger, State>, FingerMovementFactory>
+getFingerMovementComponent() {
   return fruit::createComponent()
       .bind<FingerMovement, FingerMovementImpl>()
-      .install(getConfigComponent)
-      .install(getStateComponent)
       .install(device::getStepperComponent);
 }
 }  // namespace emmerich::mechanisms::finger

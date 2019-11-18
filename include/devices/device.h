@@ -36,7 +36,9 @@
 #include <fmt/format.h>
 #include <fruit/fruit.h>
 
+#include "config.h"
 #include "logger.h"
+#include "state.h"
 
 #include "gpio.h"
 
@@ -103,7 +105,8 @@ class Device {
 using DeviceFactory =
     std::function<std::unique_ptr<Device>(int, const device_mode&)>;
 
-fruit::Component<DeviceFactory> getDeviceComponent();
+fruit::Component<fruit::Required<Config, Logger, State>, DeviceFactory>
+getDeviceComponent();
 
 // class Device : public AbstractDevice {
 //  protected:

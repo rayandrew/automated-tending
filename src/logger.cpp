@@ -27,11 +27,57 @@
 #include "logger.h"
 
 namespace emmerich {
+// LoggerImpl::LoggerImpl(const std::string& name) : Logger(name) {
+//   try {
+//     spdlog::init_thread_pool(8192, 1);
+
+//     bool debug = true;
+
+//     auto stdout_sink =
+//     std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+//     stdout_sink->set_level(debug ? spdlog::level::debug :
+//     spdlog::level::info);
+
+//     auto rotating_sink =
+//     std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+//         "logs/rotating.txt", 1024 * 1024 * 10, 3);
+//     rotating_sink->set_level(spdlog::level::trace);
+
+//     std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
+
+//     _logger = spdlog::get(name);
+//     if (!_logger) {
+//       _logger = std::make_shared<spdlog::async_logger>(
+//           name, begin(sinks), end(sinks), spdlog::thread_pool(),
+//           spdlog::async_overflow_policy::block);
+
+//       spdlog::register_logger(_logger);
+//     }
+
+//     // _logger->set_pattern(
+//     //     fmt::format("[%d/%m/%C %T][{}][%n][%^%l%$] %v",
+//     //                 (*config)["general"]["name"].as<std::string>()));
+
+//     _logger->set_level(spdlog::level::trace);
+//     _logger->flush_on(spdlog::level::trace);
+//   } catch (const spdlog::spdlog_ex& ex) {
+//     std::cout << "Log initialization failed: " << ex.what() << std::endl;
+//   }
+// }
+
+// LoggerImpl::~LoggerImpl() {
+//   // spdlog::drop(_name);
+//   spdlog::drop_all();
+//   spdlog::shutdown();
+// }
+
 class LoggerImpl : public Logger {
  public:
-  INJECT(LoggerImpl(Config* config, ASSISTED(const std::string&) name))
-      : Logger(name) {
+  INJECT(LoggerImpl(Config* config))
+      : Logger(std::move((*config)["general"]["name"].as<std::string>())) {
     try {
+
+      spdlog::init_thread_pool(8192, 1);
       bool debug = (*config)["general"]["debug"].as<bool>();
 
       auto stdout_sink =
@@ -46,12 +92,21 @@ class LoggerImpl : public Logger {
 
       std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
 
+<<<<<<< Updated upstream
       _logger =
           std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
+=======
+      _logger = spdlog::get(_name);
+      if (!_logger) {
+        _logger = std::make_shared<spdlog::async_logger>(
+            _name, begin(sinks), end(sinks), spdlog::thread_pool(),
+            spdlog::async_overflow_policy::block);
 
-      _logger->set_pattern(
-          fmt::format("[%d/%m/%C %T][{}][%n][%^%l%$] %v",
-                      (*config)["general"]["name"].as<std::string>()));
+        spdlog::register_logger(_logger);
+      }
+>>>>>>> Stashed changes
+
+      _logger->set_pattern("[%d/%m/%C %T][%n][%^%l%$] %v");
 
       spdlog::register_logger(_logger);
       _logger->set_level(spdlog::level::trace);
@@ -60,11 +115,19 @@ class LoggerImpl : public Logger {
     }
   }
 
-  virtual ~LoggerImpl() { spdlog::drop(_name); }
+  virtual ~LoggerImpl() {
+    spdlog::drop_all();
+    spdlog::shutdown();
+  }
 };
 
+<<<<<<< Updated upstream
 fruit::Component<LoggerFactory> getLoggerComponent() {
   return fruit::createComponent().bind<Logger, LoggerImpl>().install(
       getConfigComponent);
+=======
+fruit::Component<fruit::Required<Config>, Logger> getLoggerComponent() {
+  return fruit::createComponent().bind<Logger, LoggerImpl>();
+>>>>>>> Stashed changes
 }
 }  // namespace emmerich

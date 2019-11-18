@@ -27,6 +27,11 @@
 #include "config.h"
 
 namespace emmerich {
+// Config::Config() {
+//   _config = std::make_shared<YAML::Node>(YAML::LoadFile("config.yaml"));
+//   std::cout << "TEST x0" << _config << std::endl;
+//   std::cout << "TEST x1" << (*_config) << std::endl;
+// };
 class ConfigImpl : public Config {
  public:
   INJECT(ConfigImpl()) {

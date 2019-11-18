@@ -37,6 +37,7 @@
 #include <fruit/fruit.h>
 
 #include "config.h"
+#include "logger.h"
 #include "state.h"
 
 #include "devices/stepper.h"
@@ -59,6 +60,7 @@ class FingerMovementImpl : public FingerMovement {
  private:
   Config*                          _config;
   State*                           _state;
+  Logger*                          _logger;
   std::unique_ptr<device::Stepper> _stepperX;
   std::unique_ptr<device::Stepper> _stepperY;
   const float                      _xStepToCm;
@@ -72,6 +74,12 @@ class FingerMovementImpl : public FingerMovement {
 
  public:
   INJECT(FingerMovementImpl(ASSISTED(QObject*) parent,
+<<<<<<< Updated upstream
+=======
+                            ASSISTED(int) x,
+                            ASSISTED(int) y,
+                            Logger*                logger,
+>>>>>>> Stashed changes
                             Config*                config,
                             State*                 state,
                             device::StepperFactory stepperFactory));
@@ -85,7 +93,8 @@ class FingerMovementImpl : public FingerMovement {
 using FingerMovementFactory =
     std::function<std::unique_ptr<FingerMovement>(QObject*)>;
 
-fruit::Component<FingerMovementFactory> getFingerMovementComponent();
+fruit::Component<fruit::Required<Config, Logger, State>, FingerMovementFactory>
+getFingerMovementComponent();
 }  // namespace emmerich::mechanisms::finger
 
 #endif

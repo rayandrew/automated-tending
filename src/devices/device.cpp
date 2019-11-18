@@ -108,16 +108,17 @@ const char* DeviceException::what() const noexcept {
 
 class DeviceImpl : public Device {
  private:
-  std::unique_ptr<Logger> _logger;
+  // std::unique_ptr<Logger> _logger;
 
  public:
   DeviceImpl(int pin) : Device(pin) {}
 
   INJECT(DeviceImpl(ASSISTED(int) pin,
                     ASSISTED(const device_mode&) mode,
-                    LoggerFactory loggerFactory))
-      : Device(pin, mode),
-        _logger(loggerFactory(fmt::format("Device Pin #{}", pin))) {
+                    Logger* logger))
+      : Device(pin, mode)
+  // _logger(loggerFactory(fmt::format("Device Pin #{}", pin)))
+  {
     setMode(mode);
   }
 
@@ -167,8 +168,8 @@ class DeviceImpl : public Device {
   }
 };
 
-fruit::Component<DeviceFactory> getDeviceComponent() {
-  return fruit::createComponent().bind<Device, DeviceImpl>().install(
-      getLoggerComponent);
+fruit::Component<fruit::Required<Config, Logger, State>, DeviceFactory>
+getDeviceComponent() {
+  return fruit::createComponent().bind<Device, DeviceImpl>();
 }
 }  // namespace emmerich::device

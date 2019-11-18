@@ -68,6 +68,10 @@ set(QT5_SOURCES                     # All .h files in include/
     include/app.h
     include/config.h
     include/state.h
+<<<<<<< Updated upstream
+=======
+    # include/qspdlog.h
+>>>>>>> Stashed changes
     include/logger.h
     include/gpio.h
     include/windows/main_window.h

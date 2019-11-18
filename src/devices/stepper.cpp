@@ -27,11 +27,32 @@
 #include "devices/stepper.h"
 
 namespace emmerich::device {
+<<<<<<< Updated upstream
 class StepperImpl : public Stepper {
  private:
   std::unique_ptr<Device> _step_device;
   std::unique_ptr<Device> _direction_device;
   std::unique_ptr<Logger> _logger;
+=======
+StepperImpl::StepperImpl(int           step_pin,
+                         int           direction_pin,
+                         DeviceFactory deviceFactory,
+                         Logger*       logger)
+    : Stepper(step_pin, direction_pin),
+      _step_device(deviceFactory(step_pin, device_mode::OUTPUT)),
+      _direction_device(deviceFactory(direction_pin, device_mode::OUTPUT)),
+      _logger(logger)
+// _logger(loggerFactory(
+//     fmt::format("Stepper(Step#{})(Dir#{})", step_pin, direction_pin)))
+{
+  _logger->debug("Stepper with step pin {} and direction pin {} initialized!",
+                 step_pin, direction_pin);
+}
+
+void StepperImpl::step(int n, useconds_t step_delay = 5000) {
+  _logger->debug("Initiate step count : {} with step_delay : {} microseconds",
+                 n, step_delay);
+>>>>>>> Stashed changes
 
  public:
   INJECT(StepperImpl(ASSISTED(int) step_pin,
@@ -70,11 +91,18 @@ class StepperImpl : public Stepper {
   }
 };
 
+<<<<<<< Updated upstream
 fruit::Component<StepperFactory> getStepperComponent() {
   return fruit::createComponent()
       .bind<Stepper, StepperImpl>()
       .install(getLoggerComponent)
       .install(getDeviceComponent);
   ;
+=======
+fruit::Component<fruit::Required<Config, Logger, State>, StepperFactory>
+getStepperComponent() {
+  return fruit::createComponent().bind<Stepper, StepperImpl>().install(
+      getDeviceComponent);
+>>>>>>> Stashed changes
 }
 }  // namespace emmerich::device
