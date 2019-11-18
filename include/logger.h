@@ -58,6 +58,12 @@ class Logger {
     return _logger;
   }
 
+  inline spdlog::level::level_enum level() const { return _logger->level(); }
+
+  inline void set_level(const spdlog::level::level_enum& log_level) {
+    _logger->set_level(log_level);
+  }
+
   template <typename... Args>
   inline void trace(fmt::basic_string_view<char> fmt, const Args&... args) {
     _logger->trace(fmt, args...);
@@ -89,10 +95,7 @@ class Logger {
   }
 };
 
-using LoggerFactory =
-    std::function<std::unique_ptr<Logger>(const std::string&)>;
-
-fruit::Component<LoggerFactory> getLoggerComponent();
+fruit::Component<Logger> getLoggerComponent();
 }  // namespace emmerich
 
 #endif

@@ -54,118 +54,54 @@ const char* DeviceException::what() const noexcept {
   return message.c_str();
 }
 
-// Device::Device(int pin) : AbstractDevice(pin) {}
+DeviceImpl::DeviceImpl(int pin, const device_mode& mode, Logger* logger) : Device(pin, mode), _logger(std::move(logger))
+{
+  setMode(mode);
+}
 
-// Device::Device(int pin, const device_mode& mode) : AbstractDevice(pin, mode)
-// {
-//   setMode(mode);
-// }
+Device& DeviceImpl::setMode(const device_mode& mode) {
+  _mode = mode;
 
-// AbstractDevice& Device::setMode(const device_mode& mode) {
-//   _mode = mode;
-
-//   if (mode == device_mode::INPUT) {
-//     gpioSetMode(_pin, PI_INPUT);
-//   } else {
-//     gpioSetMode(_pin, PI_OUTPUT);
-//   }
-
-//   return *this;
-// }
-
-// void Device::write(const device_output& output) {
-//   if (_mode == device_mode::INPUT) {
-//     throw DeviceException("DEVICE_MODE 'INPUT' cannot send output to pin",
-//     _pin,
-//                           _mode, output);
-//   }
-
-//   switch (output) {
-//     case device_output::LOW:
-//       gpioWrite(_pin, PI_LOW);
-//       break;
-//     case device_output::HIGH:
-//       gpioWrite(_pin, PI_HIGH);
-//       break;
-//     default:
-//       throw DeviceException("Device output should not reach here", _pin,
-//       _mode,
-//                             output);
-//   }
-// }
-
-// device_output Device::read() const {
-//   if (_mode == device_mode::OUTPUT) {
-//     throw DeviceException("DEVICE_MODE 'OUTPUT' cannot get input from the
-//     pin",
-//                           _pin, _mode, device_output::LOW);
-//   }
-
-//   int value = gpioRead(_pin);
-
-//   return value == 0 ? device_output::LOW : device_output::HIGH;
-// }
-
-class DeviceImpl : public Device {
- private:
-  std::unique_ptr<Logger> _logger;
-
- public:
-  DeviceImpl(int pin) : Device(pin) {}
-
-  INJECT(DeviceImpl(ASSISTED(int) pin,
-                    ASSISTED(const device_mode&) mode,
-                    LoggerFactory loggerFactory))
-      : Device(pin, mode),
-        _logger(loggerFactory(fmt::format("Device Pin #{}", pin))) {
-    setMode(mode);
+  if (mode == device_mode::INPUT) {
+    gpioSetMode(_pin, PI_INPUT);
+  } else {
+    gpioSetMode(_pin, PI_OUTPUT);
   }
 
-  virtual ~DeviceImpl() = default;
+  return *this;
+}
 
-  virtual Device& setMode(const device_mode& mode) override {
-    _mode = mode;
-
-    if (mode == device_mode::INPUT) {
-      gpioSetMode(_pin, PI_INPUT);
-    } else {
-      gpioSetMode(_pin, PI_OUTPUT);
-    }
-
-    return *this;
+void DeviceImpl::write(const device_output& output) {
+  if (_mode == device_mode::INPUT) {
+    throw DeviceException("DEVICE_MODE 'INPUT' cannot send output to pin",
+    _pin,
+                          _mode, output);
   }
 
-  virtual void write(const device_output& output) override {
-    if (_mode == device_mode::INPUT) {
-      throw DeviceException("DEVICE_MODE 'INPUT' cannot send output to pin",
-                            _pin, _mode, output);
-    }
+  switch (output) {
+    case device_output::LOW:
+      gpioWrite(_pin, PI_LOW);
+      break;
+    case device_output::HIGH:
+      gpioWrite(_pin, PI_HIGH);
+      break;
+    default:
+      throw DeviceException("Device output should not reach here", _pin,
+      _mode,
+                            output);
+  }
+}
 
-    switch (output) {
-      case device_output::LOW:
-        gpioWrite(_pin, PI_LOW);
-        break;
-      case device_output::HIGH:
-        gpioWrite(_pin, PI_HIGH);
-        break;
-      default:
-        throw DeviceException("Device output should not reach here", _pin,
-                              _mode, output);
-    }
+device_output DeviceImpl::read() const {
+  if (_mode == device_mode::OUTPUT) {
+    throw DeviceException("DEVICE_MODE 'OUTPUT' cannot get input from the pin",
+                          _pin, _mode, device_output::LOW);
   }
 
-  device_output read() const override {
-    if (_mode == device_mode::OUTPUT) {
-      throw DeviceException(
-          "DEVICE_MODE 'OUTPUT' cannot get input from the pin", _pin, _mode,
-          device_output::LOW);
-    }
+  int value = gpioRead(_pin);
 
-    int value = gpioRead(_pin);
-
-    return value == 0 ? device_output::LOW : device_output::HIGH;
-  }
-};
+  return value == 0 ? device_output::LOW : device_output::HIGH;
+}
 
 fruit::Component<DeviceFactory> getDeviceComponent() {
   return fruit::createComponent().bind<Device, DeviceImpl>().install(

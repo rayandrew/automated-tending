@@ -27,64 +27,80 @@
 #include "app.h"
 
 namespace emmerich {
-class AppImpl : public App {
- private:
-  const std::unique_ptr<QApplication>       _qApp;
-  const std::unique_ptr<ui::MainWindow>     _window;
-  Config*                                   _config;
-  State*                                    _state;
-  std::unique_ptr<Logger>                   _logger;
-  mechanisms::finger::FingerMovementFactory _fingerMovementFactory;
+AppImpl::AppImpl(
+    int                                       argc,
+    char**                                    argv,
+    Config*                                   config,
+    Logger*                                   logger,
+    State*                                    state,
+    mechanisms::finger::FingerMovementFactory fingerMovementFactory)
+    : _qApp(std::make_unique<QApplication>(argc, argv)),
+      _window(std::make_unique<ui::MainWindow>()),
+      _config(std::move(config)),
+      _state(std::move(state)),
+      _logger(std::move(logger)),
+      _qSpdlog(std::make_shared<QSpdlog>()),
+      _fingerMovementFactory(fingerMovementFactory) {
+  _ui = _window->getUi();
 
- private:
-  void setupSignalsAndSlots() {
-    QObject::connect(state, SIGNAL(xHasChanged(QString)),
-                     stateFingerPositionValueX, SLOT(display(QString)));
-    QObject::connect(state, SIGNAL(yHasChanged(QString)),
-                     stateFingerPositionValueY, SLOT(display(QString)));
+  setupLogger();
+  setupSignalsAndSlots();
 
-    int i = 1;
-    QObject::connect(tendingButton, &QPushButton::clicked, [=]() mutable {
-      _fingerMovementFactory(nullptr, i++, 20);
-    });
+  _window->setWindowState(Qt::WindowMaximized);
+  _window->show();
+}
+
+void AppImpl::setupSignalsAndSlots() {
+  QPushButton* tendingButton = _ui->tendingButton;
+  QLCDNumber*  stateFingerPositionValueX = _ui->stateFingerPositionValueX;
+  QLCDNumber*  stateFingerPositionValueY = _ui->stateFingerPositionValueY;
+
+  QObject::connect(_state, SIGNAL(xHasChanged(QString)),
+                   stateFingerPositionValueX, SLOT(display(QString)));
+  QObject::connect(_state, SIGNAL(yHasChanged(QString)),
+                   stateFingerPositionValueY, SLOT(display(QString)));
+
+  int i = 1;
+  QObject::connect(tendingButton, &QPushButton::clicked,
+                   [=]() mutable { _fingerMovementFactory(nullptr, i++, 20); });
+}
+
+void AppImpl::setupLogger() {
+  _logger->getLogger()->sinks().push_back(_qSpdlog);
+
+  _logger->info("Automated Tending Project v{}.{}.{}.{}", PROJECT_VERSION_MAJOR,
+                PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
+                PROJECT_VERSION_TWEAK);
+
+  for (const auto& log_level_name : SPDLOG_LEVEL_NAMES) {
+    _ui->cmbox_log_level->addItem(log_level_name);
   }
 
- public:
-  INJECT(
-      AppImpl(ASSISTED(int) argc,
-              ASSISTED(char**) argv,
-              Config*                                   config,
-              State*                                    state,
-              LoggerFactory                             loggerFactory,
-              mechanisms::finger::FingerMovementFactory fingerMovementFactory))
-      : _qApp(std::make_unique<QApplication>(argc, argv)),
-        _window(std::make_unique<ui::MainWindow>()),
-        _config(config),
-        _state(state),
-        _logger(loggerFactory("App")),
-        _fingerMovementFactory(fingerMovementFactory) {
-    _logger->info("Automated Tending Project v{}.{}.{}.{}",
-                  PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
-                  PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
+  _ui->cmbox_log_level->setCurrentText(QString::fromStdString(
+      fmt::format(spdlog::level::to_string_view(_logger->level()))));
+  QObject::connect(_ui->cmbox_log_level, &QComboBox::currentTextChanged, this,
+                   [this](const QString& level) {
+                     _logger->set_level(spdlog::level::info);
+                     auto level_str = level.toStdString();
+                     _logger->info("Log level: " + level_str);
+                     _logger->set_level(spdlog::level::from_str(level_str));
+                   });
+  QObject::connect(_qSpdlog.get(), &QSpdlog::newLogEntry, this,
+                   &App::addLogEntry);
+  QObject::connect(_ui->btn_clear_log_output, &QPushButton::released,
+                   _ui->ptextedit_log_output, &QPlainTextEdit::clear);
+}
 
-    // QPushButton* tendingButton
-    // =_window->findChild<QPushButton*>("tending_button");
-    QPushButton* tendingButton = _window->getUi()->tendingButton;
-    QLCDNumber*  stateFingerPositionValueX =
-        _window->getUi()->stateFingerPositionValueX;
-    QLCDNumber* stateFingerPositionValueY =
-        _window->getUi()->stateFingerPositionValueY;
-
-    setupSignalsAndSlots();
-
-    _window->setWindowState(Qt::WindowMaximized);
-    _window->show();
+void AppImpl::addLogEntry(const QString& msg) {
+  auto line_count = _ui->ptextedit_log_output->document()->lineCount();
+  auto msg_formatted =
+      QString("%1 %2").arg(QString::number(line_count), 4).arg(msg);
+  _ui->ptextedit_log_output->insertPlainText(msg_formatted);
+  if (_ui->chkbox_log_autoscroll->isChecked()) {
+    _ui->ptextedit_log_output->verticalScrollBar()->setValue(
+        _ui->ptextedit_log_output->verticalScrollBar()->maximum());
   }
-
-  virtual ~AppImpl() = default;
-
-  int run() override { return _qApp->exec(); }
-};
+}
 
 fruit::Component<AppFactory> getAppComponent() {
   return fruit::createComponent()

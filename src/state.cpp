@@ -27,8 +27,7 @@
 #include "state.h"
 
 namespace emmerich {
-StateImpl::StateImpl(LoggerFactory loggerFactory)
-    : _logger(loggerFactory("AppState")) {}
+StateImpl::StateImpl(Logger* logger) : _logger(std::move(logger)) {}
 
 void StateImpl::setX(int x) {
   if (x != _coordinate.x) {

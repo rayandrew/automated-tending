@@ -70,62 +70,6 @@ void FingerMovementImpl::moveY(int y) {
   _stepperX->step(roundStepToCm(y, _yStepToCm));
 }
 
-// class FingerMovementImpl : public FingerMovement {
-//   Q_OBJECT
-
-//  private:
-//   Config*                          _config;
-//   State*                           _state;
-//   std::unique_ptr<device::Stepper> _stepperX;
-//   std::unique_ptr<device::Stepper> _stepperY;
-//   const float                      _xStepToCm;
-//   const float                      _yStepToCm;
-
-//   static int roundStepToCm(int step, float stepToCm) {
-//     float stepInCm = ceil(step * stepToCm);
-//     // return int(step + 0.5 - (step < 0));
-//     return (int)stepInCm;
-//   }
-
-//  public:
-//   INJECT(FingerMovementImpl(ASSISTED(QObject*) parent,
-//                             Config*                config,
-//                             State*                 state,
-//                             device::StepperFactory stepperFactory))
-//       : FingerMovement(parent),
-//         _config(std::move(config)),
-//         _state(std::move(state)),
-//         _xStepToCm(
-//             (*config)["finger"]["movement"]["x"]["step_to_cm"].as<float>()),
-//         _yStepToCm(
-//             (*config)["finger"]["movement"]["y"]["step_to_cm"].as<float>()) {
-//     _stepperX = stepperFactory(
-//         (*config)["finger"]["movement"]["x"]["step_pin"].as<int>(),
-//         (*config)["finger"]["movement"]["x"]["direction_pin"].as<int>());
-//     _stepperY = stepperFactory(
-//         (*config)["finger"]["movement"]["y"]["step_pin"].as<int>(),
-//         (*config)["finger"]["movement"]["y"]["direction_pin"].as<int>());
-//   }
-
-//   virtual ~FingerMovementImpl() override {
-//     quit();
-//     wait();
-//   };
-
-//   virtual void run() override {
-
-//   }
-
-//   virtual void moveX(int x) override {
-//     _stepperX->step(roundStepToCm(x, _xStepToCm));
-//     _state->setX(x);
-//   }
-
-//   virtual void moveY(int y) override {
-//     _stepperX->step(roundStepToCm(y, _yStepToCm));
-//   }
-// };
-
 fruit::Component<FingerMovementFactory> getFingerMovementComponent() {
   return fruit::createComponent()
       .bind<FingerMovement, FingerMovementImpl>()

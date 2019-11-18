@@ -54,9 +54,15 @@ set(SOURCES                     # All .cpp files in src/
     src/state.cpp
     src/logger.cpp
     src/gpio.cpp
+
+    src/utils/qspdlog.cpp
+    src/utils/worker.cpp
+
     src/windows/main_window.cpp
+
     src/devices/stepper.cpp
     src/devices/device.cpp
+
     src/mechanisms/finger/movement.cpp) 
 
 file (GLOB_RECURSE
@@ -68,12 +74,17 @@ set(QT5_SOURCES                     # All .h files in include/
     include/app.h
     include/config.h
     include/state.h
-    include/qspdlog.h
     include/logger.h
     include/gpio.h
+    
+    include/utils/qspdlog.h
+    include/utils/worker.h
+    
     include/windows/main_window.h
+
     include/devices/stepper.h
     include/devices/device.h
+
     include/mechanisms/finger/movement.h) 
 
 # file(GLOB_RECURSE 

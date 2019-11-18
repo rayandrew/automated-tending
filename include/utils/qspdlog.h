@@ -1,8 +1,10 @@
 /*
- * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
- * SPDX-License-Identifier: MIT
+ * Copyright (c) 2018 Stefan Broekman.
+ * Modified by Ray Andrew <raydreww@gmail.com>
  *
- * Copyright (c) 2019 Ray Andrew
+ *  This file is distributed under the MIT license.
+ *  See: https://stefanbroekman.nl
+ *  See: https://github.com/Broekman/Qt5_template
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,37 +23,37 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
-#ifdef ENABLE_DOCTEST_IN_LIBRARY
-#define DOCTEST_CONFIG_IMPLEMENT
+#ifndef SPDLOG_QSPDLOG_HPP
+#define SPDLOG_QSPDLOG_HPP
 
-#include <doctest.h>
+#pragma once
+
+#include <memory>
+
+#include <QString>
+#include <QWidget>
+
+#include <fmt/format.h>
+#include <spdlog/async_logger.h>
+#include <spdlog/sinks/base_sink.h>
+
+namespace emmerich {
+class QSpdlog : public QWidget, public spdlog::sinks::base_sink<std::mutex> {
+  Q_OBJECT
+
+ public:
+  QSpdlog(QWidget* parent = nullptr) : QWidget(parent) {}
+  virtual ~QSpdlog() = default;
+
+ protected:
+  virtual void sink_it_(const spdlog::details::log_msg& msg) override;
+  virtual void flush_() override;
+
+ signals:
+  void newLogEntry(const QString& msg);
+};
+}  // namespace spdlog
 
 #endif
-
-#include <stdlib.h>
-#include <cassert>
-#include <iostream>
-
-#include <QApplication>
-
-#include <fruit/fruit.h>
-#include <spdlog/spdlog.h>
-
-#include "app.h"
-#include "logger.h"
-
-int main(int argc, char** argv) {
-  qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "1");
-  QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
-  fruit::Injector<emmerich::AppFactory> injector(emmerich::getAppComponent);
-  emmerich::AppFactory                  appFactory(injector);
-
-  std::unique_ptr<emmerich::App> app = appFactory(argc, argv);
-
-  int exit_code = app->run();
-  return exit_code;
-}

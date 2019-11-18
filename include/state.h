@@ -28,7 +28,7 @@
 #define STATE_H_
 
 #include <QObject>
-// #include <QString>
+#include <QString>
 
 #include <fmt/format.h>
 #include <fruit/fruit.h>
@@ -84,10 +84,10 @@ class StateImpl : public State {
   Q_OBJECT
 
  private:
-  std::unique_ptr<Logger> _logger;
+  Logger* _logger;
 
  public:
-  INJECT(StateImpl(LoggerFactory loggerFactory));
+  INJECT(StateImpl(Logger* logger));
 
   virtual ~StateImpl() = default;
 

@@ -29,33 +29,73 @@
 
 #pragma once
 
+#include <fmt/format.h>
 #include <fruit/fruit.h>
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
+#include <QObject>
 
 #include <QApplication>
+#include <QString>
 
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QLCDNumber>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
 
+#include "general_config.h"
+
 #include "config.h"
 #include "logger.h"
-
 #include "state.h"
+
+#include "utils/qspdlog.h"
 
 #include "devices/stepper.h"
 #include "mechanisms/finger/movement.h"
 
-#include "general_config.h"
-
 #include "windows/main_window.h"
 
 namespace emmerich {
-class App {
+class App : public QObject {
+  Q_OBJECT
  public:
   virtual int run() = 0;
   virtual ~App() = default;
+
+ public slots:
+  virtual void addLogEntry(const QString& msg) = 0;
+};
+
+class AppImpl : public App {
+  Q_OBJECT
+ private:
+  const std::unique_ptr<QApplication>       _qApp;
+  const std::unique_ptr<ui::MainWindow>     _window;
+  std::shared_ptr<Ui::MainWindow>           _ui;
+  Config*                                   _config;
+  Logger*                                   _logger;
+  State*                                    _state;
+  const std::shared_ptr<QSpdlog>    _qSpdlog;
+  mechanisms::finger::FingerMovementFactory _fingerMovementFactory;
+
+ private:
+  void setupLogger();
+  void setupSignalsAndSlots();
+
+ public:
+  INJECT(
+      AppImpl(ASSISTED(int) argc,
+              ASSISTED(char**) argv,
+              Config*                                   config,
+              Logger*                                   logger,
+              State*                                    state,
+              mechanisms::finger::FingerMovementFactory fingerMovementFactory));
+  virtual ~AppImpl() = default;
+  inline virtual int run() override { return _qApp->exec(); }
+
+ public slots:
+  virtual void addLogEntry(const QString& msg) override;
 };
 
 using AppFactory = std::function<std::unique_ptr<App>(int, char**)>;

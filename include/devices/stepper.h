@@ -74,13 +74,13 @@ class StepperImpl : public Stepper {
  private:
   std::unique_ptr<Device> _step_device;
   std::unique_ptr<Device> _direction_device;
-  std::unique_ptr<Logger> _logger;
+  Logger*                 _logger;
 
  public:
   INJECT(StepperImpl(ASSISTED(int) step_pin,
                      ASSISTED(int) direction_pin,
-                     DeviceFactory deviceFactory,
-                     LoggerFactory loggerFactory));
+                     Logger*       logger,
+                     DeviceFactory deviceFactory));
 
   virtual ~StepperImpl() = default;
 

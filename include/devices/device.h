@@ -100,20 +100,27 @@ class Device {
   inline device_mode    getMode() const { return _mode; }
 };
 
+class DeviceImpl: public Device {
+  private:
+  Logger* _logger;
+  
+ public:
+  DeviceImpl() = default;
+  INJECT(DeviceImpl(ASSISTED(int) pin,
+                    ASSISTED(const device_mode&) mode,
+                    Logger* logger));
+  DeviceImpl(int pin) : Device(pin) {}
+  virtual ~DeviceImpl() = default;
+
+  virtual Device&       setMode(const device_mode& mode) override;
+  virtual void          write(const device_output& level) override;
+  virtual device_output read() const override;
+};
+
 using DeviceFactory =
     std::function<std::unique_ptr<Device>(int, const device_mode&)>;
 
 fruit::Component<DeviceFactory> getDeviceComponent();
-
-// class Device : public AbstractDevice {
-//  protected:
-//   Device(int pin);
-//   Device(int pin, const device_mode& mode);
-//   virtual ~Device() = default;
-//   virtual AbstractDevice& setMode(const device_mode& mode);
-//   virtual void            write(const device_output& output);
-//   virtual device_output   read() const;
-// };
 }  // namespace emmerich::device
 
 #endif
