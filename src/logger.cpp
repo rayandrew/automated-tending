@@ -46,15 +46,21 @@ class LoggerImpl : public Logger {
 
       std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
 
-      _logger =
-          std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
+      _logger = spdlog::get(name);
+      if (!_logger) {
+        _logger = std::make_shared<spdlog::async_logger>(
+            name, begin(sinks), end(sinks), spdlog::thread_pool(),
+            spdlog::async_overflow_policy::block);
+
+        spdlog::register_logger(_logger);
+      }
 
       _logger->set_pattern(
           fmt::format("[%d/%m/%C %T][{}][%n][%^%l%$] %v",
                       (*config)["general"]["name"].as<std::string>()));
 
-      spdlog::register_logger(_logger);
       _logger->set_level(spdlog::level::trace);
+      _logger->flush_on(spdlog::level::trace);
     } catch (const spdlog::spdlog_ex& ex) {
       std::cout << "Log initialization failed: " << ex.what() << std::endl;
     }
@@ -63,7 +69,7 @@ class LoggerImpl : public Logger {
   virtual ~LoggerImpl() { spdlog::drop(_name); }
 };
 
-fruit::Component<LoggerFactory> getLoggerComponent() {
+fruit::Component<const Logger> getLoggerComponent() {
   return fruit::createComponent().bind<Logger, LoggerImpl>().install(
       getConfigComponent);
 }

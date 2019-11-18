@@ -48,9 +48,17 @@ class FingerMovement : public QThread {
  public:
   FingerMovement(QObject* parent = nullptr) : QThread(parent){};
   virtual ~FingerMovement() = default;
+
+ public slots:
   virtual void run() = 0;
   virtual void moveX(int x) = 0;
   virtual void moveY(int y) = 0;
+
+ signals:
+  void move();
+  void result();
+  void error();
+  void finished();
 };
 
 class FingerMovementImpl : public FingerMovement {
@@ -61,6 +69,8 @@ class FingerMovementImpl : public FingerMovement {
   State*                           _state;
   std::unique_ptr<device::Stepper> _stepperX;
   std::unique_ptr<device::Stepper> _stepperY;
+  const int                        _x;
+  const int                        _y;
   const float                      _xStepToCm;
   const float                      _yStepToCm;
 
@@ -72,6 +82,8 @@ class FingerMovementImpl : public FingerMovement {
 
  public:
   INJECT(FingerMovementImpl(ASSISTED(QObject*) parent,
+                            ASSISTED(int) x,
+                            ASSISTED(int) y,
                             Config*                config,
                             State*                 state,
                             device::StepperFactory stepperFactory));
@@ -83,7 +95,7 @@ class FingerMovementImpl : public FingerMovement {
 };
 
 using FingerMovementFactory =
-    std::function<std::unique_ptr<FingerMovement>(QObject*)>;
+    std::function<std::unique_ptr<FingerMovement>(QObject*, int, int)>;
 
 fruit::Component<FingerMovementFactory> getFingerMovementComponent();
 }  // namespace emmerich::mechanisms::finger

@@ -28,12 +28,16 @@
 
 namespace emmerich::mechanisms::finger {
 FingerMovementImpl::FingerMovementImpl(QObject*               parent,
+                                       int                    x,
+                                       int                    y,
                                        Config*                config,
                                        State*                 state,
                                        device::StepperFactory stepperFactory)
     : FingerMovement(parent),
       _config(std::move(config)),
       _state(std::move(state)),
+      _x(x),
+      _y(y),
       _xStepToCm(
           (*config)["finger"]["movement"]["x"]["step_to_cm"].as<float>()),
       _yStepToCm(
@@ -44,6 +48,8 @@ FingerMovementImpl::FingerMovementImpl(QObject*               parent,
   _stepperY = stepperFactory(
       (*config)["finger"]["movement"]["y"]["step_pin"].as<int>(),
       (*config)["finger"]["movement"]["y"]["direction_pin"].as<int>());
+  // _state->moveToThread(this);
+  start();
 }
 
 FingerMovementImpl::~FingerMovementImpl() {
@@ -51,7 +57,9 @@ FingerMovementImpl::~FingerMovementImpl() {
   wait();
 };
 
-void FingerMovementImpl::run() {}
+void FingerMovementImpl::run() {
+  moveX(_x);
+}
 
 void FingerMovementImpl::moveX(int x) {
   _stepperX->step(roundStepToCm(x, _xStepToCm));

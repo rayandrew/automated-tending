@@ -35,6 +35,10 @@
 
 #include <QApplication>
 
+#include <QtWidgets/QLCDNumber>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+
 #include "config.h"
 #include "logger.h"
 

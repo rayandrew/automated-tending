@@ -68,6 +68,7 @@ set(QT5_SOURCES                     # All .h files in include/
     include/app.h
     include/config.h
     include/state.h
+    include/qspdlog.h
     include/logger.h
     include/gpio.h
     include/windows/main_window.h

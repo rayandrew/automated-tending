@@ -33,7 +33,8 @@ StateImpl::StateImpl(LoggerFactory loggerFactory)
 void StateImpl::setX(int x) {
   if (x != _coordinate.x) {
     _coordinate.x = x;
-    emit xHasChanged(x);
+    emit xHasChanged(QString::number(x));
+    // emit xHasChanged(x);
     _logger->info(fmt::format("Coordinate X has changed into {}", x));
   }
 };
@@ -41,7 +42,8 @@ void StateImpl::setX(int x) {
 void StateImpl::setY(int y) {
   if (y != _coordinate.y) {
     _coordinate.y = y;
-    emit yHasChanged(y);
+    emit yHasChanged(QString::number(y));
+    // emit xHasChanged(y);
     _logger->info(fmt::format("Coordinate Y has changed into {}", y));
   }
 };

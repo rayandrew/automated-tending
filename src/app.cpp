@@ -29,12 +29,25 @@
 namespace emmerich {
 class AppImpl : public App {
  private:
-  const std::unique_ptr<QApplication>                 _qApp;
-  const std::unique_ptr<ui::MainWindow>               _window;
-  Config*                                             _config;
-  State*                                              _state;
-  std::unique_ptr<Logger>                             _logger;
-  std::unique_ptr<mechanisms::finger::FingerMovement> _fingerMovement;
+  const std::unique_ptr<QApplication>       _qApp;
+  const std::unique_ptr<ui::MainWindow>     _window;
+  Config*                                   _config;
+  State*                                    _state;
+  std::unique_ptr<Logger>                   _logger;
+  mechanisms::finger::FingerMovementFactory _fingerMovementFactory;
+
+ private:
+  void setupSignalsAndSlots() {
+    QObject::connect(state, SIGNAL(xHasChanged(QString)),
+                     stateFingerPositionValueX, SLOT(display(QString)));
+    QObject::connect(state, SIGNAL(yHasChanged(QString)),
+                     stateFingerPositionValueY, SLOT(display(QString)));
+
+    int i = 1;
+    QObject::connect(tendingButton, &QPushButton::clicked, [=]() mutable {
+      _fingerMovementFactory(nullptr, i++, 20);
+    });
+  }
 
  public:
   INJECT(
@@ -49,20 +62,26 @@ class AppImpl : public App {
         _config(config),
         _state(state),
         _logger(loggerFactory("App")),
-        _fingerMovement(fingerMovementFactory(nullptr)) {
+        _fingerMovementFactory(fingerMovementFactory) {
     _logger->info("Automated Tending Project v{}.{}.{}.{}",
                   PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
                   PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
-    // _fingerMovementFactoryProvider.get()->moveX(10);
+
     // QPushButton* tendingButton
     // =_window->findChild<QPushButton*>("tending_button");
-    QPushButton* tendingButton = _window->getUi()->tending_button;
-    QObject::connect(tendingButton, &QPushButton::clicked,
-                     [=]() { tendingButton->setText("Hi"); });
+    QPushButton* tendingButton = _window->getUi()->tendingButton;
+    QLCDNumber*  stateFingerPositionValueX =
+        _window->getUi()->stateFingerPositionValueX;
+    QLCDNumber* stateFingerPositionValueY =
+        _window->getUi()->stateFingerPositionValueY;
+
+    setupSignalsAndSlots();
+
+    _window->setWindowState(Qt::WindowMaximized);
     _window->show();
   }
 
-  virtual ~AppImpl() { spdlog::drop_all(); }
+  virtual ~AppImpl() = default;
 
   int run() override { return _qApp->exec(); }
 };

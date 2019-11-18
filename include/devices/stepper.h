@@ -31,6 +31,8 @@
 
 #include <unistd.h>
 
+#include <QObject>
+
 #include <fmt/format.h>
 #include <fruit/fruit.h>
 
@@ -52,7 +54,9 @@ inline const std::string getStepperDirectionString(
   }
 }
 
-class Stepper {
+class Stepper : public QObject {
+  Q_OBJECT
+
  protected:
   const int _step_pin;
   const int _direction_pin;
@@ -60,9 +64,30 @@ class Stepper {
  public:
   Stepper(int step_pin, int direction_pin)
       : _step_pin(step_pin), _direction_pin(direction_pin) {}
-  virtual void     step(int n, useconds_t step_delay = 5000) = 0;
-  virtual Stepper& set_direction(const stepper_direction& step_direction) = 0;
+  virtual void           step(int n, useconds_t step_delay = 5000) = 0;
+  virtual const Stepper& set_direction(
+      const stepper_direction& step_direction) const = 0;
   virtual ~Stepper() = default;
+};
+
+class StepperImpl : public Stepper {
+ private:
+  std::unique_ptr<Device> _step_device;
+  std::unique_ptr<Device> _direction_device;
+  std::unique_ptr<Logger> _logger;
+
+ public:
+  INJECT(StepperImpl(ASSISTED(int) step_pin,
+                     ASSISTED(int) direction_pin,
+                     DeviceFactory deviceFactory,
+                     LoggerFactory loggerFactory));
+
+  virtual ~StepperImpl() = default;
+
+  virtual void step(int n, useconds_t step_delay) override;
+
+  virtual const Stepper& set_direction(
+      const stepper_direction& step_direction) const override;
 };
 
 using StepperFactory = std::function<std::unique_ptr<Stepper>(int, int)>;

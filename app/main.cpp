@@ -35,6 +35,8 @@
 #include <cassert>
 #include <iostream>
 
+#include <QApplication>
+
 #include <fruit/fruit.h>
 #include <spdlog/spdlog.h>
 
@@ -42,10 +44,17 @@
 #include "logger.h"
 
 int main(int argc, char** argv) {
+  qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "1");
+  QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  spdlog::init_thread_pool(8192, 1);
+
   fruit::Injector<emmerich::AppFactory> injector(emmerich::getAppComponent);
   emmerich::AppFactory                  appFactory(injector);
 
   std::unique_ptr<emmerich::App> app = appFactory(argc, argv);
 
-  return app->run();
+  int exit_code = app->run();
+  spdlog::drop_all();
+  spdlog::shutdown();
+  return exit_code;
 }

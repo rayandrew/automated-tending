@@ -28,6 +28,7 @@
 #define STATE_H_
 
 #include <QObject>
+// #include <QString>
 
 #include <fmt/format.h>
 #include <fruit/fruit.h>
@@ -75,8 +76,8 @@ class State : public QObject {
   virtual void setCoordinate(const Coordinate& coordinate) = 0;
 
  signals:
-  void xHasChanged(int new_x);
-  void yHasChanged(int new_y);
+  void xHasChanged(const QString& new_x);
+  void yHasChanged(const QString& new_y);
 };
 
 class StateImpl : public State {
