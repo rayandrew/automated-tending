@@ -100,10 +100,10 @@ class Device {
   inline device_mode    getMode() const { return _mode; }
 };
 
-class DeviceImpl: public Device {
-  private:
+class DeviceImpl : public Device {
+ private:
   Logger* _logger;
-  
+
  public:
   DeviceImpl() = default;
   INJECT(DeviceImpl(ASSISTED(int) pin,

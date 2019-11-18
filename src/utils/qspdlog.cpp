@@ -35,4 +35,4 @@ void QSpdlog::sink_it_(const spdlog::details::log_msg& msg) {
 }
 
 void QSpdlog::flush_() {}
-}  // namespace spdlog
+}  // namespace emmerich

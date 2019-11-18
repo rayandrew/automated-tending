@@ -27,6 +27,4 @@
 
 #include "utils/worker.h"
 
-namespace emmerich {
-
-}
+namespace emmerich {}

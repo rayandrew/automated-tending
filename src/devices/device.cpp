@@ -54,8 +54,8 @@ const char* DeviceException::what() const noexcept {
   return message.c_str();
 }
 
-DeviceImpl::DeviceImpl(int pin, const device_mode& mode, Logger* logger) : Device(pin, mode), _logger(std::move(logger))
-{
+DeviceImpl::DeviceImpl(int pin, const device_mode& mode, Logger* logger)
+    : Device(pin, mode), _logger(std::move(logger)) {
   setMode(mode);
 }
 
@@ -73,8 +73,7 @@ Device& DeviceImpl::setMode(const device_mode& mode) {
 
 void DeviceImpl::write(const device_output& output) {
   if (_mode == device_mode::INPUT) {
-    throw DeviceException("DEVICE_MODE 'INPUT' cannot send output to pin",
-    _pin,
+    throw DeviceException("DEVICE_MODE 'INPUT' cannot send output to pin", _pin,
                           _mode, output);
   }
 
@@ -86,8 +85,7 @@ void DeviceImpl::write(const device_output& output) {
       gpioWrite(_pin, PI_HIGH);
       break;
     default:
-      throw DeviceException("Device output should not reach here", _pin,
-      _mode,
+      throw DeviceException("Device output should not reach here", _pin, _mode,
                             output);
   }
 }

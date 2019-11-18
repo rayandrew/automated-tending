@@ -76,7 +76,7 @@ class AppImpl : public App {
   Config*                                   _config;
   Logger*                                   _logger;
   State*                                    _state;
-  const std::shared_ptr<QSpdlog>    _qSpdlog;
+  const std::shared_ptr<QSpdlog>            _qSpdlog;
   mechanisms::finger::FingerMovementFactory _fingerMovementFactory;
 
  private:

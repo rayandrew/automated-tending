@@ -54,6 +54,6 @@ class QSpdlog : public QWidget, public spdlog::sinks::base_sink<std::mutex> {
  signals:
   void newLogEntry(const QString& msg);
 };
-}  // namespace spdlog
+}  // namespace emmerich
 
 #endif
