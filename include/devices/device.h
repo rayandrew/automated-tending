@@ -69,13 +69,15 @@ inline const std::string getOutputModeString(const device_output& output) {
 
 class DeviceException : public std::exception {
  private:
+  Logger*             _logger;
   const std::string   _message;
   const int           _pin;
   const device_mode   _mode;
   const device_output _output;
 
  public:
-  DeviceException(const std::string&   message,
+  DeviceException(Logger*              logger,
+                  const std::string&   message,
                   const int            pin,
                   const device_mode&   mode,
                   const device_output& output);

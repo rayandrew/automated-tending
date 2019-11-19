@@ -23,6 +23,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
 #ifndef QT5_UI_WORKER_HPP
@@ -30,10 +31,11 @@
 
 #pragma once
 
-#include <QObject>
-#include <QString>
 #include <functional>
 #include <tuple>
+
+#include <QObject>
+#include <QString>
 
 namespace emmerich {
 class worker_object : public QObject {

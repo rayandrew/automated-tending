@@ -9,14 +9,12 @@ option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defi
 option(ENABLE_LTO "Enable link time optimization" ON)
 option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code. Tests in tests/*.cpp will still be enabled." OFF)
 option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work" ON)
-# option(FRUIT_USES_BOOST "Not using any boost library for Fruit dependencies" OFF)
-# option(SPDLOG_FMT_EXTERNAL "Using external FMT for SPDLOG" OFF)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_definitions(-DMOCK_GPIO)
 endif()
 
-# Include stuff. No change needed.
+# Include stuffs
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 include(ConfigSafeGuards)
@@ -41,14 +39,14 @@ find_package(Qt5 COMPONENTS REQUIRED
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
-# set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # --------------------------------------------------------------------------------
-#                         Locate files (change as needed).
+# Locate files 
 # --------------------------------------------------------------------------------
 
-set(SOURCES                     # All .cpp files in src/
+# All .cpp files in src/
+set(SOURCES
     src/app.cpp
     src/config.cpp
     src/state.cpp
@@ -65,12 +63,12 @@ set(SOURCES                     # All .cpp files in src/
 
     src/mechanisms/finger/movement.cpp) 
 
-file (GLOB_RECURSE
-      UI_SOURCES
-      RELATIVE
-      ${CMAKE_SOURCE_DIR} "resources/ui/*.ui") # All .ui files in resources/ui
+# All .ui files in resources/ui
+set(UI_SOURCES
+    resources/ui/main_window.ui)
 
-set(QT5_SOURCES                     # All .h files in include/
+# All .h files in include/
+set(QT5_SOURCES
     include/app.h
     include/config.h
     include/state.h
@@ -87,23 +85,19 @@ set(QT5_SOURCES                     # All .h files in include/
 
     include/mechanisms/finger/movement.h) 
 
-# file(GLOB_RECURSE 
-#      QT5_SOURCES 
-#      RELATIVE 
-#      ${CMAKE_SOURCE_DIR} "include/*.h") # All .cpp files in src/
-
-set(TESTFILES                   # All .cpp files in tests/
+# All .cpp files in tests/
+set(TESTFILES
     tests/main.cpp)
 
 set(LIBRARY_NAME engine)
 
+# --------------------------------------------------------------------------------
+# Building
+# --------------------------------------------------------------------------------
+
 # Qt5 wrapper
 qt5_wrap_ui(ui_sources_headers ${UI_SOURCES})
 qt5_wrap_cpp(ui_sources_moc ${QT5_SOURCES})
-
-# --------------------------------------------------------------------------------
-#                            Build! (Change as needed)
-# --------------------------------------------------------------------------------
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT
@@ -111,7 +105,7 @@ add_library(${LIBRARY_NAME} OBJECT
             ${ui_sources_headers}
             ${ui_sources_moc})
 
-# Lib needs its header files, and users of the library must also see these (PUBLIC). (No change needed)
+# Lib needs its header files, and users of the library must also see these (PUBLIC)
 target_include_directories(${LIBRARY_NAME} PUBLIC
                            ${PROJECT_SOURCE_DIR}/include
                            ${Qt5Widgets_INCLUDES})
@@ -136,9 +130,6 @@ add_compile_definitions(BUILD_SHARED_LIBS
                         SPDLOG_MASTER_PROJECT
                         SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG
                         SPDLOG_FMT_EXTERNAL)
-
-# Create logs directory
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
 
 # Add an executable for the file app/main.cpp.
 add_executable(main app/main.cpp)
@@ -167,5 +158,8 @@ set_target_properties(
         CXX_STANDARD_REQUIRED YES 
         CXX_EXTENSIONS NO)
 
-# Set up tests (see tests/CMakeLists.txt).
+# Set up tests
 add_subdirectory(tests)
+
+# Create logs directory
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")

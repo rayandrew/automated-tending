@@ -30,11 +30,13 @@
 #include "logger.h"
 
 namespace emmerich::device {
-DeviceException::DeviceException(const std::string&   message,
+DeviceException::DeviceException(Logger*              logger,
+                                 const std::string&   message,
                                  const int            pin,
                                  const device_mode&   mode,
                                  const device_output& output)
-    : _message(std::move(message)),
+    : _logger(std::move(logger)),
+      _message(std::move(message)),
       _pin(std::move(pin)),
       _mode(std::move(mode)),
       _output(std::move(output)) {}
@@ -49,7 +51,7 @@ const char* DeviceException::what() const noexcept {
 
   std::string message = temp.str();
 
-  // _logger->error(message);
+  _logger->error(message);
 
   return message.c_str();
 }
@@ -73,7 +75,8 @@ Device& DeviceImpl::setMode(const device_mode& mode) {
 
 void DeviceImpl::write(const device_output& output) {
   if (_mode == device_mode::INPUT) {
-    throw DeviceException("DEVICE_MODE 'INPUT' cannot send output to pin", _pin,
+    throw DeviceException(_logger,
+                          "DEVICE_MODE 'INPUT' cannot send output to pin", _pin,
                           _mode, output);
   }
 
@@ -85,14 +88,15 @@ void DeviceImpl::write(const device_output& output) {
       gpioWrite(_pin, PI_HIGH);
       break;
     default:
-      throw DeviceException("Device output should not reach here", _pin, _mode,
-                            output);
+      throw DeviceException(_logger, "Device output should not reach here",
+                            _pin, _mode, output);
   }
 }
 
 device_output DeviceImpl::read() const {
   if (_mode == device_mode::OUTPUT) {
-    throw DeviceException("DEVICE_MODE 'OUTPUT' cannot get input from the pin",
+    throw DeviceException(_logger,
+                          "DEVICE_MODE 'OUTPUT' cannot get input from the pin",
                           _pin, _mode, device_output::LOW);
   }
 
