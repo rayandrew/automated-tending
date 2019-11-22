@@ -31,11 +31,14 @@
 
 #pragma once
 
+#include <iostream>
+
 #include <functional>
 #include <tuple>
 
 #include <QObject>
 #include <QString>
+#include <QThread>
 
 namespace emmerich {
 class worker_object : public QObject {
@@ -104,6 +107,14 @@ template <typename Func, typename... Args>
 worker<Args...> make_worker(Func&& fn, Args&&... args) {
   return worker<Args...>(std::forward<Func>(fn), std::forward<Args>(args)...);
 }
+
+using worker_callback = std::function<void()>;
+using worker_error_callback = std::function<void(const QString&)>;
+
+void start_worker(QObject*                     parent,
+                  worker_object*               work,
+                  const worker_callback&       on_finish,
+                  const worker_error_callback& on_error);
 }  // namespace emmerich
 
 #endif

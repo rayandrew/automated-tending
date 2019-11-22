@@ -52,6 +52,5 @@ int main(int argc, char** argv) {
 
   std::unique_ptr<emmerich::App> app = appFactory(argc, argv);
 
-  int exit_code = app->run();
-  return exit_code;
+  return app->run();
 }

@@ -32,6 +32,8 @@
 #include <unistd.h>
 
 #include <QObject>
+#include <QString>
+#include <QThread>
 
 #include <fmt/format.h>
 #include <fruit/fruit.h>
@@ -64,16 +66,29 @@ class Stepper : public QObject {
  public:
   Stepper(int step_pin, int direction_pin)
       : _step_pin(step_pin), _direction_pin(direction_pin) {}
-  virtual void           step(int n, useconds_t step_delay = 5000) = 0;
-  virtual const Stepper& set_direction(
-      const stepper_direction& step_direction) const = 0;
   virtual ~Stepper() = default;
+  virtual const Stepper& setStep(int step) = 0;
+  virtual const Stepper& setStepDelay(useconds_t step_delay) = 0;
+  virtual const Stepper& setDirection(
+      const stepper_direction& step_direction) const = 0;
+
+ public slots:
+  virtual void run() = 0;
+  virtual void step(int n, useconds_t step_delay = 5000) = 0;
+
+ signals:
+  void progress(float progress);
+  void finished();
 };
 
 class StepperImpl : public Stepper {
+  Q_OBJECT
+
  private:
   std::unique_ptr<Device> _step_device;
   std::unique_ptr<Device> _direction_device;
+  int                     _step = 0;
+  useconds_t              _step_delay = 5000;
   Logger*                 _logger;
 
  public:
@@ -84,10 +99,14 @@ class StepperImpl : public Stepper {
 
   virtual ~StepperImpl() = default;
 
-  virtual void step(int n, useconds_t step_delay) override;
-
-  virtual const Stepper& set_direction(
+  virtual const Stepper& setStep(int step) override;
+  virtual const Stepper& setStepDelay(useconds_t step_delay) override;
+  virtual const Stepper& setDirection(
       const stepper_direction& step_direction) const override;
+
+ public slots:
+  virtual void run() override;
+  virtual void step(int n, useconds_t step_delay) override;
 };
 
 using StepperFactory = std::function<std::unique_ptr<Stepper>(int, int)>;

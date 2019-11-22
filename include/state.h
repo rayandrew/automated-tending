@@ -30,6 +30,9 @@
 #include <QObject>
 #include <QString>
 
+#include <QMutex>
+#include <QMutexLocker>
+
 #include <fmt/format.h>
 #include <fruit/fruit.h>
 
@@ -38,42 +41,30 @@
 #pragma once
 
 namespace emmerich {
-struct Coordinate {
+struct Point {
   int x = 0;
   int y = 0;
 };
 
 class State : public QObject {
   Q_OBJECT
+  Q_DISABLE_COPY(State)
 
  protected:
-  Coordinate _coordinate;
-
-  //  protected:
-  //   virtual void _setX(int x) { _coordinate.x = x; }
-  //   virtual void _setY(int y) { _coordinate.y = y; }
-  //   virtual void _setCoordinate(const Coordinate& coordinate) {
-  //     _coordinate = coordinate;
-  //   }
+  Point _coordinate;
 
  public:
   State() = default;
   virtual ~State() = default;
 
-  inline const Coordinate& getCoordinate() const { return _coordinate; }
-  inline int               getX() { return _coordinate.x; };
-  inline int               getY() { return _coordinate.y; };
-
-  // singleton stuffs
-  // State(State const&) = delete;
-  // State(State&&) = delete;
-  // State&               operator=(State const&) = delete;
-  // State&               operator=(State&&) = delete;
+  inline const Point& getCoordinate() const { return _coordinate; }
+  inline int          getX() { return _coordinate.x; };
+  inline int          getY() { return _coordinate.y; };
 
  public slots:
   virtual void setX(int x) = 0;
   virtual void setY(int y) = 0;
-  virtual void setCoordinate(const Coordinate& coordinate) = 0;
+  virtual void setCoordinate(const Point& coordinate) = 0;
 
  signals:
   void xHasChanged(const QString& new_x);
@@ -84,17 +75,18 @@ class StateImpl : public State {
   Q_OBJECT
 
  private:
-  Logger* _logger;
+  Logger*                       _logger;
+  const std::unique_ptr<QMutex> _mutex_x;
+  const std::unique_ptr<QMutex> _mutex_y;
 
  public:
   INJECT(StateImpl(Logger* logger));
-
   virtual ~StateImpl() = default;
 
  public slots:
-  virtual void setX(int x);
-  virtual void setY(int y);
-  virtual void setCoordinate(const Coordinate& coordinate);
+  virtual void setX(int x) override;
+  virtual void setY(int y) override;
+  virtual void setCoordinate(const Point& coordinate) override;
 };
 
 fruit::Component<State> getStateComponent();

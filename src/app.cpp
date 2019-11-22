@@ -27,50 +27,63 @@
 #include "app.h"
 
 namespace emmerich {
-AppImpl::AppImpl(
-    int                                       argc,
-    char**                                    argv,
-    Config*                                   config,
-    Logger*                                   logger,
-    State*                                    state,
-    mechanisms::finger::FingerMovementFactory fingerMovementFactory)
-    : _qApp(std::make_unique<QApplication>(argc, argv)),
+AppImpl::AppImpl(int                   argc,
+                 char**                argv,
+                 Config*               config,
+                 Logger*               logger,
+                 State*                state,
+                 mechanisms::Movement* movement)
+    : App(argc, argv),
       _window(std::make_unique<ui::MainWindow>()),
       _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
       _qSpdlog(std::make_shared<QSpdlog>()),
-      _fingerMovementFactory(fingerMovementFactory) {
+      _movement(std::move(movement)) {
   _ui = _window->getUi();
 
   setupLogger();
   setupSignalsAndSlots();
+
+  _logger->info("Automated Tending Project v{}.{}.{}.{}", PROJECT_VERSION_MAJOR,
+                PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
+                PROJECT_VERSION_TWEAK);
 
   _window->setWindowState(Qt::WindowMaximized);
   _window->show();
 }
 
 void AppImpl::setupSignalsAndSlots() {
-  QPushButton* tendingButton = _ui->tendingButton;
-  QLCDNumber*  stateFingerPositionValueX = _ui->stateFingerPositionValueX;
-  QLCDNumber*  stateFingerPositionValueY = _ui->stateFingerPositionValueY;
+  QPushButton*  tendingButton = _ui->tendingButton;
+  QPushButton*  wateringButton = _ui->wateringButton;
+  QLCDNumber*   stateFingerPositionValueX = _ui->stateFingerPositionValueX;
+  QLCDNumber*   stateFingerPositionValueY = _ui->stateFingerPositionValueY;
+  QProgressBar* progressBar = _ui->progressBar;
 
-  QObject::connect(_state, SIGNAL(xHasChanged(QString)),
-                   stateFingerPositionValueX, SLOT(display(QString)));
-  QObject::connect(_state, SIGNAL(yHasChanged(QString)),
-                   stateFingerPositionValueY, SLOT(display(QString)));
+  progressBar->setRange(0, 100);
 
-  int i = 1;
-  QObject::connect(tendingButton, &QPushButton::clicked,
-                   [=]() mutable { _fingerMovementFactory(nullptr, i++, 20); });
+  connect(_state, SIGNAL(xHasChanged(QString)), stateFingerPositionValueX,
+          SLOT(display(QString)));
+  connect(_state, SIGNAL(yHasChanged(QString)), stateFingerPositionValueY,
+          SLOT(display(QString)));
+
+  connect(_movement, &mechanisms::Movement::progress, progressBar,
+          &QProgressBar::setValue);
+  connect(_movement, &mechanisms::Movement::progress, this,
+          [this](int progress) {
+            _logger->info("Progress Movement : {}%", progress);
+          });
+  connect(_movement, &mechanisms::Movement::finished, this,
+          [this]() { _logger->info("Finger Movement finished!"); });
+
+  int i = 0;
+
+  connect(tendingButton, &QPushButton::released, this,
+          [=]() mutable { movementService(++i, 2); });
 }
 
 void AppImpl::setupLogger() {
   _logger->getLogger()->sinks().push_back(_qSpdlog);
-
-  _logger->info("Automated Tending Project v{}.{}.{}.{}", PROJECT_VERSION_MAJOR,
-                PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
-                PROJECT_VERSION_TWEAK);
 
   for (const auto& log_level_name : SPDLOG_LEVEL_NAMES) {
     _ui->cmbox_log_level->addItem(log_level_name);
@@ -78,17 +91,16 @@ void AppImpl::setupLogger() {
 
   _ui->cmbox_log_level->setCurrentText(QString::fromStdString(
       fmt::format(spdlog::level::to_string_view(_logger->level()))));
-  QObject::connect(_ui->cmbox_log_level, &QComboBox::currentTextChanged, this,
-                   [this](const QString& level) {
-                     _logger->set_level(spdlog::level::info);
-                     auto level_str = level.toStdString();
-                     _logger->info("Log level: " + level_str);
-                     _logger->set_level(spdlog::level::from_str(level_str));
-                   });
-  QObject::connect(_qSpdlog.get(), &QSpdlog::newLogEntry, this,
-                   &App::addLogEntry);
-  QObject::connect(_ui->btn_clear_log_output, &QPushButton::released,
-                   _ui->ptextedit_log_output, &QPlainTextEdit::clear);
+  connect(_ui->cmbox_log_level, &QComboBox::currentTextChanged, this,
+          [this](const QString& level) {
+            _logger->set_level(spdlog::level::info);
+            auto level_str = level.toStdString();
+            _logger->info("Log level: " + level_str);
+            _logger->set_level(spdlog::level::from_str(level_str));
+          });
+  connect(_qSpdlog.get(), &QSpdlog::newLogEntry, this, &App::addLogEntry);
+  connect(_ui->btn_clear_log_output, &QPushButton::released,
+          _ui->ptextedit_log_output, &QPlainTextEdit::clear);
 }
 
 void AppImpl::addLogEntry(const QString& msg) {
@@ -102,12 +114,45 @@ void AppImpl::addLogEntry(const QString& msg) {
   }
 }
 
+void AppImpl::start_worker(worker_object*               thread_worker,
+                           const worker_callback&       on_finish,
+                           const worker_error_callback& on_error) {
+  auto* worker_thread = new QThread;
+  thread_worker->moveToThread(worker_thread);
+  connect(thread_worker, &worker_object::error, this, on_error);
+  connect(worker_thread, &QThread::started, thread_worker, &worker_object::run);
+  connect(thread_worker, &worker_object::finished, worker_thread,
+          &QThread::quit);
+  connect(thread_worker, &worker_object::finished, this, on_finish);
+  connect(thread_worker, &worker_object::finished, thread_worker,
+          &worker_object::deleteLater);
+  connect(worker_thread, &QThread::finished, worker_thread,
+          &QThread::deleteLater);
+  worker_thread->start();
+}
+
+void AppImpl::movementService(int x = 10, int y = 0) {
+  QProgressBar* progressBar = _ui->progressBar;
+  auto*         workerThread = new QThread();
+
+  _movement->goTo(x, y);
+
+  connect(_movement, &mechanisms::Movement::finished, workerThread,
+          &QThread::quit);
+  connect(workerThread, &QThread::started, _movement,
+          &mechanisms::Movement::run);
+  connect(workerThread, &QThread::finished, workerThread,
+          &QThread::deleteLater);
+
+  workerThread->start();
+}
+
 fruit::Component<AppFactory> getAppComponent() {
   return fruit::createComponent()
       .bind<App, AppImpl>()
       .install(getConfigComponent)
       .install(getLoggerComponent)
       .install(getStateComponent)
-      .install(mechanisms::finger::getFingerMovementComponent);
+      .install(mechanisms::getMovementComponent);
 }
 }  // namespace emmerich

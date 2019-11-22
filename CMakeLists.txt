@@ -19,6 +19,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 include(ConfigSafeGuards)
 include(Colors)
+include(Cotire)
 include(CTest)
 include(Doctest)
 include(Fruit)
@@ -55,13 +56,14 @@ set(SOURCES
 
     src/utils/qspdlog.cpp
     src/utils/worker.cpp
+    src/utils/signal_merge.cpp
 
     src/windows/main_window.cpp
 
     src/devices/stepper.cpp
     src/devices/device.cpp
 
-    src/mechanisms/finger/movement.cpp) 
+    src/mechanisms/movement.cpp) 
 
 # All .ui files in resources/ui
 set(UI_SOURCES
@@ -77,13 +79,14 @@ set(QT5_SOURCES
     
     include/utils/qspdlog.h
     include/utils/worker.h
+    include/utils/signal_merge.h
     
     include/windows/main_window.h
 
     include/devices/stepper.h
     include/devices/device.h
 
-    include/mechanisms/finger/movement.h) 
+    include/mechanisms/movement.h) 
 
 # All .cpp files in tests/
 set(TESTFILES
@@ -142,6 +145,9 @@ target_link_libraries(main PRIVATE ${LIBRARY_NAME}
                       yaml::yaml
                       Qt5::Core
                       Qt5::Widgets)
+
+# Precompiled Headers
+cotire(main)
 
 # Set warnings
 spdlog_enable_warnings(main)

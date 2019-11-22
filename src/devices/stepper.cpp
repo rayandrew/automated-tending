@@ -32,26 +32,49 @@ StepperImpl::StepperImpl(int           step_pin,
                          Logger*       logger,
                          DeviceFactory deviceFactory)
     : Stepper(step_pin, direction_pin),
-      _step_device(deviceFactory(step_pin, device_mode::OUTPUT)),
-      _direction_device(deviceFactory(direction_pin, device_mode::OUTPUT)),
+      _step_device(std::move(deviceFactory(step_pin, device_mode::OUTPUT))),
+      _direction_device(
+          std::move(deviceFactory(direction_pin, device_mode::OUTPUT))),
       _logger(std::move(logger)) {
   _logger->debug("Stepper with step pin {} and direction pin {} initialized!",
                  step_pin, direction_pin);
 }
 
-void StepperImpl::step(int n, useconds_t step_delay = 5000) {
-  _logger->debug("Initiate step count : {} with step_delay : {} microseconds",
-                 n, step_delay);
-
-  for (int i = 0; i <= n; i++) {
-    _step_device->write(device_output::LOW);
-    usleep(step_delay);
-    _step_device->write(device_output::HIGH);
-    usleep(step_delay);
-  }
+void StepperImpl::run() {
+  step(_step, _step_delay);
 }
 
-const Stepper& StepperImpl::set_direction(
+void StepperImpl::step(int n, useconds_t step_delay = 5000) {
+  if (n > 0) {
+    _logger->debug("Initiate step count : {} with step_delay : {} microseconds",
+                   n, step_delay);
+    for (int i = 0; i <= n; ++i) {
+      _step_device->write(device_output::LOW);
+      QThread::usleep(step_delay);
+      _step_device->write(device_output::HIGH);
+      QThread::usleep(step_delay);
+      emit progress(float(i) / float(n));
+    }
+  } else {
+    emit progress(1.0);
+  }
+
+  emit finished();
+}
+
+const Stepper& StepperImpl::setStep(int step) {
+  _logger->debug("Set step count : {}", _step);
+  _step = step;
+  return *this;
+}
+
+const Stepper& StepperImpl::setStepDelay(useconds_t step_delay) {
+  _logger->debug("Set step delay : {}", step_delay);
+  _step_delay = step_delay;
+  return *this;
+}
+
+const Stepper& StepperImpl::setDirection(
     const stepper_direction& step_direction) const {
   _logger->debug("Initiate step count : {}",
                  getStepperDirectionString(step_direction));

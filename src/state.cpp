@@ -30,24 +30,25 @@ namespace emmerich {
 StateImpl::StateImpl(Logger* logger) : _logger(std::move(logger)) {}
 
 void StateImpl::setX(int x) {
+  QMutexLocker locker(_mutex_x.get());
+
   if (x != _coordinate.x) {
     _coordinate.x = x;
     emit xHasChanged(QString::number(x));
-    // emit xHasChanged(x);
     _logger->info(fmt::format("Coordinate X has changed into {}", x));
   }
 };
 
 void StateImpl::setY(int y) {
+  QMutexLocker locker(_mutex_y.get());
   if (y != _coordinate.y) {
     _coordinate.y = y;
     emit yHasChanged(QString::number(y));
-    // emit xHasChanged(y);
     _logger->info(fmt::format("Coordinate Y has changed into {}", y));
   }
 };
 
-void StateImpl::setCoordinate(const Coordinate& coordinate) {
+void StateImpl::setCoordinate(const Point& coordinate) {
   setX(coordinate.x);
   setY(coordinate.y);
 };

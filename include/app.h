@@ -38,28 +38,29 @@
 #include <QApplication>
 #include <QString>
 
-#include <QtWidgets/QComboBox>
-#include <QtWidgets/QLCDNumber>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QPushButton>
+#include <QComboBox>
+#include <QLCDNumber>
+#include <QLabel>
+#include <QProgressBar>
+#include <QPushButton>
 
 #include "general_config.h"
+#include "windows/main_window.h"
 
 #include "config.h"
 #include "logger.h"
 #include "state.h"
 
 #include "utils/qspdlog.h"
+#include "utils/worker.h"
 
-#include "devices/stepper.h"
-#include "mechanisms/finger/movement.h"
-
-#include "windows/main_window.h"
+#include "mechanisms/movement.h"
 
 namespace emmerich {
-class App : public QObject {
+class App : public QApplication {
   Q_OBJECT
  public:
+  App(int argc, char** argv) : QApplication(argc, argv) {}
   virtual int run() = 0;
   virtual ~App() = default;
 
@@ -70,29 +71,33 @@ class App : public QObject {
 class AppImpl : public App {
   Q_OBJECT
  private:
-  const std::unique_ptr<QApplication>       _qApp;
-  const std::unique_ptr<ui::MainWindow>     _window;
-  std::shared_ptr<Ui::MainWindow>           _ui;
-  Config*                                   _config;
-  Logger*                                   _logger;
-  State*                                    _state;
-  const std::shared_ptr<QSpdlog>            _qSpdlog;
-  mechanisms::finger::FingerMovementFactory _fingerMovementFactory;
+  const std::unique_ptr<ui::MainWindow> _window;
+  std::shared_ptr<Ui::MainWindow>       _ui;
+  Config*                               _config;
+  Logger*                               _logger;
+  State*                                _state;
+  const std::shared_ptr<QSpdlog>        _qSpdlog;
+  mechanisms::Movement*                 _movement;
 
  private:
   void setupLogger();
   void setupSignalsAndSlots();
 
+  void movementService(int x, int y);
+
+  void start_worker(worker_object*               thread_worker,
+                    const worker_callback&       on_finish,
+                    const worker_error_callback& on_error);
+
  public:
-  INJECT(
-      AppImpl(ASSISTED(int) argc,
-              ASSISTED(char**) argv,
-              Config*                                   config,
-              Logger*                                   logger,
-              State*                                    state,
-              mechanisms::finger::FingerMovementFactory fingerMovementFactory));
+  INJECT(AppImpl(ASSISTED(int) argc,
+                 ASSISTED(char**) argv,
+                 Config*               config,
+                 Logger*               logger,
+                 State*                state,
+                 mechanisms::Movement* movement));
   virtual ~AppImpl() = default;
-  inline virtual int run() override { return _qApp->exec(); }
+  inline virtual int run() override { return this->exec(); }
 
  public slots:
   virtual void addLogEntry(const QString& msg) override;
