@@ -27,10 +27,11 @@
 #include "mechanisms/movement.h"
 
 namespace emmerich::mechanisms {
-MovementImpl::MovementImpl(Config*                config,
-                           State*                 state,
-                           Logger*                logger,
-                           device::StepperFactory stepperFactory)
+MovementImpl::MovementImpl(Config*                    config,
+                           State*                     state,
+                           Logger*                    logger,
+                           device::StepperFactory     stepperFactory,
+                           device::LimitSwitchFactory limitSwitchFactory)
     : _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
@@ -44,42 +45,23 @@ MovementImpl::MovementImpl(Config*                config,
       _stepperY(std::move(stepperFactory(
           (*config)["devices"]["movement"]["y"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>()))),
-      _mutex(std::make_unique<QMutex>()),
-      _stepperXThread(std::make_unique<QThread>()),
-      _stepperYThread(std::make_unique<QThread>()),
-      _signalMergeWorkersFinished(std::make_unique<SignalMerge>()),
-      _signalMergeWorkersProgress(std::make_unique<SignalMergeFloat>()) {
-  _stepperX->moveToThread(_stepperXThread.get());
-  _stepperY->moveToThread(_stepperYThread.get());
-
-  connect(_stepperXThread.get(), &QThread::started, _stepperX.get(),
-          &device::Stepper::run);
-  connect(_stepperX.get(), &device::Stepper::finished, _stepperXThread.get(),
-          &QThread::quit);
-  connect(_stepperX.get(), &device::Stepper::finished, this, [this]() {
-    _signalMergeWorkersProgress->disconnect(_stepperX.get(),
-                                            SIGNAL(progress(float)));
-    _moveTogether = false;
-  });
-
-  connect(_stepperYThread.get(), &QThread::started, _stepperY.get(),
-          &device::Stepper::run);
-  connect(_stepperY.get(), &device::Stepper::finished, _stepperYThread.get(),
-          &QThread::quit);
-  connect(_stepperY.get(), &device::Stepper::finished, this, [this]() {
-    _signalMergeWorkersProgress->disconnect(_stepperY.get(),
-                                            SIGNAL(progress(float)));
-    _moveTogether = false;
-  });
+      _limitSwitch(std::move(limitSwitchFactory(
+          (*config)["devices"]["movement"]["limit_switch_pin"].as<int>()))),
+      _mutex(std::move(std::make_unique<QMutex>())),
+      _stepperXThread(std::move(std::make_unique<QThread>())),
+      _stepperYThread(std::move(std::make_unique<QThread>())),
+      _signalMergeWorkersFinished(std::move(std::make_unique<SignalMerge>())),
+      _signalMergeWorkersProgress(
+          std::move(std::make_unique<SignalMergeFloat>())) {
+  setupStepperX();
+  setupStepperY();
 
   _signalMergeWorkersProgress->setCallback([this](float value) {
     QMutexLocker locker(_mutex.get());
     return value * (_moveTogether ? 50 : 100);
   });
-
   connect(_signalMergeWorkersProgress.get(), &SignalMergeFloat::merged, this,
           &Movement::sendProgress);
-
   connect(_signalMergeWorkersFinished.get(), &SignalMerge::merged, this,
           &Movement::finish);
 }
@@ -92,6 +74,34 @@ MovementImpl::~MovementImpl() {
   _stepperYThread->quit();
 };
 
+void MovementImpl::setupStepperX() {
+  _stepperX->moveToThread(_stepperXThread.get());
+
+  connect(_stepperXThread.get(), &QThread::started, _stepperX.get(),
+          &device::Stepper::run);
+  connect(_stepperX.get(), &device::Stepper::finished, _stepperXThread.get(),
+          &QThread::quit);
+  connect(_stepperX.get(), &device::Stepper::finished, this, [this]() {
+    _signalMergeWorkersProgress->disconnect(_stepperX.get(),
+                                            SIGNAL(progress(float)));
+    _moveTogether = false;
+  });
+}
+
+void MovementImpl::setupStepperY() {
+  _stepperY->moveToThread(_stepperYThread.get());
+
+  connect(_stepperYThread.get(), &QThread::started, _stepperY.get(),
+          &device::Stepper::run);
+  connect(_stepperY.get(), &device::Stepper::finished, _stepperYThread.get(),
+          &QThread::quit);
+  connect(_stepperY.get(), &device::Stepper::finished, this, [this]() {
+    _signalMergeWorkersProgress->disconnect(_stepperY.get(),
+                                            SIGNAL(progress(float)));
+    _moveTogether = false;
+  });
+}
+
 void MovementImpl::sendProgress(float currentProgress) {
   emit progress(round(currentProgress));
 }
@@ -100,7 +110,6 @@ void MovementImpl::run() {
   bool moveX = _state->getX() != _x;
   bool moveY = _state->getY() != _y;
 
-  // [NOTE!] @rayandrews: hacky solution to send one signal into progress bar
   _moveTogether = moveX && moveY;
 
   if (moveX) {
@@ -181,6 +190,7 @@ fruit::Component<Movement> getMovementComponent() {
       .install(getConfigComponent)
       .install(getStateComponent)
       .install(getLoggerComponent)
-      .install(device::getStepperComponent);
+      .install(device::getStepperComponent)
+      .install(device::getLimitSwitchComponent);
 }
 }  // namespace emmerich::mechanisms

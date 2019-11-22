@@ -27,6 +27,9 @@
 #ifndef STATE_H_
 #define STATE_H_
 
+#include <fstream>
+#include <map>
+
 #include <QObject>
 #include <QString>
 
@@ -35,6 +38,7 @@
 
 #include <fmt/format.h>
 #include <fruit/fruit.h>
+#include <yaml-cpp/yaml.h>
 
 #include "logger.h"
 
@@ -52,21 +56,30 @@ class State : public QObject {
 
  protected:
   Point _coordinate;
+  float _degree = 0.0;
 
  public:
   State() = default;
   virtual ~State() = default;
 
-  inline const Point& getCoordinate() const { return _coordinate; }
-  inline int          getX() { return _coordinate.x; };
-  inline int          getY() { return _coordinate.y; };
+  inline float          getDegree() const { return _degree; }
+  inline const Point&   getCoordinate() const { return _coordinate; }
+  inline int            getX() const { return _coordinate.x; };
+  inline int            getY() const { return _coordinate.y; };
+  friend std::ostream&  operator<<(std::ostream& os, const State& state);
+  friend YAML::Emitter& operator<<(YAML::Emitter& out, const State& state);
+
+  virtual void load(const std::string& filename = "state.yaml");
+  virtual void save(const std::string& filename = "state.yaml");
 
  public slots:
+  virtual void setDegree(float degree) = 0;
   virtual void setX(int x) = 0;
   virtual void setY(int y) = 0;
   virtual void setCoordinate(const Point& coordinate) = 0;
 
  signals:
+  void degreeHasChanged(const QString& new_degree);
   void xHasChanged(const QString& new_x);
   void yHasChanged(const QString& new_y);
 };
@@ -76,14 +89,14 @@ class StateImpl : public State {
 
  private:
   Logger*                       _logger;
-  const std::unique_ptr<QMutex> _mutex_x;
-  const std::unique_ptr<QMutex> _mutex_y;
+  const std::unique_ptr<QMutex> _mutex;
 
  public:
   INJECT(StateImpl(Logger* logger));
   virtual ~StateImpl() = default;
 
  public slots:
+  virtual void setDegree(float degree) override;
   virtual void setX(int x) override;
   virtual void setY(int y) override;
   virtual void setCoordinate(const Point& coordinate) override;

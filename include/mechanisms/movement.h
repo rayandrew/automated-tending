@@ -49,6 +49,7 @@
 #include "utils/signal_merge.h"
 #include "utils/worker.h"
 
+#include "devices/limit_switch.h"
 #include "devices/stepper.h"
 
 namespace emmerich::mechanisms {
@@ -77,13 +78,14 @@ class MovementImpl : public Movement {
   Q_OBJECT
 
  private:  // injected state
-  Config*                                _config;
-  State*                                 _state;
-  Logger*                                _logger;
-  const std::unique_ptr<device::Stepper> _stepperX;
-  const std::unique_ptr<device::Stepper> _stepperY;
-  const float                            _xStepToCm;
-  const float                            _yStepToCm;
+  Config*                                    _config;
+  State*                                     _state;
+  Logger*                                    _logger;
+  const std::unique_ptr<device::Stepper>     _stepperX;
+  const std::unique_ptr<device::Stepper>     _stepperY;
+  const std::unique_ptr<device::LimitSwitch> _limitSwitch;
+  const float                                _xStepToCm;
+  const float                                _yStepToCm;
 
  private:  // internal state
   const std::unique_ptr<QMutex>           _mutex;
@@ -108,11 +110,15 @@ class MovementImpl : public Movement {
     _logger->info("Finger Movement state resetted!");
   }
 
+  void setupStepperX();
+  void setupStepperY();
+
  public:
-  INJECT(MovementImpl(Config*                config,
-                      State*                 state,
-                      Logger*                logger,
-                      device::StepperFactory stepperFactory));
+  INJECT(MovementImpl(Config*                    config,
+                      State*                     state,
+                      Logger*                    logger,
+                      device::StepperFactory     stepperFactory,
+                      device::LimitSwitchFactory limitSwitchFactory));
 
   virtual ~MovementImpl();
 

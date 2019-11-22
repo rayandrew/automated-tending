@@ -4,6 +4,7 @@ general:
 devices:
   movement:
     sleep_pin: 16
+    limit_switch_pin: 19
     x:
       step_pin: 20
       direction_pin: 21
@@ -12,4 +13,3 @@ devices:
       step_pin: 6
       direction_pin: 26
       step_to_cm: 0.3
-    limit_switch: 19

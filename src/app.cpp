@@ -49,6 +49,8 @@ AppImpl::AppImpl(int                   argc,
                 PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
                 PROJECT_VERSION_TWEAK);
 
+  _state->load();
+
   _window->setWindowState(Qt::WindowMaximized);
   _window->show();
 }
@@ -58,6 +60,7 @@ void AppImpl::setupSignalsAndSlots() {
   QPushButton*  wateringButton = _ui->wateringButton;
   QLCDNumber*   stateFingerPositionValueX = _ui->stateFingerPositionValueX;
   QLCDNumber*   stateFingerPositionValueY = _ui->stateFingerPositionValueY;
+  QLCDNumber*   stateFingerDegreeValue = _ui->stateFingerDegreeValue;
   QProgressBar* progressBar = _ui->progressBar;
 
   progressBar->setRange(0, 100);
@@ -65,6 +68,8 @@ void AppImpl::setupSignalsAndSlots() {
   connect(_state, SIGNAL(xHasChanged(QString)), stateFingerPositionValueX,
           SLOT(display(QString)));
   connect(_state, SIGNAL(yHasChanged(QString)), stateFingerPositionValueY,
+          SLOT(display(QString)));
+  connect(_state, SIGNAL(degreeHasChanged(QString)), stateFingerDegreeValue,
           SLOT(display(QString)));
 
   connect(_movement, &mechanisms::Movement::progress, progressBar,

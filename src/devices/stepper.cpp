@@ -36,15 +36,16 @@ StepperImpl::StepperImpl(int           step_pin,
       _direction_device(
           std::move(deviceFactory(direction_pin, device_mode::OUTPUT))),
       _logger(std::move(logger)) {
-  _logger->debug("Stepper with step pin {} and direction pin {} initialized!",
-                 step_pin, direction_pin);
+  _logger->debug(
+      "Stepper with step pin {} and direction pin {} is initialized!", step_pin,
+      direction_pin);
 }
 
 void StepperImpl::run() {
   step(_step, _step_delay);
 }
 
-void StepperImpl::step(int n, useconds_t step_delay = 5000) {
+void StepperImpl::step(int n, useconds_t step_delay) {
   if (n > 0) {
     _logger->debug("Initiate step count : {} with step_delay : {} microseconds",
                    n, step_delay);

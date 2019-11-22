@@ -60,11 +60,11 @@ enum class device_output {
 };
 
 inline const std::string getOutputModeString(const device_output& output) {
-  if (output == device_output::LOW) {
-    return "low";
-  } else {
-    return "high";
-  }
+  return output == device_output::LOW ? "low" : "high";
+}
+
+inline bool getOutputModeBool(const device_output& output) {
+  return output == device_output::HIGH;
 }
 
 class DeviceException : public std::exception {

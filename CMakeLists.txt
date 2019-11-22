@@ -62,6 +62,7 @@ set(SOURCES
 
     src/devices/stepper.cpp
     src/devices/device.cpp
+    src/devices/limit_switch.cpp
 
     src/mechanisms/movement.cpp) 
 
@@ -70,7 +71,7 @@ set(UI_SOURCES
     resources/ui/main_window.ui)
 
 # All .h files in include/
-set(QT5_SOURCES
+set(HEADERS
     include/app.h
     include/config.h
     include/state.h
@@ -85,6 +86,7 @@ set(QT5_SOURCES
 
     include/devices/stepper.h
     include/devices/device.h
+    include/devices/limit_switch.h
 
     include/mechanisms/movement.h) 
 
@@ -100,7 +102,7 @@ set(LIBRARY_NAME engine)
 
 # Qt5 wrapper
 qt5_wrap_ui(ui_sources_headers ${UI_SOURCES})
-qt5_wrap_cpp(ui_sources_moc ${QT5_SOURCES})
+qt5_wrap_cpp(ui_sources_moc ${HEADERS})
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT
