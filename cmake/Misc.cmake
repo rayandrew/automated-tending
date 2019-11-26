@@ -8,10 +8,16 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/include/general_config.h.in"
   "${PROJECT_BINARY_DIR}/general_config.h")
 
-# Copy config files
+# Copy config file
 configure_file("${PROJECT_SOURCE_DIR}/config.yaml"
                "${PROJECT_BINARY_DIR}/config.yaml"
                COPYONLY)
+             
+# Copy state file
+configure_file("${PROJECT_SOURCE_DIR}/state.yaml"
+               "${PROJECT_BINARY_DIR}/state.yaml"
+               COPYONLY)
+
 # add the binary tree to the search path for include files
 # so that we will find config.h
 include_directories("${PROJECT_BINARY_DIR}")
