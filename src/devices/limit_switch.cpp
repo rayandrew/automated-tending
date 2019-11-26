@@ -31,13 +31,9 @@ LimitSwitchImpl::LimitSwitchImpl(int           pin,
                                  Logger*       logger,
                                  DeviceFactory deviceFactory)
     : LimitSwitch(pin),
-      _limit_switch_device(std::move(deviceFactory(pin, device_mode::INPUT))),
+      _limit_switch_device(deviceFactory(pin, device_mode::INPUT)),
       _logger(std::move(logger)) {
   _logger->debug("LimitSwitch with pin {} is initialized!", pin);
-}
-
-void LimitSwitchImpl::run() {
-  emit finished();
 }
 
 fruit::Component<LimitSwitchFactory> getLimitSwitchComponent() {

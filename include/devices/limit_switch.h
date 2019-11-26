@@ -42,9 +42,7 @@
 #include "logger.h"
 
 namespace emmerich::device {
-class LimitSwitch : public QObject {
-  Q_OBJECT
-
+class LimitSwitch {
  protected:
   const int _pin;
 
@@ -53,17 +51,9 @@ class LimitSwitch : public QObject {
   virtual ~LimitSwitch() = default;
   virtual const device_output getStatus() const = 0;
   virtual bool                getStatusBool() const = 0;
-
- public slots:
-  virtual void run() = 0;
-
- signals:
-  void finished();
 };
 
 class LimitSwitchImpl : public LimitSwitch {
-  Q_OBJECT
-
  private:
   std::unique_ptr<Device> _limit_switch_device;
   Logger*                 _logger;
@@ -82,9 +72,6 @@ class LimitSwitchImpl : public LimitSwitch {
   virtual inline bool getStatusBool() const override {
     return getOutputModeBool(_limit_switch_device->read());
   }
-
- public slots:
-  virtual void run() override;
 };
 
 using LimitSwitchFactory = std::function<std::unique_ptr<LimitSwitch>(int)>;

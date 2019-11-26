@@ -44,6 +44,7 @@ AppImpl::AppImpl(int                   argc,
 
   setupLogger();
   setupSignalsAndSlots();
+  setupMovementService();
 
   _logger->info("Automated Tending Project v{}.{}.{}.{}", PROJECT_VERSION_MAJOR,
                 PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
@@ -53,6 +54,11 @@ AppImpl::AppImpl(int                   argc,
 
   _window->setWindowState(Qt::WindowMaximized);
   _window->show();
+}
+
+AppImpl::~AppImpl() {
+  _fingerMovementThread->wait();
+  _fingerMovementThread->quit();
 }
 
 void AppImpl::setupSignalsAndSlots() {
@@ -81,10 +87,8 @@ void AppImpl::setupSignalsAndSlots() {
   connect(_movement, &mechanisms::Movement::finished, this,
           [this]() { _logger->info("Finger Movement finished!"); });
 
-  int i = 0;
-
   connect(tendingButton, &QPushButton::released, this,
-          [=]() mutable { movementService(++i, 2); });
+          [=]() { movementService(); });
 }
 
 void AppImpl::setupLogger() {
@@ -136,20 +140,19 @@ void AppImpl::start_worker(worker_object*               thread_worker,
   worker_thread->start();
 }
 
-void AppImpl::movementService(int x = 10, int y = 0) {
-  QProgressBar* progressBar = _ui->progressBar;
-  auto*         workerThread = new QThread();
+void AppImpl::setupMovementService() {
+  _movement->moveToThread(_fingerMovementThread.get());
 
-  _movement->goTo(x, y);
-
-  connect(_movement, &mechanisms::Movement::finished, workerThread,
-          &QThread::quit);
-  connect(workerThread, &QThread::started, _movement,
+  connect(_fingerMovementThread.get(), &QThread::started, _movement,
           &mechanisms::Movement::run);
-  connect(workerThread, &QThread::finished, workerThread,
-          &QThread::deleteLater);
+  connect(_movement, &mechanisms::Movement::finished,
+          _fingerMovementThread.get(), &QThread::quit);
+  // connect(_fingerMovementThread, &QThread::finished, _fingerMovementThread,
+  //         &QThread::deleteLater);
+}
 
-  workerThread->start();
+void AppImpl::movementService() {
+  _fingerMovementThread->start();
 }
 
 fruit::Component<AppFactory> getAppComponent() {

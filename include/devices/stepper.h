@@ -56,9 +56,7 @@ inline const std::string getStepperDirectionString(
   }
 }
 
-class Stepper : public QObject {
-  Q_OBJECT
-
+class Stepper {
  protected:
   const int _step_pin;
   const int _direction_pin;
@@ -67,28 +65,16 @@ class Stepper : public QObject {
   Stepper(int step_pin, int direction_pin)
       : _step_pin(step_pin), _direction_pin(direction_pin) {}
   virtual ~Stepper() = default;
-  virtual const Stepper& setStep(int step) = 0;
-  virtual const Stepper& setStepDelay(useconds_t step_delay) = 0;
   virtual const Stepper& setDirection(
       const stepper_direction& step_direction) const = 0;
-
- public slots:
-  virtual void run() = 0;
-  virtual void step(int n, useconds_t step_delay = 5000) = 0;
-
- signals:
-  void progress(float progress);
-  void finished();
+  virtual void pulseHigh() = 0;
+  virtual void pulseLow() = 0;
 };
 
 class StepperImpl : public Stepper {
-  Q_OBJECT
-
  private:
   std::unique_ptr<Device> _step_device;
   std::unique_ptr<Device> _direction_device;
-  int                     _step = 0;
-  useconds_t              _step_delay = 5000;
   Logger*                 _logger;
 
  public:
@@ -99,14 +85,11 @@ class StepperImpl : public Stepper {
 
   virtual ~StepperImpl() = default;
 
-  virtual const Stepper& setStep(int step) override;
-  virtual const Stepper& setStepDelay(useconds_t step_delay) override;
   virtual const Stepper& setDirection(
       const stepper_direction& step_direction) const override;
 
- public slots:
-  virtual void run() override;
-  virtual void step(int n, useconds_t step_delay) override;
+  virtual void pulseHigh() override;
+  virtual void pulseLow() override;
 };
 
 using StepperFactory = std::function<std::unique_ptr<Stepper>(int, int)>;

@@ -33,10 +33,11 @@
 #include <fruit/fruit.h>
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
-#include <QObject>
 
 #include <QApplication>
+#include <QObject>
 #include <QString>
+#include <QThread>
 
 #include <QComboBox>
 #include <QLCDNumber>
@@ -79,11 +80,15 @@ class AppImpl : public App {
   const std::shared_ptr<QSpdlog>        _qSpdlog;
   mechanisms::Movement*                 _movement;
 
+  // list of threads
+  const std::unique_ptr<QThread> _fingerMovementThread;
+
  private:
   void setupLogger();
   void setupSignalsAndSlots();
 
-  void movementService(int x, int y);
+  void setupMovementService();
+  void movementService();
 
   void start_worker(worker_object*               thread_worker,
                     const worker_callback&       on_finish,
@@ -96,7 +101,7 @@ class AppImpl : public App {
                  Logger*               logger,
                  State*                state,
                  mechanisms::Movement* movement));
-  virtual ~AppImpl() = default;
+  virtual ~AppImpl();
   inline virtual int run() override { return this->exec(); }
 
  public slots:

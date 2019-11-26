@@ -35,153 +35,107 @@ MovementImpl::MovementImpl(Config*                    config,
     : _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
-      _xStepToCm(
-          (*config)["devices"]["movement"]["x"]["step_to_cm"].as<float>()),
-      _yStepToCm(
-          (*config)["devices"]["movement"]["y"]["step_to_cm"].as<float>()),
-      _stepperX(std::move(stepperFactory(
+      _xStepPerCm(
+          (*config)["devices"]["movement"]["x"]["step_per_cm"].as<float>()),
+      _yStepPerCm(
+          (*config)["devices"]["movement"]["y"]["step_per_cm"].as<float>()),
+      _stepperX(stepperFactory(
           (*config)["devices"]["movement"]["x"]["step_pin"].as<int>(),
-          (*config)["devices"]["movement"]["x"]["direction_pin"].as<int>()))),
-      _stepperY(std::move(stepperFactory(
+          (*config)["devices"]["movement"]["x"]["direction_pin"].as<int>())),
+      _stepperY(stepperFactory(
           (*config)["devices"]["movement"]["y"]["step_pin"].as<int>(),
-          (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>()))),
-      _limitSwitch(std::move(limitSwitchFactory(
-          (*config)["devices"]["movement"]["limit_switch_pin"].as<int>()))),
-      _mutex(std::move(std::make_unique<QMutex>())),
-      _stepperXThread(std::move(std::make_unique<QThread>())),
-      _stepperYThread(std::move(std::make_unique<QThread>())),
-      _signalMergeWorkersFinished(std::move(std::make_unique<SignalMerge>())),
-      _signalMergeWorkersProgress(
-          std::move(std::make_unique<SignalMergeFloat>())) {
+          (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>())),
+      _limitSwitch(limitSwitchFactory(
+          (*config)["devices"]["movement"]["limit_switch_pin"].as<int>())),
+      _mutex(std::make_unique<QMutex>()) {
   setupStepperX();
   setupStepperY();
-
-  _signalMergeWorkersProgress->setCallback([this](float value) {
-    QMutexLocker locker(_mutex.get());
-    return value * (_moveTogether ? 50 : 100);
-  });
-  connect(_signalMergeWorkersProgress.get(), &SignalMergeFloat::merged, this,
-          &Movement::sendProgress);
-  connect(_signalMergeWorkersFinished.get(), &SignalMerge::merged, this,
-          &Movement::finish);
 }
 
-MovementImpl::~MovementImpl() {
-  _stepperXThread->wait();
-  _stepperYThread->wait();
+MovementImpl::~MovementImpl() {}
 
-  _stepperXThread->quit();
-  _stepperYThread->quit();
-};
+void MovementImpl::setupStepperX() {}
 
-void MovementImpl::setupStepperX() {
-  _stepperX->moveToThread(_stepperXThread.get());
-
-  connect(_stepperXThread.get(), &QThread::started, _stepperX.get(),
-          &device::Stepper::run);
-  connect(_stepperX.get(), &device::Stepper::finished, _stepperXThread.get(),
-          &QThread::quit);
-  connect(_stepperX.get(), &device::Stepper::finished, this, [this]() {
-    _signalMergeWorkersProgress->disconnect(_stepperX.get(),
-                                            SIGNAL(progress(float)));
-    _moveTogether = false;
-  });
-}
-
-void MovementImpl::setupStepperY() {
-  _stepperY->moveToThread(_stepperYThread.get());
-
-  connect(_stepperYThread.get(), &QThread::started, _stepperY.get(),
-          &device::Stepper::run);
-  connect(_stepperY.get(), &device::Stepper::finished, _stepperYThread.get(),
-          &QThread::quit);
-  connect(_stepperY.get(), &device::Stepper::finished, this, [this]() {
-    _signalMergeWorkersProgress->disconnect(_stepperY.get(),
-                                            SIGNAL(progress(float)));
-    _moveTogether = false;
-  });
-}
+void MovementImpl::setupStepperY() {}
 
 void MovementImpl::sendProgress(float currentProgress) {
   emit progress(round(currentProgress));
 }
 
+const Movement& MovementImpl::goTo(const Point& point) {
+  QMutexLocker locker(_mutex.get());
+  _currentX = point.x;
+  _currentY = point.y;
+  return *this;
+}
+
 void MovementImpl::run() {
-  bool moveX = _state->getX() != _x;
-  bool moveY = _state->getY() != _y;
+  std::queue<Point> tempPaths = _paths;
 
-  _moveTogether = moveX && moveY;
+  while (!tempPaths.empty()) {
+    const Point point = tempPaths.front();
 
-  if (moveX) {
-    _stepperX->setStep(_x);
-    _signalMergeWorkersProgress->connect(_stepperX.get(),
-                                         SIGNAL(progress(float)));
-    _signalMergeWorkersFinished->connect(_stepperX.get(), SIGNAL(finished()));
-    _stepperXThread->start();
+    int diffX = point.x - _state->getX();
+    int diffY = point.y - _state->getY();
+
+    if (diffX >= 0) {
+      _stepperX->setDirection(device::stepper_direction::FORWARD);
+    } else {
+      _stepperX->setDirection(device::stepper_direction::BACKWARD);
+    }
+
+    if (diffY >= 0) {
+      _stepperY->setDirection(device::stepper_direction::FORWARD);
+    } else {
+      _stepperY->setDirection(device::stepper_direction::BACKWARD);
+    }
+
+    int xStep = cmToSteps(diffX, _xStepPerCm);
+    int yStep = cmToSteps(diffY, _yStepPerCm);
+
+    int maxStep = std::max(xStep, yStep);
+
+    int step = 1;
+
+    while ((step <= maxStep) && _limitSwitch->getStatusBool()) {
+      if (step <= xStep)
+        _stepperX->pulseHigh();
+
+      if (step <= yStep)
+        _stepperY->pulseHigh();
+
+      QThread::usleep(_delay);
+
+      if (step <= xStep)
+        _stepperX->pulseLow();
+
+      if (step <= yStep)
+        _stepperY->pulseLow();
+
+      QThread::usleep(_delay);
+
+      sendProgress(float(step) / float(maxStep));
+      ++step;
+    }
+
+    _state->setX(point.x);
+    _state->setY(point.y);
+
+    tempPaths.pop();
   }
 
-  if (moveY) {
-    _stepperY->setStep(_y);
-    _signalMergeWorkersProgress->connect(_stepperY.get(),
-                                         SIGNAL(progress(float)));
-    _signalMergeWorkersFinished->connect(_stepperY.get(), SIGNAL(finished()));
-    _stepperYThread->start();
-  }
+  finish();
+}
+
+void MovementImpl::reset() {
+  // QMutexLocker locker(_mutex.get());
+  clearPaths();
+  _logger->info("Finger Movement state resetted!");
 }
 
 void MovementImpl::finish() {
-  _signalMergeWorkersProgress->clear();
-  _signalMergeWorkersFinished->clear();
-  _state->setX(_x);
-  _state->setY(_y);
-  reset();
   emit finished();
-}
-
-void MovementImpl::moveX(int x, useconds_t step_delay) {
-  if (_state->getX() != x) {
-    // _stepperX->step(roundStepToCm(y, _yStepToCm));
-    // _state->setX(y);
-
-    auto* work = new worker(make_worker([this, x]() {
-      _logger->info("Stepping");
-      _stepperX->step(x);
-    }));
-
-    auto on_finish_callback = [this, x]() {
-      _state->setX(x);
-      _logger->info("Finished!");
-    };
-
-    auto on_error_callback = [this](const QString& err_msg) {
-      _logger->error(err_msg.toStdString());
-    };
-
-    start_worker(this, work, on_finish_callback, on_error_callback);
-  }
-}
-
-void MovementImpl::moveY(int y, useconds_t step_delay) {
-  if (_state->getY() != y) {
-    // _stepperX->step(roundStepToCm(y, _yStepToCm));
-    // _state->setX(y);
-
-    auto* work = new worker(make_worker([this, y]() {
-      _logger->info("Stepping");
-      _stepperY->step(y);
-    }));
-
-    auto on_finish_callback = [this, y]() {
-      _state->setY(y);
-      _logger->info("Finished!");
-    };
-
-    auto on_error_callback = [this](const QString& err_msg) {
-      _logger->error(err_msg.toStdString());
-    };
-
-    start_worker(this, work, on_finish_callback, on_error_callback);
-  }
+  reset();
 }
 
 fruit::Component<Movement> getMovementComponent() {

@@ -30,15 +30,16 @@
 #pragma once
 
 #include <unistd.h>
+#include <algorithm>
 #include <cmath>
 #include <functional>
-
-#include <QObject>
-#include <QString>
-#include <QThread>
+#include <queue>
 
 #include <QMutex>
 #include <QMutexLocker>
+#include <QObject>
+#include <QString>
+#include <QThread>
 
 #include <fruit/fruit.h>
 
@@ -57,12 +58,41 @@ namespace emmerich::mechanisms {
 class Movement : public QObject {
   Q_OBJECT
 
+ protected:
+  std::queue<Point> _paths;
+  useconds_t        _delay;
+
  public:
   Movement() = default;
   virtual ~Movement() = default;
-  virtual const Movement& goTo(int x, int y) = 0;
-  virtual void            moveX(int x, useconds_t step_delay) = 0;
-  virtual void            moveY(int y, useconds_t step_delay) = 0;
+
+  inline virtual const Movement& setStepDelay(useconds_t delay) {
+    _delay = delay;
+    return *this;
+  }
+
+  virtual const Movement& clearPaths() {
+    std::queue<Point> empty;
+    std::swap(_paths, empty);
+    return *this;
+  }
+
+  virtual const Movement& setPaths(const std::queue<Point>& paths) {
+    _paths = paths;
+    return *this;
+  }
+
+  inline virtual const Movement& setPaths(Point paths[]) {
+    clearPaths();
+
+    for (int i = 0; i <= *(&paths + 1) - paths; i++) {
+      _paths.push(paths[i]);
+    }
+
+    return *this;
+  }
+
+  virtual const Movement& goTo(const Point& point) = 0;
 
  public slots:
   virtual void sendProgress(float progress) = 0;
@@ -84,32 +114,23 @@ class MovementImpl : public Movement {
   const std::unique_ptr<device::Stepper>     _stepperX;
   const std::unique_ptr<device::Stepper>     _stepperY;
   const std::unique_ptr<device::LimitSwitch> _limitSwitch;
-  const float                                _xStepToCm;
-  const float                                _yStepToCm;
+  const float                                _xStepPerCm;
+  const float                                _yStepPerCm;
 
  private:  // internal state
-  const std::unique_ptr<QMutex>           _mutex;
-  const std::unique_ptr<QThread>          _stepperXThread;
-  const std::unique_ptr<QThread>          _stepperYThread;
-  const std::unique_ptr<SignalMerge>      _signalMergeWorkersFinished;
-  const std::unique_ptr<SignalMergeFloat> _signalMergeWorkersProgress;
-  int                                     _x = 0;
-  int                                     _y = 0;
-  int                                     _progress = 0;
-  bool                                    _moveTogether = false;
+  const std::unique_ptr<QMutex> _mutex;
+  int                           _currentX = 0;
+  int                           _currentY = 0;
+  int                           _progress = 0;
+  bool                          _moveTogether = false;
 
  private:
-  static inline int roundStepToCm(int step, float stepToCm) {
-    float stepInCm = ceil(step * stepToCm);
-    return (int)stepInCm;
+  static inline int cmToSteps(int cm, float stepPerCm) {
+    float steps = ceil(cm * stepPerCm);
+    return (int)steps;
   }
 
-  inline void reset() {
-    QMutexLocker locker(_mutex.get());
-    _progress = 0;
-    _logger->info("Finger Movement state resetted!");
-  }
-
+  void reset();
   void setupStepperX();
   void setupStepperY();
 
@@ -122,15 +143,7 @@ class MovementImpl : public Movement {
 
   virtual ~MovementImpl();
 
-  inline virtual const Movement& goTo(int x, int y) override {
-    QMutexLocker locker(_mutex.get());
-    _x = x;
-    _y = y;
-    return *this;
-  }
-
-  virtual void moveX(int x, useconds_t step_delay = 5000) override;
-  virtual void moveY(int y, useconds_t step_delay = 5000) override;
+  virtual const Movement& goTo(const Point& point) override;
 
  public slots:
   virtual void sendProgress(float progress) override;
