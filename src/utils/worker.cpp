@@ -1,10 +1,8 @@
 /*
- * Copyright (c) 2018 Stefan Broekman.
- * Modified by Ray Andrew <raydreww@gmail.com>
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * SPDX-License-Identifier: MIT
  *
- *  This file is distributed under the MIT license.
- *  See: https://stefanbroekman.nl
- *  See: https://github.com/Broekman/Qt5_template
+ * Copyright (c) 2019 Ray Andrew
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,22 +27,15 @@
 #include "utils/worker.h"
 
 namespace emmerich {
-void start_worker(QObject*                     parent,
-                  worker_object*               thread_worker,
-                  const worker_callback&       on_finish,
-                  const worker_error_callback& on_error) {
-  auto* worker_thread = new QThread;
-  thread_worker->moveToThread(worker_thread);
-  QObject::connect(thread_worker, &worker_object::error, parent, on_error);
-  QObject::connect(worker_thread, &QThread::started, thread_worker,
-                   &worker_object::run);
-  QObject::connect(thread_worker, &worker_object::finished, worker_thread,
-                   &QThread::quit);
-  QObject::connect(thread_worker, &worker_object::finished, parent, on_finish);
-  QObject::connect(thread_worker, &worker_object::finished, thread_worker,
-                   &worker_object::deleteLater);
-  QObject::connect(worker_thread, &QThread::finished, worker_thread,
-                   &QThread::deleteLater);
-  worker_thread->start();
+void Worker::start() {
+  emit started();
+  // QThread::usleep(100);
+  _running = true;
+}
+
+void Worker::stop() {
+  _running = false;
+  // QThread::usleep(100);
+  emit finished();
 }
 }  // namespace emmerich

@@ -27,11 +27,12 @@
 #include "mechanisms/movement.h"
 
 namespace emmerich::mechanisms {
-MovementImpl::MovementImpl(Config*                    config,
-                           State*                     state,
-                           Logger*                    logger,
-                           device::StepperFactory     stepperFactory,
-                           device::LimitSwitchFactory limitSwitchFactory)
+MovementImpl::MovementImpl(Config*                     config,
+                           State*                      state,
+                           Logger*                     logger,
+                           device::OutputDeviceFactory outputDeviceFactory,
+                           device::StepperFactory      stepperFactory,
+                           device::LimitSwitchFactory  limitSwitchFactory)
     : _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
@@ -39,6 +40,8 @@ MovementImpl::MovementImpl(Config*                    config,
           (*config)["devices"]["movement"]["x"]["step_per_cm"].as<float>()),
       _yStepPerCm(
           (*config)["devices"]["movement"]["y"]["step_per_cm"].as<float>()),
+      _sleepDevice(outputDeviceFactory(
+          (*config)["devices"]["movement"]["sleep_pin"].as<int>())),
       _stepperX(stepperFactory(
           (*config)["devices"]["movement"]["x"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["x"]["direction_pin"].as<int>())),
@@ -47,94 +50,97 @@ MovementImpl::MovementImpl(Config*                    config,
           (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>())),
       _limitSwitch(limitSwitchFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"].as<int>())),
-      _mutex(std::make_unique<QMutex>()) {
-  setupStepperX();
-  setupStepperY();
-}
+      _mutex(std::make_unique<QMutex>()) {}
 
 MovementImpl::~MovementImpl() {}
 
-void MovementImpl::setupStepperX() {}
-
-void MovementImpl::setupStepperY() {}
-
-void MovementImpl::sendProgress(float currentProgress) {
-  emit progress(round(currentProgress));
+void MovementImpl::move(const Point& point) {
+  move(point.x, point.y);
 }
 
-const Movement& MovementImpl::goTo(const Point& point) {
-  QMutexLocker locker(_mutex.get());
-  _currentX = point.x;
-  _currentY = point.y;
-  return *this;
+void MovementImpl::move(int x, int y) {
+  int diffX = getDiffAndSetDirection(_stepperX.get(), x, _state->getX());
+  int diffY = getDiffAndSetDirection(_stepperY.get(), y, _state->getY());
+
+  int xStep = cmToSteps(diffX, _xStepPerCm);
+  int yStep = cmToSteps(diffY, _yStepPerCm);
+  int maxStep = std::max(xStep, yStep);
+
+  _logger->debug("Moving with x step: {} y step: {}", xStep, yStep);
+
+  int step = 1;
+
+  while ((step <= maxStep) && !_limitSwitch->triggered()) {
+    if (step <= xStep)
+      _stepperX->pulseHigh();
+
+    if (step <= yStep)
+      _stepperY->pulseHigh();
+
+    QThread::usleep(_delay);
+
+    if (step <= xStep)
+      _stepperX->pulseLow();
+
+    if (step <= yStep)
+      _stepperY->pulseLow();
+
+    QThread::usleep(_delay);
+
+    _state->setProgress(round(float(step) / float(maxStep) * 100));
+    ++step;
+  }
+
+  if (_limitSwitch->triggered()) {
+    _running = false;
+    return;
+  }
+
+  _state->setX(x);
+  _state->setY(y);
 }
 
 void MovementImpl::run() {
   std::queue<Point> tempPaths = _paths;
 
-  while (!tempPaths.empty()) {
+  _logger->debug("Start moving the stepper {}", _running);
+
+  while (_running && !tempPaths.empty()) {
     const Point point = tempPaths.front();
-
-    int diffX = point.x - _state->getX();
-    int diffY = point.y - _state->getY();
-
-    if (diffX >= 0) {
-      _stepperX->setDirection(device::stepper_direction::FORWARD);
-    } else {
-      _stepperX->setDirection(device::stepper_direction::BACKWARD);
-    }
-
-    if (diffY >= 0) {
-      _stepperY->setDirection(device::stepper_direction::FORWARD);
-    } else {
-      _stepperY->setDirection(device::stepper_direction::BACKWARD);
-    }
-
-    int xStep = cmToSteps(diffX, _xStepPerCm);
-    int yStep = cmToSteps(diffY, _yStepPerCm);
-
-    int maxStep = std::max(xStep, yStep);
-
-    int step = 1;
-
-    while ((step <= maxStep) && _limitSwitch->getStatusBool()) {
-      if (step <= xStep)
-        _stepperX->pulseHigh();
-
-      if (step <= yStep)
-        _stepperY->pulseHigh();
-
-      QThread::usleep(_delay);
-
-      if (step <= xStep)
-        _stepperX->pulseLow();
-
-      if (step <= yStep)
-        _stepperY->pulseLow();
-
-      QThread::usleep(_delay);
-
-      sendProgress(float(step) / float(maxStep));
-      ++step;
-    }
-
-    _state->setX(point.x);
-    _state->setY(point.y);
-
+    _logger->debug("Moving to x: {} y: {}", point.x, point.y);
+    move(point);
+    QThread::usleep(_delay);
     tempPaths.pop();
   }
 
-  finish();
+  if (!_running) {
+    homing();
+  }
+
+  stop();
+}
+
+void MovementImpl::homing() {
+  _stepperX->setDirection(device::stepper_direction::BACKWARD);
+  _stepperY->setDirection(device::stepper_direction::BACKWARD);
+  _running = true;
+  move(0, 0);
+}
+
+void MovementImpl::start() {
+  _sleepDevice->on();
+  QThread::usleep(100);
+  Worker::start();
 }
 
 void MovementImpl::reset() {
-  // QMutexLocker locker(_mutex.get());
-  clearPaths();
+  homing();
+  _sleepDevice->off();
   _logger->info("Finger Movement state resetted!");
 }
 
-void MovementImpl::finish() {
-  emit finished();
+void MovementImpl::stop() {
+  Worker::stop();
   reset();
 }
 
@@ -144,6 +150,7 @@ fruit::Component<Movement> getMovementComponent() {
       .install(getConfigComponent)
       .install(getStateComponent)
       .install(getLoggerComponent)
+      .install(device::getOutputDeviceComponent)
       .install(device::getStepperComponent)
       .install(device::getLimitSwitchComponent);
 }

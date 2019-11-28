@@ -90,7 +90,6 @@ class Device {
   device_mode _mode;
 
  public:
-  Device() = default;
   Device(int pin) : _pin(pin) {}
   Device(int pin, const device_mode& mode) : _pin(pin), _mode(mode) {}
   virtual ~Device() = default;
@@ -107,7 +106,6 @@ class DeviceImpl : public Device {
   Logger* _logger;
 
  public:
-  DeviceImpl() = default;
   INJECT(DeviceImpl(ASSISTED(int) pin,
                     ASSISTED(const device_mode&) mode,
                     Logger* logger));

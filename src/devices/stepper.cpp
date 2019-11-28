@@ -42,7 +42,7 @@ StepperImpl::StepperImpl(int           step_pin,
 
 const Stepper& StepperImpl::setDirection(
     const stepper_direction& step_direction) const {
-  _logger->debug("Initiate step count : {}",
+  _logger->debug("Set step direction : {}",
                  getStepperDirectionString(step_direction));
   _direction_device->write(device_output::HIGH);
   return *this;

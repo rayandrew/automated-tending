@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,32 +24,31 @@
  *
  */
 
-#ifndef WORKER_H_
-#define WORKER_H_
+#include "devices/output_device.h"
 
-#include <QObject>
-#include <QThread>
+namespace emmerich::device {
+OutputDeviceImpl::OutputDeviceImpl(int           pin,
+                                   Logger*       logger,
+                                   DeviceFactory deviceFactory)
+    : _device(deviceFactory(pin, device_mode::OUTPUT)),
+      _logger(std::move(logger)) {
+  _logger->debug("Output Device with pin {} is initialized!", pin);
+}
 
-namespace emmerich {
-class Worker : public QObject {
-  Q_OBJECT
+  void OutputDeviceImpl::on() {
+    _device->write(device_output::HIGH);
+  }
 
- protected:
-  bool _running = false;
+    void OutputDeviceImpl::off() {
+    _device->write(device_output::LOW);
+  }
 
- public:
-  Worker() = default;
-  ~Worker() = default;
 
- public slots:
-  virtual void start();
-  virtual void run() = 0;
-  virtual void stop();
+fruit::Component<OutputDeviceFactory> getOutputDeviceComponent() {
+  return fruit::createComponent()
+      .bind<OutputDevice, OutputDeviceImpl>()
+      .install(getLoggerComponent)
+      .install(getDeviceComponent);
+}
 
- signals:
-  void started();
-  void finished();
-};
-}  // namespace emmerich
-
-#endif
+}  // namespace emmerich::device

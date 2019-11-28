@@ -51,16 +51,17 @@
 #include "utils/worker.h"
 
 #include "devices/limit_switch.h"
+#include "devices/output_device.h"
 #include "devices/stepper.h"
 
 namespace emmerich::mechanisms {
 
-class Movement : public QObject {
+class Movement : public Worker {
   Q_OBJECT
 
  protected:
   std::queue<Point> _paths;
-  useconds_t        _delay;
+  useconds_t        _delay = 5000;
 
  public:
   Movement() = default;
@@ -82,40 +83,30 @@ class Movement : public QObject {
     return *this;
   }
 
-  inline virtual const Movement& setPaths(Point paths[]) {
+  inline virtual const Movement& setPaths(const std::vector<Point> paths) {
     clearPaths();
 
-    for (int i = 0; i <= *(&paths + 1) - paths; i++) {
-      _paths.push(paths[i]);
+    for (Point point : paths) {
+      _paths.push(point);
     }
 
     return *this;
   }
-
-  virtual const Movement& goTo(const Point& point) = 0;
-
- public slots:
-  virtual void sendProgress(float progress) = 0;
-  virtual void run() = 0;
-  virtual void finish() = 0;
-
- signals:
-  void progress(int progress);
-  void finished();
 };
 
 class MovementImpl : public Movement {
   Q_OBJECT
 
  private:  // injected state
-  Config*                                    _config;
-  State*                                     _state;
-  Logger*                                    _logger;
-  const std::unique_ptr<device::Stepper>     _stepperX;
-  const std::unique_ptr<device::Stepper>     _stepperY;
-  const std::unique_ptr<device::LimitSwitch> _limitSwitch;
-  const float                                _xStepPerCm;
-  const float                                _yStepPerCm;
+  Config*                                     _config;
+  State*                                      _state;
+  Logger*                                     _logger;
+  const std::unique_ptr<device::Stepper>      _stepperX;
+  const std::unique_ptr<device::Stepper>      _stepperY;
+  const std::unique_ptr<device::LimitSwitch>  _limitSwitch;
+  const std::unique_ptr<device::OutputDevice> _sleepDevice;
+  const float                                 _xStepPerCm;
+  const float                                 _yStepPerCm;
 
  private:  // internal state
   const std::unique_ptr<QMutex> _mutex;
@@ -130,25 +121,36 @@ class MovementImpl : public Movement {
     return (int)steps;
   }
 
+  static inline int getDiffAndSetDirection(const device::Stepper* stepper,
+                                           int                    current,
+                                           int                    destination) {
+    int diff = current - destination;
+
+    stepper->setDirection(diff >= 0 ? device::stepper_direction::FORWARD
+                                    : device::stepper_direction::BACKWARD);
+
+    return abs(diff);
+  }
+
   void reset();
-  void setupStepperX();
-  void setupStepperY();
+  void homing();
+  void move(int x, int y);
+  void move(const Point& point);
 
  public:
-  INJECT(MovementImpl(Config*                    config,
-                      State*                     state,
-                      Logger*                    logger,
-                      device::StepperFactory     stepperFactory,
-                      device::LimitSwitchFactory limitSwitchFactory));
+  INJECT(MovementImpl(Config*                     config,
+                      State*                      state,
+                      Logger*                     logger,
+                      device::OutputDeviceFactory outputDeviceFactory,
+                      device::StepperFactory      stepperFactory,
+                      device::LimitSwitchFactory  limitSwitchFactory));
 
   virtual ~MovementImpl();
 
-  virtual const Movement& goTo(const Point& point) override;
-
  public slots:
-  virtual void sendProgress(float progress) override;
+  virtual void start() override;
   virtual void run() override;
-  virtual void finish() override;
+  virtual void stop() override;
 };
 
 fruit::Component<Movement> getMovementComponent();

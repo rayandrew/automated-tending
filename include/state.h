@@ -55,6 +55,10 @@ class State : public QObject {
   Q_DISABLE_COPY(State)
 
  protected:
+  // Global
+  int _progress = 0;
+
+  // Movement
   Point _coordinate;
   float _degree = 0.0;
 
@@ -62,10 +66,16 @@ class State : public QObject {
   State() = default;
   virtual ~State() = default;
 
+  // Global
+  inline int getProgress() const { return _progress; }
+
+  // Movement 
   inline float          getDegree() const { return _degree; }
   inline const Point&   getCoordinate() const { return _coordinate; }
   inline int            getX() const { return _coordinate.x; };
   inline int            getY() const { return _coordinate.y; };
+
+  // Formatter
   friend std::ostream&  operator<<(std::ostream& os, const State& state);
   friend YAML::Emitter& operator<<(YAML::Emitter& out, const State& state);
 
@@ -73,12 +83,20 @@ class State : public QObject {
   virtual void save(const std::string& filename = "state.yaml");
 
  public slots:
+  // Global
+  virtual void setProgress(int progress) = 0;
+
+  // Movement
   virtual void setDegree(float degree) = 0;
   virtual void setX(int x) = 0;
   virtual void setY(int y) = 0;
   virtual void setCoordinate(const Point& coordinate) = 0;
 
  signals:
+  // Global
+  void progressHasChanged(int new_progress);
+
+  // Movement
   void degreeHasChanged(const QString& new_degree);
   void xHasChanged(const QString& new_x);
   void yHasChanged(const QString& new_y);
@@ -96,6 +114,10 @@ class StateImpl : public State {
   virtual ~StateImpl() = default;
 
  public slots:
+  // Global
+  virtual void setProgress(int progress) override;
+
+  // Movement
   virtual void setDegree(float degree) override;
   virtual void setX(int x) override;
   virtual void setY(int y) override;

@@ -81,7 +81,7 @@ class AppImpl : public App {
   mechanisms::Movement*                 _movement;
 
   // list of threads
-  const std::unique_ptr<QThread> _fingerMovementThread;
+  const std::unique_ptr<QThread> _movementThread;
 
  private:
   void setupLogger();
@@ -89,10 +89,6 @@ class AppImpl : public App {
 
   void setupMovementService();
   void movementService();
-
-  void start_worker(worker_object*               thread_worker,
-                    const worker_callback&       on_finish,
-                    const worker_error_callback& on_error);
 
  public:
   INJECT(AppImpl(ASSISTED(int) argc,

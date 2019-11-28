@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,16 +24,14 @@
  *
  */
 
-#ifndef DEVICE_LIMIT_SWITCH_H_
-#define DEVICE_LIMIT_SWITCH_H_
+#ifndef OUTPUT_DEVICE_H_
+#define OUTPUT_DEVICE_H_
 
 #pragma once
 
-#include <unistd.h>
-
-#include <QObject>
-#include <QString>
-#include <QThread>
+#include <exception>
+#include <iostream>
+#include <sstream>
 
 #include <fmt/format.h>
 #include <fruit/fruit.h>
@@ -42,41 +40,32 @@
 #include "logger.h"
 
 namespace emmerich::device {
-class LimitSwitch {
- protected:
-  const int _pin;
-
+class OutputDevice {
  public:
-  LimitSwitch(int pin) : _pin(pin) {}
-  virtual ~LimitSwitch() = default;
-  virtual device_output       getStatus() const = 0;
-  virtual bool                triggered() const = 0;
+  OutputDevice() = default;
+  virtual ~OutputDevice() = default;
+  virtual void on() = 0;
+  virtual void off() = 0;
 };
 
-class LimitSwitchImpl : public LimitSwitch {
+class OutputDeviceImpl : public OutputDevice {
  private:
-  std::unique_ptr<Device> _limit_switch_device;
+  std::unique_ptr<Device> _device;
   Logger*                 _logger;
 
  public:
-  INJECT(LimitSwitchImpl(ASSISTED(int) pin,
-                         Logger*       logger,
-                         DeviceFactory deviceFactory));
+  INJECT(OutputDeviceImpl(ASSISTED(int) pin,
+                          Logger*       logger,
+                          DeviceFactory deviceFactory));
+  virtual ~OutputDeviceImpl() = default;
 
-  virtual ~LimitSwitchImpl() = default;
-
-  virtual inline device_output getStatus() const override {
-    return _limit_switch_device->read();
-  }
-
-  virtual inline bool triggered() const override {
-    return getOutputModeBool(_limit_switch_device->read());
-  }
+  virtual void on() override;
+  virtual void off() override;
 };
 
-using LimitSwitchFactory = std::function<std::unique_ptr<LimitSwitch>(int)>;
+using OutputDeviceFactory = std::function<std::unique_ptr<OutputDevice>(int)>;
 
-fruit::Component<LimitSwitchFactory> getLimitSwitchComponent();
+fruit::Component<OutputDeviceFactory> getOutputDeviceComponent();
 }  // namespace emmerich::device
 
 #endif

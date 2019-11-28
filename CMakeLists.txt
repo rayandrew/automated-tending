@@ -56,12 +56,14 @@ set(SOURCES
 
     src/utils/qspdlog.cpp
     src/utils/worker.cpp
+    src/utils/simple_worker.cpp
     src/utils/signal_merge.cpp
 
     src/windows/main_window.cpp
 
     src/devices/stepper.cpp
     src/devices/device.cpp
+    src/devices/output_device.cpp
     src/devices/limit_switch.cpp
 
     src/mechanisms/movement.cpp) 
@@ -80,12 +82,14 @@ set(HEADERS
     
     include/utils/qspdlog.h
     include/utils/worker.h
+    include/utils/simple_worker.h
     include/utils/signal_merge.h
     
     include/windows/main_window.h
 
     include/devices/stepper.h
     include/devices/device.h
+    include/devices/output_device.h
     include/devices/limit_switch.h
 
     include/mechanisms/movement.h) 

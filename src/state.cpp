@@ -74,13 +74,23 @@ void StateImpl::setDegree(float degree) {
   }
 }
 
+void StateImpl::setProgress(int progress) {
+  QMutexLocker locker(_mutex.get());
+
+  if (_progress != progress && progress >= 0 && progress <= 100) {
+    _progress = progress;
+    emit progressHasChanged(progress);
+    // _logger->debug("Progress has changed into {}%", progress);
+  }
+}
+
 void StateImpl::setX(int x) {
   QMutexLocker locker(_mutex.get());
 
   if (x != _coordinate.x) {
     _coordinate.x = x;
     emit xHasChanged(QString::number(x));
-    _logger->info("Coordinate X has changed into {}", x);
+    _logger->debug("Coordinate X has changed into {}", x);
   }
 };
 
@@ -89,7 +99,7 @@ void StateImpl::setY(int y) {
   if (y != _coordinate.y) {
     _coordinate.y = y;
     emit yHasChanged(QString::number(y));
-    _logger->info("Coordinate Y has changed into {}", y);
+    _logger->debug("Coordinate Y has changed into {}", y);
   }
 };
 

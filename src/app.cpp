@@ -39,7 +39,8 @@ AppImpl::AppImpl(int                   argc,
       _state(std::move(state)),
       _logger(std::move(logger)),
       _qSpdlog(std::make_shared<QSpdlog>()),
-      _movement(std::move(movement)) {
+      _movement(std::move(movement)),
+      _movementThread(std::make_unique<QThread>()) {
   _ui = _window->getUi();
 
   setupLogger();
@@ -57,8 +58,7 @@ AppImpl::AppImpl(int                   argc,
 }
 
 AppImpl::~AppImpl() {
-  _fingerMovementThread->wait();
-  _fingerMovementThread->quit();
+  _movementThread->quit();
 }
 
 void AppImpl::setupSignalsAndSlots() {
@@ -78,12 +78,8 @@ void AppImpl::setupSignalsAndSlots() {
   connect(_state, SIGNAL(degreeHasChanged(QString)), stateFingerDegreeValue,
           SLOT(display(QString)));
 
-  connect(_movement, &mechanisms::Movement::progress, progressBar,
+  connect(_state, &State::progressHasChanged, progressBar,
           &QProgressBar::setValue);
-  connect(_movement, &mechanisms::Movement::progress, this,
-          [this](int progress) {
-            _logger->info("Progress Movement : {}%", progress);
-          });
   connect(_movement, &mechanisms::Movement::finished, this,
           [this]() { _logger->info("Finger Movement finished!"); });
 
@@ -123,36 +119,22 @@ void AppImpl::addLogEntry(const QString& msg) {
   }
 }
 
-void AppImpl::start_worker(worker_object*               thread_worker,
-                           const worker_callback&       on_finish,
-                           const worker_error_callback& on_error) {
-  auto* worker_thread = new QThread;
-  thread_worker->moveToThread(worker_thread);
-  connect(thread_worker, &worker_object::error, this, on_error);
-  connect(worker_thread, &QThread::started, thread_worker, &worker_object::run);
-  connect(thread_worker, &worker_object::finished, worker_thread,
-          &QThread::quit);
-  connect(thread_worker, &worker_object::finished, this, on_finish);
-  connect(thread_worker, &worker_object::finished, thread_worker,
-          &worker_object::deleteLater);
-  connect(worker_thread, &QThread::finished, worker_thread,
-          &QThread::deleteLater);
-  worker_thread->start();
-}
-
 void AppImpl::setupMovementService() {
-  _movement->moveToThread(_fingerMovementThread.get());
+  std::vector<Point> paths = {{0, 0},  {0, 200},  {20, 200}, {20, 0},
+                              {40, 0}, {40, 200}, {60, 200}};
 
-  connect(_fingerMovementThread.get(), &QThread::started, _movement,
+  _movement->setPaths(paths);
+  _movement->moveToThread(_movementThread.get());
+
+  connect(_movement, SIGNAL(started()), _movementThread.get(), SLOT(start()));
+  connect(_movementThread.get(), &QThread::started, _movement,
           &mechanisms::Movement::run);
-  connect(_movement, &mechanisms::Movement::finished,
-          _fingerMovementThread.get(), &QThread::quit);
-  // connect(_fingerMovementThread, &QThread::finished, _fingerMovementThread,
-  //         &QThread::deleteLater);
+  connect(_movement, &mechanisms::Movement::finished, _movementThread.get(),
+          &QThread::quit);
 }
 
 void AppImpl::movementService() {
-  _fingerMovementThread->start();
+  _movement->start();
 }
 
 fruit::Component<AppFactory> getAppComponent() {
