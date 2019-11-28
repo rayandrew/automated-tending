@@ -80,7 +80,7 @@ class AppImpl : public App {
   Logger*                             _logger;
   State*                              _state;
   const std::shared_ptr<QSpdlog>      _qSpdlog;
-  // mechanisms::Movement*             _movement;
+  mechanisms::Movement*               _movement;
 
   // list of threads
   const std::unique_ptr<QThread> _movementThread;
@@ -95,9 +95,10 @@ class AppImpl : public App {
  public:
   INJECT(AppImpl(ASSISTED(int) argc,
                  ASSISTED(char**) argv,
-                 Config* config,
-                 Logger* logger,
-                 State*  state));
+                 Config*               config,
+                 Logger*               logger,
+                 State*                state,
+                 mechanisms::Movement* movement));
   virtual ~AppImpl();
   inline virtual int run() override { return _qApp->exec(); }
 
