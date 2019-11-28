@@ -11,7 +11,9 @@ option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will r
 option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work" ON)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    add_definitions(-DMOCK_GPIO)
+  add_definitions(-DMOCK_GPIO)
+else()
+  find_package(pigpio REQUIRED)
 endif()
 
 # Include stuffs
