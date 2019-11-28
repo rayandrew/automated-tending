@@ -13,10 +13,13 @@ option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work"
 # Include stuffs
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
+set(RASPI_LIB "")
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   add_definitions(-DMOCK_GPIO)
 else()
   find_package(pigpio REQUIRED)
+  set(RASPI_LIB "pigpio rt")
 endif()
 
 include(ConfigSafeGuards)
@@ -129,7 +132,8 @@ target_link_libraries(${LIBRARY_NAME} PUBLIC
                       fmt::fmt
                       yaml::yaml
                       Qt5::Core
-                      Qt5::Widgets)
+                      Qt5::Widgets
+                      ${RASPI_LIB})
 
 # Set the compile options you want (change as needed).
 # target_set_warnings(${LIBRARY_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
@@ -152,7 +156,8 @@ target_link_libraries(main PRIVATE ${LIBRARY_NAME}
                       fruit
                       yaml::yaml
                       Qt5::Core
-                      Qt5::Widgets)
+                      Qt5::Widgets
+                      ${RASPI_LIB})
 
 # Precompiled Headers
 cotire(main)
