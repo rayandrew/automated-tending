@@ -27,20 +27,20 @@
 #include "app.h"
 
 namespace emmerich {
-AppImpl::AppImpl(int                   argc,
-                 char**                argv,
-                 Config*               config,
-                 Logger*               logger,
-                 State*                state,
-                 mechanisms::Movement* movement)
+AppImpl::AppImpl(int     argc,
+                 char**  argv,
+                 Config* config,
+                 Logger* logger,
+                 State*  state)
+    // mechanisms::Movement* movement)
     : App(argc, argv),
-      _window(std::make_unique<ui::MainWindow>()),
+      _window(std::make_unique<MainWindow>()),
       _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
       _qSpdlog(std::make_shared<QSpdlog>()),
-      _movement(std::move(movement)),
       _movementThread(std::make_unique<QThread>()) {
+  // _movement(std::move(movement)) {
   _ui = _window->getUi();
 
   setupLogger();
@@ -53,7 +53,7 @@ AppImpl::AppImpl(int                   argc,
 
   _state->load();
 
-  _window->setWindowState(Qt::WindowMaximized);
+  // _window->setWindowState(Qt::WindowMaximized);
   _window->show();
 }
 
@@ -80,8 +80,8 @@ void AppImpl::setupSignalsAndSlots() {
 
   connect(_state, &State::progressHasChanged, progressBar,
           &QProgressBar::setValue);
-  connect(_movement, &mechanisms::Movement::finished, this,
-          [this]() { _logger->info("Finger Movement finished!"); });
+  // connect(_movement, &mechanisms::Movement::finished, this,
+  //         [this]() { _logger->info("Finger Movement finished!"); });
 
   connect(tendingButton, &QPushButton::released, this,
           [=]() { movementService(); });
@@ -123,18 +123,19 @@ void AppImpl::setupMovementService() {
   std::vector<Point> paths = {{0, 0},  {0, 200},  {20, 200}, {20, 0},
                               {40, 0}, {40, 200}, {60, 200}};
 
-  _movement->setPaths(paths);
-  _movement->moveToThread(_movementThread.get());
+  // _movement->setPaths(paths);
+  // _movement->moveToThread(_movementThread.get());
 
-  connect(_movement, SIGNAL(started()), _movementThread.get(), SLOT(start()));
-  connect(_movementThread.get(), &QThread::started, _movement,
-          &mechanisms::Movement::run);
-  connect(_movement, &mechanisms::Movement::finished, _movementThread.get(),
-          &QThread::quit);
+  // connect(_movement, SIGNAL(started()), _movementThread.get(),
+  // SLOT(start())); connect(_movementThread.get(), &QThread::started,
+  // _movement,
+  //         &mechanisms::Movement::run);
+  // connect(_movement, &mechanisms::Movement::finished, _movementThread.get(),
+  //         &QThread::quit);
 }
 
 void AppImpl::movementService() {
-  _movement->start();
+  // _movement->start();
 }
 
 fruit::Component<AppFactory> getAppComponent() {
@@ -142,7 +143,6 @@ fruit::Component<AppFactory> getAppComponent() {
       .bind<App, AppImpl>()
       .install(getConfigComponent)
       .install(getLoggerComponent)
-      .install(getStateComponent)
-      .install(mechanisms::getMovementComponent);
+      .install(getStateComponent);
 }
 }  // namespace emmerich

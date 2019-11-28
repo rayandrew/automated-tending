@@ -72,13 +72,13 @@ class App : public QApplication {
 class AppImpl : public App {
   Q_OBJECT
  private:
-  const std::unique_ptr<ui::MainWindow> _window;
-  std::shared_ptr<Ui::MainWindow>       _ui;
-  Config*                               _config;
-  Logger*                               _logger;
-  State*                                _state;
-  const std::shared_ptr<QSpdlog>        _qSpdlog;
-  mechanisms::Movement*                 _movement;
+  const std::unique_ptr<MainWindow> _window;
+  Ui::MainWindow*                   _ui;
+  Config*                           _config;
+  Logger*                           _logger;
+  State*                            _state;
+  const std::shared_ptr<QSpdlog>    _qSpdlog;
+  // mechanisms::Movement*             _movement;
 
   // list of threads
   const std::unique_ptr<QThread> _movementThread;
@@ -93,10 +93,9 @@ class AppImpl : public App {
  public:
   INJECT(AppImpl(ASSISTED(int) argc,
                  ASSISTED(char**) argv,
-                 Config*               config,
-                 Logger*               logger,
-                 State*                state,
-                 mechanisms::Movement* movement));
+                 Config* config,
+                 Logger* logger,
+                 State*  state));
   virtual ~AppImpl();
   inline virtual int run() override { return this->exec(); }
 

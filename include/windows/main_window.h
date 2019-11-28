@@ -32,27 +32,23 @@
 #include <QObject>
 #include <QtWidgets>
 
-#include "ui_main_window.h"
+namespace Ui {
+class MainWindow;
+}
 
-// namespace Ui {
-// class MainWindow;
-// }
-
-namespace emmerich::ui {
 class MainWindow : public QMainWindow {
   Q_OBJECT
 
  private:
-  std::shared_ptr<Ui::MainWindow> _ui;
+  Ui::MainWindow* ui;
 
  public:
   explicit MainWindow(QWidget* parent = 0);
   ~MainWindow();
-  inline const std::shared_ptr<Ui::MainWindow>& getUi() const { return _ui; }
+  inline Ui::MainWindow* getUi() { return ui; }
 
  private slots:
   void on_actionExit_triggered();
 };
-}  // namespace emmerich::ui
 
 #endif  // MAINWINDOW_H

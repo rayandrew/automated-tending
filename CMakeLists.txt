@@ -13,15 +13,6 @@ option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work"
 # Include stuffs
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-set(RASPI_LIB "")
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  add_definitions(-DMOCK_GPIO)
-else()
-  find_package(pigpio REQUIRED)
-  set(RASPI_LIB "pigpio rt")
-endif()
-
 include(ConfigSafeGuards)
 include(Colors)
 include(Cotire)
@@ -35,6 +26,17 @@ include(Misc)
 include(Spdlog)
 include(Warnings)
 include(Yaml)
+
+set(RASPI_LIB "")
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  add_definitions(-DMOCK_GPIO)
+else()
+  find_package(pigpio REQUIRED)
+  LIST(APPEND RASPI_LIB "pigpio")
+  LIST(APPEND RASPI_LIB "rt")
+endif()
+
 
 # Check for LTO support.
 find_lto(CXX)
@@ -126,14 +128,14 @@ target_include_directories(${LIBRARY_NAME} PUBLIC
 
 # There's also (probably) doctests within the library, so we need to see this as well.
 target_link_libraries(${LIBRARY_NAME} PUBLIC
+                      ${RASPI_LIB}
                       doctest
                       spdlog::spdlog
                       fruit
                       fmt::fmt
                       yaml::yaml
                       Qt5::Core
-                      Qt5::Widgets
-                      ${RASPI_LIB})
+                      Qt5::Widgets)
 
 # Set the compile options you want (change as needed).
 # target_set_warnings(${LIBRARY_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
@@ -151,13 +153,13 @@ add_executable(main app/main.cpp)
 
 # Link the executable to libraries
 target_link_libraries(main PRIVATE ${LIBRARY_NAME}
+                      ${RASPI_LIB}
                       spdlog::spdlog
                       fmt::fmt
                       fruit
                       yaml::yaml
                       Qt5::Core
-                      Qt5::Widgets
-                      ${RASPI_LIB})
+                      Qt5::Widgets)
 
 # Precompiled Headers
 cotire(main)

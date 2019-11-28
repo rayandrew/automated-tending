@@ -57,8 +57,10 @@ int main(int argc, char** argv) {
 
   std::unique_ptr<emmerich::App> app = appFactory(argc, argv);
 
+  int status = app->run();
+
   // Terminate GPIO
   gpioTerminate();
 
-  return app->run();
+  return status;
 }
