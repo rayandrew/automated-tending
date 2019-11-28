@@ -58,12 +58,13 @@
 #include "mechanisms/movement.h"
 
 namespace emmerich {
-class App : public QApplication {
+class App : public QObject {
   Q_OBJECT
+
  public:
-  App(int argc, char** argv) : QApplication(argc, argv) {}
-  virtual int run() = 0;
+  App() = default;
   virtual ~App() = default;
+  virtual int run() = 0;
 
  public slots:
   virtual void addLogEntry(const QString& msg) = 0;
@@ -72,12 +73,13 @@ class App : public QApplication {
 class AppImpl : public App {
   Q_OBJECT
  private:
-  const std::unique_ptr<MainWindow> _window;
-  Ui::MainWindow*                   _ui;
-  Config*                           _config;
-  Logger*                           _logger;
-  State*                            _state;
-  const std::shared_ptr<QSpdlog>    _qSpdlog;
+  const std::unique_ptr<QApplication> _qApp;
+  const std::unique_ptr<MainWindow>   _window;
+  Ui::MainWindow*                     _ui;
+  Config*                             _config;
+  Logger*                             _logger;
+  State*                              _state;
+  const std::shared_ptr<QSpdlog>      _qSpdlog;
   // mechanisms::Movement*             _movement;
 
   // list of threads
@@ -97,7 +99,7 @@ class AppImpl : public App {
                  Logger* logger,
                  State*  state));
   virtual ~AppImpl();
-  inline virtual int run() override { return this->exec(); }
+  inline virtual int run() override { return _qApp->exec(); }
 
  public slots:
   virtual void addLogEntry(const QString& msg) override;

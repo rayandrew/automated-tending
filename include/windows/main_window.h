@@ -29,12 +29,11 @@
 
 #pragma once
 
+#include <QMainWindow>
 #include <QObject>
 #include <QtWidgets>
 
-namespace Ui {
-class MainWindow;
-}
+#include "ui_main_window.h"
 
 class MainWindow : public QMainWindow {
   Q_OBJECT

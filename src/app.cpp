@@ -33,7 +33,7 @@ AppImpl::AppImpl(int     argc,
                  Logger* logger,
                  State*  state)
     // mechanisms::Movement* movement)
-    : App(argc, argv),
+    : _qApp(std::make_unique<QApplication>(argc, argv)),
       _window(std::make_unique<MainWindow>()),
       _config(std::move(config)),
       _state(std::move(state)),
