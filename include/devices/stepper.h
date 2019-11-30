@@ -67,6 +67,7 @@ class Stepper {
   virtual ~Stepper() = default;
   virtual const Stepper& setDirection(
       const stepper_direction& step_direction) const = 0;
+  virtual void setReverseDirection(bool reverseDirection) = 0;
   virtual void pulseHigh() = 0;
   virtual void pulseLow() = 0;
 };
@@ -76,6 +77,7 @@ class StepperImpl : public Stepper {
   std::unique_ptr<Device> _step_device;
   std::unique_ptr<Device> _direction_device;
   Logger*                 _logger;
+  bool                    _reverseDirection = false;
 
  public:
   INJECT(StepperImpl(ASSISTED(int) step_pin,
@@ -87,6 +89,7 @@ class StepperImpl : public Stepper {
 
   virtual const Stepper& setDirection(
       const stepper_direction& step_direction) const override;
+  virtual void setReverseDirection(bool reverseDirection) override;
 
   virtual void pulseHigh() override;
   virtual void pulseLow() override;

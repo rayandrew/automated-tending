@@ -44,6 +44,8 @@ class OutputDevice {
  public:
   OutputDevice() = default;
   virtual ~OutputDevice() = default;
+
+  virtual void setActiveState(bool activeState) = 0;
   virtual void on() = 0;
   virtual void off() = 0;
 };
@@ -52,6 +54,7 @@ class OutputDeviceImpl : public OutputDevice {
  private:
   std::unique_ptr<Device> _device;
   Logger*                 _logger;
+  bool                    _activeState = true;
 
  public:
   INJECT(OutputDeviceImpl(ASSISTED(int) pin,
@@ -59,6 +62,7 @@ class OutputDeviceImpl : public OutputDevice {
                           DeviceFactory deviceFactory));
   virtual ~OutputDeviceImpl() = default;
 
+  virtual void setActiveState(bool activeState) override;
   virtual void on() override;
   virtual void off() override;
 };

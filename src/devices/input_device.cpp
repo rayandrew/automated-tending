@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,39 +24,21 @@
  *
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#include "devices/input_device.h"
 
-#pragma once
+namespace emmerich::device {
+InputDeviceImpl::InputDeviceImpl(int           pin,
+                                 Logger*       logger,
+                                 DeviceFactory deviceFactory)
+    : _device(deviceFactory(pin, device_mode::INPUT)),
+      _logger(std::move(logger)) {
+  _logger->debug("InputDevice with pin {} is initialized!", pin);
+}
 
-#include <iostream>
-#include <memory>
-
-#include <fruit/fruit.h>
-#include <yaml-cpp/yaml.h>
-
-#include "general_config.h"
-
-namespace emmerich {
-class Config {
- protected:
-  std::shared_ptr<YAML::Node> _config;
-
- public:
-  Config() = default;
-  virtual ~Config() = default;
-
-  template <typename Key>
-  inline const YAML::Node operator[](const Key& key) const {
-    return _config->operator[](key);
-  }
-
-  inline const std::shared_ptr<YAML::Node>& getConfig() const {
-    return _config;
-  }
-};
-
-fruit::Component<Config> getConfigComponent();
-}  // namespace emmerich
-
-#endif
+fruit::Component<InputDeviceFactory> getInputDeviceComponent() {
+  return fruit::createComponent()
+      .bind<InputDevice, InputDeviceImpl>()
+      .install(getLoggerComponent)
+      .install(getDeviceComponent);
+}
+}  // namespace emmerich::device

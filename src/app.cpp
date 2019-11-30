@@ -52,8 +52,7 @@ AppImpl::AppImpl(int                   argc,
                 PROJECT_VERSION_TWEAK);
 
   _state->load();
-
-  // _window->setWindowState(Qt::WindowMaximized);
+  _window->setWindowState(Qt::WindowMaximized);
   _window->show();
 }
 
@@ -80,8 +79,6 @@ void AppImpl::setupSignalsAndSlots() {
 
   connect(_state, &State::progressHasChanged, progressBar,
           &QProgressBar::setValue);
-  connect(_movement, &mechanisms::Movement::finished, this,
-          [this]() { _logger->info("Finger Movement finished!"); });
 
   connect(tendingButton, &QPushButton::released, this,
           [=]() { movementService(); });
@@ -120,10 +117,13 @@ void AppImpl::addLogEntry(const QString& msg) {
 }
 
 void AppImpl::setupMovementService() {
-  std::vector<Point> paths = {{0, 0},  {0, 200},  {20, 200}, {20, 0},
-                              {40, 0}, {40, 200}, {60, 200}};
+  // std::vector<Point> paths = {{0, 0},  {0, 90},  {20, 90}, {20, 0},
+  //                             {40, 0}, {40, 90}, {60, 90}};
 
-  _movement->setPaths(paths);
+  // std::vector<Point> paths = {{0, 0},  {0, 30},  {5, 30}, {10, 0},
+  //                             {15, 0}, {20, 30}, {25, 30}};
+
+  /* _movement->setPaths(paths); */
   _movement->moveToThread(_movementThread.get());
 
   connect(_movement, SIGNAL(started()), _movementThread.get(), SLOT(start()));
@@ -131,6 +131,8 @@ void AppImpl::setupMovementService() {
           &mechanisms::Movement::run);
   connect(_movement, &mechanisms::Movement::finished, _movementThread.get(),
           &QThread::quit);
+  connect(_movement, &mechanisms::Movement::finished, this,
+          [this]() { _logger->info("Finger Movement finished!"); });
 }
 
 void AppImpl::movementService() {

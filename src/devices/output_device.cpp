@@ -35,14 +35,17 @@ OutputDeviceImpl::OutputDeviceImpl(int           pin,
   _logger->debug("Output Device with pin {} is initialized!", pin);
 }
 
-  void OutputDeviceImpl::on() {
-    _device->write(device_output::HIGH);
-  }
+void OutputDeviceImpl::setActiveState(bool activeState) {
+  _activeState = activeState;
+}
 
-    void OutputDeviceImpl::off() {
-    _device->write(device_output::LOW);
-  }
+void OutputDeviceImpl::on() {
+  _device->write(_activeState ? device_output::HIGH : device_output::LOW);
+}
 
+void OutputDeviceImpl::off() {
+  _device->write(_activeState ? device_output::LOW : device_output::HIGH);
+}
 
 fruit::Component<OutputDeviceFactory> getOutputDeviceComponent() {
   return fruit::createComponent()

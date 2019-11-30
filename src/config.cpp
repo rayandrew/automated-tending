@@ -30,7 +30,7 @@ namespace emmerich {
 class ConfigImpl : public Config {
  public:
   INJECT(ConfigImpl()) {
-    _config = std::make_shared<YAML::Node>(YAML::LoadFile("config.yaml"));
+    _config = std::make_shared<YAML::Node>(YAML::LoadFile(PROJECT_CONFIG_FILE));
   };
 };
 

@@ -63,6 +63,11 @@ inline const std::string getOutputModeString(const device_output& output) {
   return output == device_output::LOW ? "low" : "high";
 }
 
+inline device_output inverseOutput(const device_output& output) {
+  return output == device_output::LOW ? device_output::HIGH
+                                      : device_output::LOW;
+}
+
 inline bool getOutputModeBool(const device_output& output) {
   return output == device_output::HIGH;
 }

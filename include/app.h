@@ -100,6 +100,7 @@ class AppImpl : public App {
                  State*                state,
                  mechanisms::Movement* movement));
   virtual ~AppImpl();
+
   inline virtual int run() override { return _qApp->exec(); }
 
  public slots:

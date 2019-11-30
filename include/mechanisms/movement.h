@@ -47,10 +47,13 @@
 #include "logger.h"
 #include "state.h"
 
+#include "general_config.h"
+
+#include "utils/csv.h"
 #include "utils/signal_merge.h"
 #include "utils/worker.h"
 
-#include "devices/limit_switch.h"
+#include "devices/input_device.h"
 #include "devices/output_device.h"
 #include "devices/stepper.h"
 
@@ -61,7 +64,7 @@ class Movement : public Worker {
 
  protected:
   std::queue<Point> _paths;
-  useconds_t        _delay = 5000;
+  useconds_t        _delay = 500;
 
  public:
   Movement() = default;
@@ -72,27 +75,41 @@ class Movement : public Worker {
     return *this;
   }
 
-  virtual const Movement& clearPaths() {
-    std::queue<Point> empty;
-    std::swap(_paths, empty);
-    return *this;
-  }
+  virtual const Movement& loadPathsFromFile(
+      const std::string& filename = PROJECT_MOVEMENT_TEMPLATE_FILE) {
+    io::CSVReader<2> in(filename);
+    in.read_header(io::ignore_extra_column, "x", "y");
 
-  virtual const Movement& setPaths(const std::queue<Point>& paths) {
-    _paths = paths;
-    return *this;
-  }
-
-  inline virtual const Movement& setPaths(const std::vector<Point> paths) {
-    clearPaths();
-
-    for (Point point : paths) {
+    int x, y;
+    while (in.read_row(x, y)) {
+      const Point point = {x, y};
       _paths.push(point);
     }
 
     return *this;
   }
-};
+
+    virtual const Movement& clearPaths() {
+      std::queue<Point> empty;
+      std::swap(_paths, empty);
+      return *this;
+    }
+
+    virtual const Movement& setPaths(const std::queue<Point>& paths) {
+      _paths = paths;
+      return *this;
+    }
+
+    inline virtual const Movement& setPaths(const std::vector<Point> paths) {
+      clearPaths();
+
+      for (Point point : paths) {
+        _paths.push(point);
+      }
+
+      return *this;
+    }
+  };
 
 class MovementImpl : public Movement {
   Q_OBJECT
@@ -103,10 +120,12 @@ class MovementImpl : public Movement {
   Logger*                                     _logger;
   const std::unique_ptr<device::Stepper>      _stepperX;
   const std::unique_ptr<device::Stepper>      _stepperY;
-  const std::unique_ptr<device::LimitSwitch>  _limitSwitch;
+  const std::unique_ptr<device::InputDevice>  _limitSwitch;
   const std::unique_ptr<device::OutputDevice> _sleepDevice;
   const float                                 _xStepPerCm;
   const float                                 _yStepPerCm;
+  bool                                        _isLimitSwitchTriggered = false;
+  bool                                        _homing = false;
 
  private:  // internal state
   const std::unique_ptr<QMutex> _mutex;
@@ -141,9 +160,9 @@ class MovementImpl : public Movement {
   INJECT(MovementImpl(Config*                     config,
                       State*                      state,
                       Logger*                     logger,
+                      device::InputDeviceFactory  inputDeviceFactory,
                       device::OutputDeviceFactory outputDeviceFactory,
-                      device::StepperFactory      stepperFactory,
-                      device::LimitSwitchFactory  limitSwitchFactory));
+                      device::StepperFactory      stepperFactory));
 
   virtual ~MovementImpl();
 

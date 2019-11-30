@@ -48,7 +48,6 @@ int main(int argc, char** argv) {
   qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "1");
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-  // Initialize GPIO
   if (gpioInitialise() < 0)
     return 1;
 
@@ -59,7 +58,6 @@ int main(int argc, char** argv) {
 
   int status = app->run();
 
-  // Terminate GPIO
   gpioTerminate();
 
   return status;

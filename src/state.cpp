@@ -61,8 +61,7 @@ void State::save(const std::string& filename) {
 }
 
 StateImpl::StateImpl(Logger* logger)
-    : _logger(std::move(logger)),
-      _mutex(std::move(std::make_unique<QMutex>())) {}
+    : _logger(std::move(logger)), _mutex(std::make_unique<QMutex>()) {}
 
 void StateImpl::setDegree(float degree) {
   QMutexLocker locker(_mutex.get());
@@ -80,7 +79,6 @@ void StateImpl::setProgress(int progress) {
   if (_progress != progress && progress >= 0 && progress <= 100) {
     _progress = progress;
     emit progressHasChanged(progress);
-    // _logger->debug("Progress has changed into {}%", progress);
   }
 }
 

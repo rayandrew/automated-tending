@@ -27,6 +27,8 @@
 #ifndef STATE_H_
 #define STATE_H_
 
+#pragma once
+
 #include <fstream>
 #include <map>
 
@@ -42,7 +44,7 @@
 
 #include "logger.h"
 
-#pragma once
+#include "general_config.h"
 
 namespace emmerich {
 struct Point {
@@ -69,18 +71,18 @@ class State : public QObject {
   // Global
   inline int getProgress() const { return _progress; }
 
-  // Movement 
-  inline float          getDegree() const { return _degree; }
-  inline const Point&   getCoordinate() const { return _coordinate; }
-  inline int            getX() const { return _coordinate.x; };
-  inline int            getY() const { return _coordinate.y; };
+  // Movement
+  inline float        getDegree() const { return _degree; }
+  inline const Point& getCoordinate() const { return _coordinate; }
+  inline int          getX() const { return _coordinate.x; };
+  inline int          getY() const { return _coordinate.y; };
 
   // Formatter
   friend std::ostream&  operator<<(std::ostream& os, const State& state);
   friend YAML::Emitter& operator<<(YAML::Emitter& out, const State& state);
 
-  virtual void load(const std::string& filename = "state.yaml");
-  virtual void save(const std::string& filename = "state.yaml");
+  virtual void load(const std::string& filename = PROJECT_STATE_FILE);
+  virtual void save(const std::string& filename = PROJECT_STATE_FILE);
 
  public slots:
   // Global

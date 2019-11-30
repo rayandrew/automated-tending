@@ -44,8 +44,23 @@ const Stepper& StepperImpl::setDirection(
     const stepper_direction& step_direction) const {
   _logger->debug("Set step direction : {}",
                  getStepperDirectionString(step_direction));
-  _direction_device->write(device_output::HIGH);
+
+  device_output stepDirectionOutput =
+      step_direction == stepper_direction::FORWARD ? device_output::HIGH
+                                                   : device_output::LOW;
+  ;
+
+  if (_reverseDirection) {
+    stepDirectionOutput = inverseOutput(stepDirectionOutput);
+  }
+
+  _direction_device->write(stepDirectionOutput);
   return *this;
+}
+
+void StepperImpl::setReverseDirection(bool reverseDirection) {
+  _logger->debug("Set reverse direction for to {}", reverseDirection);
+  _reverseDirection = reverseDirection;
 }
 
 void StepperImpl::pulseHigh() {

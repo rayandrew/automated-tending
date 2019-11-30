@@ -61,6 +61,7 @@ set(SOURCES
     src/logger.cpp
     src/gpio.cpp
 
+    src/utils/csv.cpp
     src/utils/qspdlog.cpp
     src/utils/worker.cpp
     src/utils/simple_worker.cpp
@@ -70,8 +71,8 @@ set(SOURCES
 
     src/devices/stepper.cpp
     src/devices/device.cpp
+    src/devices/input_device.cpp
     src/devices/output_device.cpp
-    src/devices/limit_switch.cpp
 
     src/mechanisms/movement.cpp) 
 
@@ -86,7 +87,8 @@ set(HEADERS
     include/state.h
     include/logger.h
     include/gpio.h
-    
+
+    include/utils/csv.h
     include/utils/qspdlog.h
     include/utils/worker.h
     include/utils/simple_worker.h
@@ -96,6 +98,7 @@ set(HEADERS
 
     include/devices/stepper.h
     include/devices/device.h
+    include/devices/input_device.h
     include/devices/output_device.h
     include/devices/limit_switch.h
 

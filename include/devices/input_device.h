@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,39 +24,54 @@
  *
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef INPUT_DEVICE_H_
+#define INPUT_DEVICE_H_
 
 #pragma once
 
+#include <exception>
 #include <iostream>
-#include <memory>
+#include <sstream>
 
+#include <fmt/format.h>
 #include <fruit/fruit.h>
-#include <yaml-cpp/yaml.h>
 
-#include "general_config.h"
+#include "devices/device.h"
+#include "logger.h"
 
-namespace emmerich {
-class Config {
- protected:
-  std::shared_ptr<YAML::Node> _config;
+namespace emmerich::device {
+class InputDevice {
+ public:
+  InputDevice() = default;
+  virtual ~InputDevice() = default;
+
+  virtual inline device_output getStatus() const = 0;
+  virtual bool                 isActive() const = 0;
+};
+
+class InputDeviceImpl : public InputDevice {
+ private:
+  std::unique_ptr<Device> _device;
+  Logger*                 _logger;
 
  public:
-  Config() = default;
-  virtual ~Config() = default;
+  INJECT(InputDeviceImpl(ASSISTED(int) pin,
+                         Logger*       logger,
+                         DeviceFactory deviceFactory));
+  virtual ~InputDeviceImpl() = default;
 
-  template <typename Key>
-  inline const YAML::Node operator[](const Key& key) const {
-    return _config->operator[](key);
+  virtual inline device_output getStatus() const override {
+    return _device->read();
   }
 
-  inline const std::shared_ptr<YAML::Node>& getConfig() const {
-    return _config;
+  virtual inline bool isActive() const override {
+    return getOutputModeBool(_device->read());
   }
 };
 
-fruit::Component<Config> getConfigComponent();
-}  // namespace emmerich
+using InputDeviceFactory = std::function<std::unique_ptr<InputDevice>(int)>;
+
+fruit::Component<InputDeviceFactory> getInputDeviceComponent();
+}  // namespace emmerich::device
 
 #endif

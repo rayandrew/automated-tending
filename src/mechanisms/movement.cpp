@@ -30,9 +30,9 @@ namespace emmerich::mechanisms {
 MovementImpl::MovementImpl(Config*                     config,
                            State*                      state,
                            Logger*                     logger,
+                           device::InputDeviceFactory  inputDeviceFactory,
                            device::OutputDeviceFactory outputDeviceFactory,
-                           device::StepperFactory      stepperFactory,
-                           device::LimitSwitchFactory  limitSwitchFactory)
+                           device::StepperFactory      stepperFactory)
     : _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
@@ -48,9 +48,16 @@ MovementImpl::MovementImpl(Config*                     config,
       _stepperY(stepperFactory(
           (*config)["devices"]["movement"]["y"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>())),
-      _limitSwitch(limitSwitchFactory(
+      _limitSwitch(inputDeviceFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"].as<int>())),
-      _mutex(std::make_unique<QMutex>()) {}
+      _mutex(std::make_unique<QMutex>()) {
+  _sleepDevice->setActiveState(false);
+  _stepperX->setReverseDirection(
+      (*config)["devices"]["movement"]["x"]["reversed"].as<bool>());
+  _stepperY->setReverseDirection(
+      (*config)["devices"]["movement"]["y"]["reversed"].as<bool>());
+  loadPathsFromFile();
+}
 
 MovementImpl::~MovementImpl() {}
 
@@ -66,11 +73,17 @@ void MovementImpl::move(int x, int y) {
   int yStep = cmToSteps(diffY, _yStepPerCm);
   int maxStep = std::max(xStep, yStep);
 
-  _logger->debug("Moving with x step: {} y step: {}", xStep, yStep);
+  _logger->debug("Moving with x step: {} y step: {} maxStep: {}", xStep, yStep,
+                 maxStep);
 
   int step = 1;
 
-  while ((step <= maxStep) && !_limitSwitch->triggered()) {
+  bool isRunning = (!_isLimitSwitchTriggered || _homing) ||
+                   (_isLimitSwitchTriggered || !_homing);
+
+  while ((step <= maxStep) && isRunning) {
+    _isLimitSwitchTriggered = _limitSwitch->isActive();
+
     if (step <= xStep)
       _stepperX->pulseHigh();
 
@@ -91,21 +104,18 @@ void MovementImpl::move(int x, int y) {
     ++step;
   }
 
-  if (_limitSwitch->triggered()) {
-    _running = false;
-    return;
+  if (!_isLimitSwitchTriggered || _homing) {
+    _state->setX(x);
+    _state->setY(y);
   }
-
-  _state->setX(x);
-  _state->setY(y);
 }
 
 void MovementImpl::run() {
   std::queue<Point> tempPaths = _paths;
 
-  _logger->debug("Start moving the stepper {}", _running);
+  _logger->debug("Start moving the stepper");
 
-  while (_running && !tempPaths.empty()) {
+  while (!_isLimitSwitchTriggered && !tempPaths.empty()) {
     const Point point = tempPaths.front();
     _logger->debug("Moving to x: {} y: {}", point.x, point.y);
     move(point);
@@ -113,7 +123,7 @@ void MovementImpl::run() {
     tempPaths.pop();
   }
 
-  if (!_running) {
+  if (_isLimitSwitchTriggered) {
     homing();
   }
 
@@ -121,21 +131,23 @@ void MovementImpl::run() {
 }
 
 void MovementImpl::homing() {
+  _homing = true;
   _stepperX->setDirection(device::stepper_direction::BACKWARD);
   _stepperY->setDirection(device::stepper_direction::BACKWARD);
-  _running = true;
+  QThread::usleep(100);
   move(0, 0);
 }
 
 void MovementImpl::start() {
-  _sleepDevice->on();
+  _sleepDevice->off();
   QThread::usleep(100);
   Worker::start();
 }
 
 void MovementImpl::reset() {
   homing();
-  _sleepDevice->off();
+  _homing = false;
+  _sleepDevice->on();
   _logger->info("Finger Movement state resetted!");
 }
 
@@ -150,8 +162,8 @@ fruit::Component<Movement> getMovementComponent() {
       .install(getConfigComponent)
       .install(getStateComponent)
       .install(getLoggerComponent)
+      .install(device::getInputDeviceComponent)
       .install(device::getOutputDeviceComponent)
-      .install(device::getStepperComponent)
-      .install(device::getLimitSwitchComponent);
+      .install(device::getStepperComponent);
 }
 }  // namespace emmerich::mechanisms
