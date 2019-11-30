@@ -82,9 +82,6 @@ void MovementImpl::move(int x, int y) {
     return (!limitSwitch || homing) || (limitSwitch || homing);
   };
 
-  // bool isRunning = (!_isLimitSwitchTriggered || _homing) ||
-  //                  (_isLimitSwitchTriggered || !_homing);
-
   while ((step <= maxStep) && isRunning(_isLimitSwitchTriggered, _homing)) {
     _isLimitSwitchTriggered = _limitSwitch->isActive();
 
@@ -119,6 +116,7 @@ void MovementImpl::run() {
 
   _logger->debug("Start moving the stepper");
 
+  _isLimitSwitchTriggered = _limitSwitch->isActive();
   while (!_isLimitSwitchTriggered && !tempPaths.empty()) {
     const Point point = tempPaths.front();
     _logger->debug("Moving to x: {} y: {}", point.x, point.y);
