@@ -45,6 +45,7 @@ class InputDevice {
   InputDevice() = default;
   virtual ~InputDevice() = default;
 
+  virtual void                 setActiveState(bool activeState) = 0;
   virtual inline device_output getStatus() const = 0;
   virtual bool                 isActive() const = 0;
 };
@@ -53,6 +54,7 @@ class InputDeviceImpl : public InputDevice {
  private:
   std::unique_ptr<Device> _device;
   Logger*                 _logger;
+  bool                    _activeState = true;
 
  public:
   INJECT(InputDeviceImpl(ASSISTED(int) pin,
@@ -60,12 +62,20 @@ class InputDeviceImpl : public InputDevice {
                          DeviceFactory deviceFactory));
   virtual ~InputDeviceImpl() = default;
 
+  virtual inline void setActiveState(bool activeState) override {
+    _activeState = activeState;
+  };
+
   virtual inline device_output getStatus() const override {
-    return _device->read();
+    device_output output = _device->read();
+    if (!_activeState) {
+      output = inverseOutput(output);
+    }
+    return output;
   }
 
   virtual inline bool isActive() const override {
-    return getOutputModeBool(_device->read());
+    return getOutputModeBool(getStatus());
   }
 };
 

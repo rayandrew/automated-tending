@@ -78,10 +78,14 @@ void MovementImpl::move(int x, int y) {
 
   int step = 1;
 
-  bool isRunning = (!_isLimitSwitchTriggered || _homing) ||
-                   (_isLimitSwitchTriggered || !_homing);
+  auto isRunning = [](bool limitSwitch, bool homing) -> bool {
+    return (!limitSwitch || homing) || (limitSwitch || homing);
+  };
 
-  while ((step <= maxStep) && isRunning) {
+  // bool isRunning = (!_isLimitSwitchTriggered || _homing) ||
+  //                  (_isLimitSwitchTriggered || !_homing);
+
+  while ((step <= maxStep) && isRunning(_isLimitSwitchTriggered, _homing)) {
     _isLimitSwitchTriggered = _limitSwitch->isActive();
 
     if (step <= xStep)
