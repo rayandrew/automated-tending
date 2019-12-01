@@ -69,7 +69,6 @@ void StateImpl::setDegree(float degree) {
   if (degree != _degree) {
     _degree = degree;
     emit degreeHasChanged(QString::number(degree));
-    _logger->info("Degree has changed into {}", degree);
   }
 }
 
@@ -88,7 +87,6 @@ void StateImpl::setX(int x) {
   if (x != _coordinate.x) {
     _coordinate.x = x;
     emit xHasChanged(QString::number(x));
-    _logger->debug("Coordinate X has changed into {}", x);
   }
 };
 
@@ -97,7 +95,6 @@ void StateImpl::setY(int y) {
   if (y != _coordinate.y) {
     _coordinate.y = y;
     emit yHasChanged(QString::number(y));
-    _logger->debug("Coordinate Y has changed into {}", y);
   }
 };
 

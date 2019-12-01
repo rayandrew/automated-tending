@@ -58,7 +58,6 @@
 #include "devices/stepper.h"
 
 namespace emmerich::mechanisms {
-
 class Movement : public Worker {
   Q_OBJECT
 
@@ -89,27 +88,27 @@ class Movement : public Worker {
     return *this;
   }
 
-    virtual const Movement& clearPaths() {
-      std::queue<Point> empty;
-      std::swap(_paths, empty);
-      return *this;
+  virtual const Movement& clearPaths() {
+    std::queue<Point> empty;
+    std::swap(_paths, empty);
+    return *this;
+  }
+
+  virtual const Movement& setPaths(const std::queue<Point>& paths) {
+    _paths = paths;
+    return *this;
+  }
+
+  inline virtual const Movement& setPaths(const std::vector<Point> paths) {
+    clearPaths();
+
+    for (Point point : paths) {
+      _paths.push(point);
     }
 
-    virtual const Movement& setPaths(const std::queue<Point>& paths) {
-      _paths = paths;
-      return *this;
-    }
-
-    inline virtual const Movement& setPaths(const std::vector<Point> paths) {
-      clearPaths();
-
-      for (Point point : paths) {
-        _paths.push(point);
-      }
-
-      return *this;
-    }
-  };
+    return *this;
+  }
+};
 
 class MovementImpl : public Movement {
   Q_OBJECT
@@ -122,8 +121,8 @@ class MovementImpl : public Movement {
   const std::unique_ptr<device::Stepper>      _stepperY;
   const std::unique_ptr<device::InputDevice>  _limitSwitch;
   const std::unique_ptr<device::OutputDevice> _sleepDevice;
-  const float                                 _xStepPerCm;
-  const float                                 _yStepPerCm;
+  const int                                   _xStepPerCm;
+  const int                                   _yStepPerCm;
   bool                                        _isLimitSwitchTriggered = false;
   bool                                        _homing = false;
 
@@ -135,20 +134,10 @@ class MovementImpl : public Movement {
   bool                          _moveTogether = false;
 
  private:
-  static inline int cmToSteps(int cm, float stepPerCm) {
-    float steps = ceil(cm * stepPerCm);
-    return (int)steps;
-  }
+  static inline int cmToSteps(int cm, int stepPerCm) { return cm * stepPerCm; }
 
-  static inline int getDiffAndSetDirection(const device::Stepper* stepper,
-                                           int                    current,
-                                           int                    destination) {
-    int diff = current - destination;
-
-    stepper->setDirection(diff >= 0 ? device::stepper_direction::FORWARD
-                                    : device::stepper_direction::BACKWARD);
-
-    return abs(diff);
+  static inline int stepsToCm(int steps, int stepPerCm) {
+    return steps / stepPerCm;
   }
 
   void reset();

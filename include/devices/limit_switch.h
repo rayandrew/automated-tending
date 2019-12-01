@@ -49,8 +49,8 @@ class LimitSwitch {
  public:
   LimitSwitch(int pin) : _pin(pin) {}
   virtual ~LimitSwitch() = default;
-  virtual device_output       getStatus() const = 0;
-  virtual bool                triggered() const = 0;
+  virtual device_output getStatus() const = 0;
+  virtual bool          triggered() const = 0;
 };
 
 class LimitSwitchImpl : public LimitSwitch {

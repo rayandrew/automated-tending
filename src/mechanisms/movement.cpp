@@ -36,10 +36,10 @@ MovementImpl::MovementImpl(Config*                     config,
     : _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
-      _xStepPerCm(
-          (*config)["devices"]["movement"]["x"]["step_per_cm"].as<float>()),
-      _yStepPerCm(
-          (*config)["devices"]["movement"]["y"]["step_per_cm"].as<float>()),
+      _xStepPerCm(ceil(
+          (*config)["devices"]["movement"]["x"]["step_per_cm"].as<float>())),
+      _yStepPerCm(ceil(
+          (*config)["devices"]["movement"]["y"]["step_per_cm"].as<float>())),
       _sleepDevice(outputDeviceFactory(
           (*config)["devices"]["movement"]["sleep_pin"].as<int>())),
       _stepperX(stepperFactory(
@@ -66,11 +66,16 @@ void MovementImpl::move(const Point& point) {
 }
 
 void MovementImpl::move(int x, int y) {
-  int diffX = getDiffAndSetDirection(_stepperX.get(), x, _state->getX());
-  int diffY = getDiffAndSetDirection(_stepperY.get(), y, _state->getY());
+  int diffX = x - _state->getX();
+  int diffY = y - _state->getY();
 
-  int xStep = cmToSteps(diffX, _xStepPerCm);
-  int yStep = cmToSteps(diffY, _yStepPerCm);
+  _stepperX->setDirection(diffX >= 0 ? device::stepper_direction::FORWARD
+                                     : device::stepper_direction::BACKWARD);
+  _stepperY->setDirection(diffY >= 0 ? device::stepper_direction::FORWARD
+                                     : device::stepper_direction::BACKWARD);
+
+  int xStep = cmToSteps(abs(diffX), _xStepPerCm);
+  int yStep = cmToSteps(abs(diffY), _yStepPerCm);
   int maxStep = std::max(xStep, yStep);
 
   _logger->debug("Moving with x step: {} y step: {} maxStep: {}", xStep, yStep,
@@ -79,7 +84,7 @@ void MovementImpl::move(int x, int y) {
   int step = 1;
 
   auto isRunning = [](bool limitSwitch, bool homing) -> bool {
-    return (!limitSwitch || homing) || (limitSwitch || homing);
+    return !limitSwitch || homing;
   };
 
   while ((step <= maxStep) && isRunning(_isLimitSwitchTriggered, _homing)) {
@@ -101,8 +106,24 @@ void MovementImpl::move(int x, int y) {
 
     QThread::usleep(_delay);
 
+    if (step <= xStep && ((step % _xStepPerCm) == 0)) {
+      int currentX = _state->getX();
+      int newX = diffX >= 0 ? currentX + 1 : currentX - 1;
+      _state->setX(newX);
+    }
+
+    if (step <= yStep && ((step % _yStepPerCm) == 0)) {
+      int currentY = _state->getY();
+      int newY = diffY >= 0 ? currentY + 1 : currentY - 1;
+      _state->setY(newY);
+    }
+
     _state->setProgress(round(float(step) / float(maxStep) * 100));
     ++step;
+  }
+
+  if (_isLimitSwitchTriggered) {
+    _logger->debug("Is limit switch triggered {}", _isLimitSwitchTriggered);
   }
 
   if (!_isLimitSwitchTriggered || _homing) {
