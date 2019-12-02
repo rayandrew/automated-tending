@@ -49,8 +49,7 @@ MovementImpl::MovementImpl(Config*                     config,
           (*config)["devices"]["movement"]["y"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>())),
       _limitSwitch(inputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_pin"].as<int>())),
-      _mutex(std::make_unique<QMutex>()) {
+          (*config)["devices"]["movement"]["limit_switch_pin"].as<int>())) {
   _sleepDevice->setActiveState(false);
   _stepperX->setReverseDirection(
       (*config)["devices"]["movement"]["x"]["reversed"].as<bool>());
@@ -83,11 +82,8 @@ void MovementImpl::move(int x, int y) {
 
   int step = 1;
 
-  auto isRunning = [](bool limitSwitch, bool homing) -> bool {
-    return !limitSwitch || homing;
-  };
-
-  while ((step <= maxStep) && isRunning(_isLimitSwitchTriggered, _homing)) {
+  while ((step <= maxStep) &&
+         isStepperRunning(_isLimitSwitchTriggered, _homing)) {
     _isLimitSwitchTriggered = _limitSwitch->isActive();
 
     if (step <= xStep)

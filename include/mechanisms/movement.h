@@ -127,17 +127,21 @@ class MovementImpl : public Movement {
   bool                                        _homing = false;
 
  private:  // internal state
-  const std::unique_ptr<QMutex> _mutex;
-  int                           _currentX = 0;
-  int                           _currentY = 0;
-  int                           _progress = 0;
-  bool                          _moveTogether = false;
+  int  _currentX = 0;
+  int  _currentY = 0;
+  int  _progress = 0;
+  bool _moveTogether = false;
 
  private:
   static inline int cmToSteps(int cm, int stepPerCm) { return cm * stepPerCm; }
 
   static inline int stepsToCm(int steps, int stepPerCm) {
     return steps / stepPerCm;
+  }
+
+  static inline bool isStepperRunning(bool limitSwitchStatus,
+                                      bool homingStatus) {
+    return !limitSwitchStatus || homingStatus;
   }
 
   void reset();
