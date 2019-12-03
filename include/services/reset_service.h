@@ -24,59 +24,53 @@
  *
  */
 
-#ifndef DEVICE_LIMIT_SWITCH_H_
-#define DEVICE_LIMIT_SWITCH_H_
+#ifndef RESET_SERVICE_H
+#define RESET_SERVICE_H
 
-#pragma once
-
-#include <unistd.h>
-
-#include <QObject>
-#include <QString>
-#include <QThread>
-
-#include <fmt/format.h>
 #include <fruit/fruit.h>
 
-#include "devices/device.h"
+#include <QObject>
+#include <QThread>
+
 #include "logger.h"
+#include "state.h"
 
-namespace emmerich::device {
-class LimitSwitch {
- protected:
-  const int _pin;
+#include "services/service.h"
 
- public:
-  LimitSwitch(int pin) : _pin(pin) {}
-  virtual ~LimitSwitch() = default;
-  virtual device_output getStatus() const = 0;
-  virtual bool          triggered() const = 0;
-};
+#include "mechanisms/movement.h"
 
-class LimitSwitchImpl : public LimitSwitch {
+namespace emmerich::services {
+struct ResetService {};
+
+class ResetServiceImpl : public Service {
+  Q_OBJECT
+
  private:
-  std::unique_ptr<Device> _limit_switch_device;
-  Logger*                 _logger;
+  Logger*                        _logger;
+  State*                         _state;
+  mechanisms::Movement*          _movementMechanism;
+  const std::unique_ptr<QThread> _serviceThread = std::make_unique<QThread>();
+
+ protected:
+  virtual void run() override;
+
+ protected slots:
+  virtual void onStart() override;
+  virtual void onFinish() override;
 
  public:
-  INJECT(LimitSwitchImpl(ASSISTED(int) pin,
-                         Logger*       logger,
-                         DeviceFactory deviceFactory));
+  INJECT(ResetServiceImpl(Logger*               logger,
+                          State*                state,
+                          mechanisms::Movement* movementMechanism));
+  virtual ~ResetServiceImpl();
 
-  virtual ~LimitSwitchImpl() = default;
-
-  virtual inline device_output getStatus() const override {
-    return _limit_switch_device->read();
-  }
-
-  virtual inline bool triggered() const override {
-    return getOutputModeBool(_limit_switch_device->read());
-  }
+ public slots:
+  virtual void execute() override;
+  virtual void stop() override;
 };
 
-using LimitSwitchFactory = std::function<std::unique_ptr<LimitSwitch>(int)>;
-
-fruit::Component<LimitSwitchFactory> getLimitSwitchComponent();
-}  // namespace emmerich::device
+fruit::Component<fruit::Annotated<ResetService, Service>>
+getResetServiceComponent();
+}  // namespace emmerich::services
 
 #endif

@@ -29,8 +29,6 @@
 #ifndef SIMPLE_WORKER_H_
 #define SIMPLE_WORKER_H_
 
-#pragma once
-
 #include <iostream>
 
 #include <functional>

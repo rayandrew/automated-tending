@@ -1,10 +1,8 @@
 /*
- * Copyright (c) 2018 Stefan Broekman.
- * Modified by Ray Andrew <raydreww@gmail.com>
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * SPDX-License-Identifier: MIT
  *
- *  This file is distributed under the MIT license.
- *  See: https://stefanbroekman.nl
- *  See: https://github.com/Broekman/Qt5_template
+ * Copyright (c) 2019 Ray Andrew
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,33 +24,6 @@
  *
  */
 
-#ifndef QSPDLOG_H_
-#define QSPDLOG_H_
+#include "services/service.h"
 
-#include <memory>
-
-#include <QString>
-#include <QWidget>
-
-#include <fmt/format.h>
-#include <spdlog/async_logger.h>
-#include <spdlog/sinks/base_sink.h>
-
-namespace emmerich {
-class QSpdlog : public QWidget, public spdlog::sinks::base_sink<std::mutex> {
-  Q_OBJECT
-
- public:
-  QSpdlog(QWidget* parent = nullptr) : QWidget(parent) {}
-  virtual ~QSpdlog() = default;
-
- protected:
-  virtual void sink_it_(const spdlog::details::log_msg& msg) override;
-  virtual void flush_() override;
-
- signals:
-  void newLogEntry(const QString& msg);
-};
-}  // namespace emmerich
-
-#endif
+namespace emmerich {}  // namespace emmerich

@@ -27,8 +27,6 @@
 #ifndef DEVICE_STEPPER_H_
 #define DEVICE_STEPPER_H_
 
-#pragma once
-
 #include <unistd.h>
 
 #include <QObject>

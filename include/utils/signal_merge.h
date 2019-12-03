@@ -27,8 +27,6 @@
 #ifndef MERGE_SIGNALS_H
 #define MERGE_SIGNALS_H
 
-#pragma once
-
 #include <functional>
 #include <iostream>
 

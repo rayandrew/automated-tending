@@ -81,6 +81,17 @@ void StateImpl::setProgress(int progress) {
   }
 }
 
+void StateImpl::setMachineState(const task_state& state) {
+  QMutexLocker locker(_mutex.get());
+
+  if (_machineState != state) {
+    _machineState = state;
+    emit machineStateHasChanged(state);
+    emit machineStateStringHasChanged(
+        QString::fromStdString(getTaskStateString(state)).toUpper());
+  }
+}
+
 void StateImpl::setX(int x) {
   QMutexLocker locker(_mutex.get());
 
@@ -88,7 +99,7 @@ void StateImpl::setX(int x) {
     _coordinate.x = x;
     emit xHasChanged(QString::number(x));
   }
-};
+}
 
 void StateImpl::setY(int y) {
   QMutexLocker locker(_mutex.get());
@@ -96,12 +107,12 @@ void StateImpl::setY(int y) {
     _coordinate.y = y;
     emit yHasChanged(QString::number(y));
   }
-};
+}
 
 void StateImpl::setCoordinate(const Point& coordinate) {
   setX(coordinate.x);
   setY(coordinate.y);
-};
+}
 
 fruit::Component<State> getStateComponent() {
   return fruit::createComponent().bind<State, StateImpl>().install(

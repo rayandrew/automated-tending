@@ -27,8 +27,6 @@
 #ifndef APP_H_
 #define APP_H_
 
-#pragma once
-
 #include <fmt/format.h>
 #include <fruit/fruit.h>
 #include <spdlog/spdlog.h>
@@ -49,6 +47,7 @@
 #include "windows/main_window.h"
 
 #include "config.h"
+#include "dispatcher.h"
 #include "logger.h"
 #include "state.h"
 
@@ -72,25 +71,21 @@ class App : public QObject {
 
 class AppImpl : public App {
   Q_OBJECT
+
  private:
   const std::unique_ptr<QApplication> _qApp;
-  const std::unique_ptr<MainWindow>   _window;
+  const std::unique_ptr<MainWindow>   _window = std::make_unique<MainWindow>();
   Ui::MainWindow*                     _ui;
   Config*                             _config;
   Logger*                             _logger;
   State*                              _state;
-  const std::shared_ptr<QSpdlog>      _qSpdlog;
-  mechanisms::Movement*               _movement;
-
-  // list of threads
-  const std::unique_ptr<QThread> _movementThread;
+  Dispatcher*                         _dispatcher;
+  const std::shared_ptr<QSpdlog>      _qSpdlog = std::make_shared<QSpdlog>();
 
  private:
   void setupLogger();
   void setupSignalsAndSlots();
-
-  void setupMovementService();
-  void movementService();
+  void setupServices();
 
  public:
   INJECT(AppImpl(ASSISTED(int) argc,
@@ -98,6 +93,7 @@ class AppImpl : public App {
                  Config*               config,
                  Logger*               logger,
                  State*                state,
+                 Dispatcher*           dispatcher,
                  mechanisms::Movement* movement));
   virtual ~AppImpl();
 

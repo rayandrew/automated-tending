@@ -24,37 +24,37 @@
  *
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
-
-#include <iostream>
-#include <memory>
-
-#include <fruit/fruit.h>
-#include <yaml-cpp/yaml.h>
-
-#include "general_config.h"
+#include "dispatcher.h"
 
 namespace emmerich {
-class Config {
- protected:
-  std::shared_ptr<YAML::Node> _config;
+DispatcherImpl::DispatcherImpl(
+    Logger*                            logger,
+    fruit::Provider<services::Service> movementServiceProvider,
+    fruit::Provider<services::Service> resetServiceProvider)
+    : _logger(std::move(logger)),
+      _movementServiceProvider(std::move(movementServiceProvider)),
+      _resetServiceProvider(std::move(resetServiceProvider)) {}
 
- public:
-  Config() = default;
-  virtual ~Config() = default;
-
-  template <typename Key>
-  inline const YAML::Node operator[](const Key& key) const {
-    return _config->operator[](key);
+void DispatcherImpl::handleTask(const task_state& task) {
+  switch (task) {
+    case task_state::WATERING:
+      break;
+    case task_state::TENDING:
+      _movementServiceProvider.get()->execute();
+      break;
+    case task_state::RESET:
+      _resetServiceProvider.get()->execute();
+      break;
+    default:
+      break;
   }
+}
 
-  inline const std::shared_ptr<YAML::Node>& getConfig() const {
-    return _config;
-  }
-};
-
-fruit::Component<Config> getConfigComponent();
+fruit::Component<Dispatcher> getDispatcherComponent() {
+  return fruit::createComponent()
+      .bind<Dispatcher, DispatcherImpl>()
+      .install(getLoggerComponent)
+      .install(services::getMovementServiceComponent)
+      .install(services::getResetServiceComponent);
+}
 }  // namespace emmerich
-
-#endif

@@ -32,57 +32,30 @@ AppImpl::AppImpl(int                   argc,
                  Config*               config,
                  Logger*               logger,
                  State*                state,
+                 Dispatcher*           dispatcher,
                  mechanisms::Movement* movement)
     : _qApp(std::make_unique<QApplication>(argc, argv)),
-      _window(std::make_unique<MainWindow>()),
       _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
-      _qSpdlog(std::make_shared<QSpdlog>()),
-      _movementThread(std::make_unique<QThread>()),
-      _movement(std::move(movement)) {
+      _dispatcher(std::move(dispatcher)) {
   _ui = _window->getUi();
 
   setupLogger();
   setupSignalsAndSlots();
-  setupMovementService();
+  setupServices();
+
+  _window->setWindowState(Qt::WindowMaximized);
+  _window->show();
 
   _logger->info("Automated Tending Project v{}.{}.{}.{}", PROJECT_VERSION_MAJOR,
                 PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
                 PROJECT_VERSION_TWEAK);
 
   _state->load();
-  _window->setWindowState(Qt::WindowMaximized);
-  _window->show();
 }
 
-AppImpl::~AppImpl() {
-  _movementThread->quit();
-}
-
-void AppImpl::setupSignalsAndSlots() {
-  QPushButton*  tendingButton = _ui->tendingButton;
-  QPushButton*  wateringButton = _ui->wateringButton;
-  QLCDNumber*   stateFingerPositionValueX = _ui->stateFingerPositionValueX;
-  QLCDNumber*   stateFingerPositionValueY = _ui->stateFingerPositionValueY;
-  QLCDNumber*   stateFingerDegreeValue = _ui->stateFingerDegreeValue;
-  QProgressBar* progressBar = _ui->progressBar;
-
-  progressBar->setRange(0, 100);
-
-  connect(_state, SIGNAL(xHasChanged(QString)), stateFingerPositionValueX,
-          SLOT(display(QString)));
-  connect(_state, SIGNAL(yHasChanged(QString)), stateFingerPositionValueY,
-          SLOT(display(QString)));
-  connect(_state, SIGNAL(degreeHasChanged(QString)), stateFingerDegreeValue,
-          SLOT(display(QString)));
-
-  connect(_state, &State::progressHasChanged, progressBar,
-          &QProgressBar::setValue);
-
-  connect(tendingButton, &QPushButton::released, this,
-          [=]() { movementService(); });
-}
+AppImpl::~AppImpl() {}
 
 void AppImpl::setupLogger() {
   _logger->getLogger()->sinks().push_back(_qSpdlog);
@@ -105,6 +78,47 @@ void AppImpl::setupLogger() {
           _ui->ptextedit_log_output, &QPlainTextEdit::clear);
 }
 
+void AppImpl::setupSignalsAndSlots() {
+  QLCDNumber*   stateFingerPositionValueX = _ui->stateFingerPositionValueX;
+  QLCDNumber*   stateFingerPositionValueY = _ui->stateFingerPositionValueY;
+  QLCDNumber*   stateFingerDegreeValue = _ui->stateFingerDegreeValue;
+  QProgressBar* progressBar = _ui->progressBar;
+  QLabel*       stateMachineStatus = _ui->stateMachineStatus;
+
+  progressBar->setRange(0, 100);
+
+  connect(_state, SIGNAL(xHasChanged(QString)), stateFingerPositionValueX,
+          SLOT(display(QString)));
+  connect(_state, SIGNAL(yHasChanged(QString)), stateFingerPositionValueY,
+          SLOT(display(QString)));
+  connect(_state, SIGNAL(degreeHasChanged(QString)), stateFingerDegreeValue,
+          SLOT(display(QString)));
+
+  connect(_state, &State::progressHasChanged, progressBar,
+          &QProgressBar::setValue);
+
+  connect(_state, &State::machineStateStringHasChanged, stateMachineStatus,
+          &QLabel::setText);
+  connect(_state, &State::machineStateHasChanged, _dispatcher,
+          &Dispatcher::handleTask);
+}
+
+void AppImpl::setupServices() {
+  QPushButton* tendingButton = _ui->tendingButton;
+  QPushButton* wateringButton = _ui->wateringButton;
+  QPushButton* resetButton = _ui->resetButton;
+  QPushButton* stopButton = _ui->stopButton;
+
+  connect(tendingButton, &QPushButton::released, this,
+          [=]() { _state->setMachineState(task_state::TENDING); });
+  connect(wateringButton, &QPushButton::released, this,
+          [=]() { _state->setMachineState(task_state::WATERING); });
+  connect(resetButton, &QPushButton::released, this,
+          [=]() { _state->setMachineState(task_state::RESET); });
+  connect(stopButton, &QPushButton::released, this,
+          [=]() { _state->setMachineState(task_state::STOP); });
+}
+
 void AppImpl::addLogEntry(const QString& msg) {
   auto line_count = _ui->ptextedit_log_output->document()->lineCount();
   auto msg_formatted =
@@ -116,35 +130,13 @@ void AppImpl::addLogEntry(const QString& msg) {
   }
 }
 
-void AppImpl::setupMovementService() {
-  // std::vector<Point> paths = {{0, 0},  {0, 90},  {20, 90}, {20, 0},
-  //                             {40, 0}, {40, 90}, {60, 90}};
-
-  // std::vector<Point> paths = {{0, 0},  {0, 30},  {5, 30}, {10, 0},
-  //                             {15, 0}, {20, 30}, {25, 30}};
-
-  /* _movement->setPaths(paths); */
-  _movement->moveToThread(_movementThread.get());
-
-  connect(_movement, SIGNAL(started()), _movementThread.get(), SLOT(start()));
-  connect(_movementThread.get(), &QThread::started, _movement,
-          &mechanisms::Movement::run);
-  connect(_movement, &mechanisms::Movement::finished, _movementThread.get(),
-          &QThread::quit);
-  connect(_movement, &mechanisms::Movement::finished, this,
-          [this]() { _logger->info("Finger Movement finished!"); });
-}
-
-void AppImpl::movementService() {
-  _movement->start();
-}
-
 fruit::Component<AppFactory> getAppComponent() {
   return fruit::createComponent()
       .bind<App, AppImpl>()
       .install(getConfigComponent)
       .install(getLoggerComponent)
       .install(getStateComponent)
-      .install(mechanisms::getMovementComponent);
+      .install(getDispatcherComponent)
+      .install(mechanisms::getMovementMechanismComponent);
 }
 }  // namespace emmerich

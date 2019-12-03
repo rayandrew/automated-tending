@@ -4,7 +4,8 @@ general:
 devices:
   movement:
     sleep_pin: 16
-    limit_switch_pin: 6
+    limit_switch_home_pin: 5
+    limit_switch_edge_pin: 6
     delay_each_step: 500
     x:
       step_pin: 26

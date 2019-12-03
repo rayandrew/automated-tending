@@ -60,8 +60,8 @@ set(SOURCES
     src/state.cpp
     src/logger.cpp
     src/gpio.cpp
-
-    src/utils/csv.cpp
+    src/dispatcher.cpp
+    
     src/utils/qspdlog.cpp
     src/utils/worker.cpp
     src/utils/simple_worker.cpp
@@ -74,7 +74,11 @@ set(SOURCES
     src/devices/input_device.cpp
     src/devices/output_device.cpp
 
-    src/mechanisms/movement.cpp) 
+    src/mechanisms/movement.cpp
+
+    src/services/service.cpp
+    src/services/movement_service.cpp
+    src/services/reset_service.cpp) 
 
 # All .ui files in resources/ui
 set(UI_SOURCES
@@ -87,8 +91,8 @@ set(HEADERS
     include/state.h
     include/logger.h
     include/gpio.h
+    include/dispatcher.h
 
-    include/utils/csv.h
     include/utils/qspdlog.h
     include/utils/worker.h
     include/utils/simple_worker.h
@@ -100,9 +104,12 @@ set(HEADERS
     include/devices/device.h
     include/devices/input_device.h
     include/devices/output_device.h
-    include/devices/limit_switch.h
 
-    include/mechanisms/movement.h) 
+    include/mechanisms/movement.h
+
+    include/services/service.h
+    include/services/movement_service.h
+    include/services/reset_service.h) 
 
 # All .cpp files in tests/
 set(TESTFILES

@@ -27,8 +27,6 @@
 #ifndef STATE_H_
 #define STATE_H_
 
-#pragma once
-
 #include <fstream>
 #include <map>
 
@@ -47,10 +45,37 @@
 #include "general_config.h"
 
 namespace emmerich {
+struct Point;
+enum class task_state;
+}  // namespace emmerich
+
+Q_DECLARE_METATYPE(emmerich::Point);
+Q_DECLARE_METATYPE(emmerich::task_state);
+
+namespace emmerich {
 struct Point {
   int x = 0;
   int y = 0;
 };
+
+enum class task_state { WATERING, TENDING, RESET, STOP, IDLE };
+
+inline const std::string getTaskStateString(const task_state& state) {
+  switch (state) {
+    case task_state::WATERING:
+      return "watering";
+    case task_state::TENDING:
+      return "tending";
+    case task_state::STOP:
+      return "stop";
+    case task_state::RESET:
+      return "reset";
+    case task_state::IDLE:
+      return "idle";
+    default:
+      return "unk";
+  }
+}
 
 class State : public QObject {
   Q_OBJECT
@@ -61,21 +86,23 @@ class State : public QObject {
   int _progress = 0;
 
   // Movement
-  Point _coordinate;
-  float _degree = 0.0;
+  Point      _coordinate;
+  float      _degree = 0.0;
+  task_state _machineState = task_state::IDLE;
 
  public:
   State() = default;
   virtual ~State() = default;
 
   // Global
-  inline int getProgress() const { return _progress; }
+  inline int               getProgress() const { return _progress; }
+  inline const task_state& getMachineState() const { return _machineState; }
 
   // Movement
   inline float        getDegree() const { return _degree; }
   inline const Point& getCoordinate() const { return _coordinate; }
-  inline int          getX() const { return _coordinate.x; };
-  inline int          getY() const { return _coordinate.y; };
+  inline int          getX() const { return _coordinate.x; }
+  inline int          getY() const { return _coordinate.y; }
 
   // Formatter
   friend std::ostream&  operator<<(std::ostream& os, const State& state);
@@ -87,6 +114,7 @@ class State : public QObject {
  public slots:
   // Global
   virtual void setProgress(int progress) = 0;
+  virtual void setMachineState(const task_state& state) = 0;
 
   // Movement
   virtual void setDegree(float degree) = 0;
@@ -97,6 +125,8 @@ class State : public QObject {
  signals:
   // Global
   void progressHasChanged(int new_progress);
+  void machineStateHasChanged(const task_state& new_machine_state);
+  void machineStateStringHasChanged(const QString& new_machine_state);
 
   // Movement
   void degreeHasChanged(const QString& new_degree);
@@ -118,6 +148,7 @@ class StateImpl : public State {
  public slots:
   // Global
   virtual void setProgress(int progress) override;
+  virtual void setMachineState(const task_state& state) override;
 
   // Movement
   virtual void setDegree(float degree) override;

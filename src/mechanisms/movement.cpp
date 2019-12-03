@@ -48,8 +48,11 @@ MovementImpl::MovementImpl(Config*                     config,
       _stepperY(stepperFactory(
           (*config)["devices"]["movement"]["y"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>())),
-      _limitSwitch(inputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_pin"].as<int>())) {
+      _limitSwitchHome(inputDeviceFactory(
+          (*config)["devices"]["movement"]["limit_switch_home_pin"].as<int>())),
+      _limitSwitchEdge(inputDeviceFactory(
+          (*config)["devices"]["movement"]["limit_switch_edge_pin"]
+              .as<int>())) {
   _sleepDevice->setActiveState(false);
   _stepperX->setReverseDirection(
       (*config)["devices"]["movement"]["x"]["reversed"].as<bool>());
@@ -133,7 +136,7 @@ void MovementImpl::run() {
 
   _logger->debug("Start moving the stepper");
 
-  _isLimitSwitchTriggered = _limitSwitch->isActive();
+  _isLimitSwitchEdgeTriggered = _limitSwitchEdge->isActive();
   while (!_isLimitSwitchTriggered && !tempPaths.empty()) {
     const Point point = tempPaths.front();
     _logger->debug("Moving to x: {} y: {}", point.x, point.y);
@@ -175,7 +178,7 @@ void MovementImpl::stop() {
   reset();
 }
 
-fruit::Component<Movement> getMovementComponent() {
+fruit::Component<Movement> getMovementMechanismComponent() {
   return fruit::createComponent()
       .bind<Movement, MovementImpl>()
       .install(getConfigComponent)

@@ -24,37 +24,53 @@
  *
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
-
-#include <iostream>
-#include <memory>
+#ifndef MOVEMENT_SERVICE_H
+#define MOVEMENT_SERVICE_H
 
 #include <fruit/fruit.h>
-#include <yaml-cpp/yaml.h>
 
-#include "general_config.h"
+#include <QObject>
+#include <QThread>
 
-namespace emmerich {
-class Config {
+#include "logger.h"
+#include "state.h"
+
+#include "services/service.h"
+
+#include "mechanisms/movement.h"
+
+namespace emmerich::services {
+struct MovementService {};
+
+class MovementServiceImpl : public Service {
+  Q_OBJECT
+
+ private:
+  Logger*                        _logger;
+  State*                         _state;
+  mechanisms::Movement*          _movementMechanism;
+  const std::unique_ptr<QThread> _serviceThread = std::make_unique<QThread>();
+
  protected:
-  std::shared_ptr<YAML::Node> _config;
+  virtual void run() override;
+
+ protected slots:
+  virtual void onStart() override;
+  virtual void onFinish() override;
 
  public:
-  Config() = default;
-  virtual ~Config() = default;
+  INJECT(MovementServiceImpl(Logger*               logger,
+                             State*                state,
+                             mechanisms::Movement* movementMechanism));
+  virtual ~MovementServiceImpl();
 
-  template <typename Key>
-  inline const YAML::Node operator[](const Key& key) const {
-    return _config->operator[](key);
-  }
-
-  inline const std::shared_ptr<YAML::Node>& getConfig() const {
-    return _config;
-  }
+ public slots:
+  virtual void execute() override;
+  virtual void stop() override;
 };
 
-fruit::Component<Config> getConfigComponent();
-}  // namespace emmerich
+fruit::Component<fruit::Annotated<MovementService, Service>>
+getMovementServiceComponent();
+}  // namespace emmerich::services
 
 #endif

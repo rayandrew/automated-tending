@@ -27,8 +27,6 @@
 #ifndef OUTPUT_DEVICE_H_
 #define OUTPUT_DEVICE_H_
 
-#pragma once
-
 #include <exception>
 #include <iostream>
 #include <sstream>

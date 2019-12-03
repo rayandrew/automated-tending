@@ -1,10 +1,8 @@
 /*
- * Copyright (c) 2018 Stefan Broekman.
- * Modified by Ray Andrew <raydreww@gmail.com>
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * SPDX-License-Identifier: MIT
  *
- *  This file is distributed under the MIT license.
- *  See: https://stefanbroekman.nl
- *  See: https://github.com/Broekman/Qt5_template
+ * Copyright (c) 2019 Ray Andrew
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,33 +24,49 @@
  *
  */
 
-#ifndef QSPDLOG_H_
-#define QSPDLOG_H_
+#ifndef DISPATCHER_H_
+#define DISPATCHER_H_
 
-#include <memory>
+#include <QObject>
 
-#include <QString>
-#include <QWidget>
+#include <fruit/fruit.h>
 
-#include <fmt/format.h>
-#include <spdlog/async_logger.h>
-#include <spdlog/sinks/base_sink.h>
+#include "logger.h"
+#include "state.h"
+
+#include "services/movement_service.h"
+#include "services/reset_service.h"
 
 namespace emmerich {
-class QSpdlog : public QWidget, public spdlog::sinks::base_sink<std::mutex> {
+
+class Dispatcher : public QObject {
   Q_OBJECT
 
- public:
-  QSpdlog(QWidget* parent = nullptr) : QWidget(parent) {}
-  virtual ~QSpdlog() = default;
-
- protected:
-  virtual void sink_it_(const spdlog::details::log_msg& msg) override;
-  virtual void flush_() override;
-
- signals:
-  void newLogEntry(const QString& msg);
+ public slots:
+  virtual void handleTask(const task_state& task) = 0;
 };
+
+class DispatcherImpl : public Dispatcher {
+  Q_OBJECT
+
+ private:
+  Logger*                            _logger;
+  fruit::Provider<services::Service> _movementServiceProvider;
+  fruit::Provider<services::Service> _resetServiceProvider;
+
+ public:
+  INJECT(DispatcherImpl(
+      Logger* logger,
+      ANNOTATED(services::MovementService, fruit::Provider<services::Service>)
+          movementServiceProvider,
+      ANNOTATED(services::ResetService, fruit::Provider<services::Service>)
+          resetServiceProvider));
+
+ public slots:
+  virtual void handleTask(const task_state& task) override;
+};
+
+fruit::Component<Dispatcher> getDispatcherComponent();
 }  // namespace emmerich
 
 #endif

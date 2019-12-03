@@ -27,8 +27,6 @@
 #ifndef DEVICE_H_
 #define DEVICE_H_
 
-#pragma once
-
 #include <exception>
 #include <iostream>
 #include <sstream>

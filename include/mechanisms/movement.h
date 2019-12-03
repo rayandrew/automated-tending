@@ -27,13 +27,13 @@
 #ifndef FINGER_MOVEMENT_H_
 #define FINGER_MOVEMENT_H_
 
-#pragma once
-
 #include <unistd.h>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <functional>
 #include <queue>
+#include <sstream>
 
 #include <QMutex>
 #include <QMutexLocker>
@@ -49,7 +49,6 @@
 
 #include "general_config.h"
 
-#include "utils/csv.h"
 #include "utils/signal_merge.h"
 #include "utils/worker.h"
 
@@ -68,6 +67,7 @@ class Movement : public Worker {
  public:
   Movement() = default;
   virtual ~Movement() = default;
+  virtual void homing() = 0;
 
   inline virtual const Movement& setStepDelay(useconds_t delay) {
     _delay = delay;
@@ -76,14 +76,22 @@ class Movement : public Worker {
 
   virtual const Movement& loadPathsFromFile(
       const std::string& filename = PROJECT_MOVEMENT_TEMPLATE_FILE) {
-    io::CSVReader<2> in(filename);
-    in.read_header(io::ignore_extra_column, "x", "y");
+    std::ifstream file(filename);
+    std::string   line;
 
-    int x, y;
-    while (in.read_row(x, y)) {
-      const Point point = {x, y};
+    while (file.is_open() && getline(file, line)) {
+      std::istringstream iss(line);
+      std::string        tempX, tempY;
+
+      iss >> tempX;
+      iss >> tempY;
+
+      const Point point{stoi(tempX), stoi(tempY)};
+
       _paths.push(point);
     }
+
+    file.close();
 
     return *this;
   }
@@ -119,18 +127,15 @@ class MovementImpl : public Movement {
   Logger*                                     _logger;
   const std::unique_ptr<device::Stepper>      _stepperX;
   const std::unique_ptr<device::Stepper>      _stepperY;
-  const std::unique_ptr<device::InputDevice>  _limitSwitch;
+  const std::unique_ptr<device::InputDevice>  _limitSwitchHome;
+  const std::unique_ptr<device::InputDevice>  _limitSwitchEdge;
   const std::unique_ptr<device::OutputDevice> _sleepDevice;
   const int                                   _xStepPerCm;
   const int                                   _yStepPerCm;
-  bool                                        _isLimitSwitchTriggered = false;
-  bool                                        _homing = false;
 
  private:  // internal state
-  int  _currentX = 0;
-  int  _currentY = 0;
-  int  _progress = 0;
-  bool _moveTogether = false;
+  bool _isLimitSwitchEdgeTriggered = false;
+  bool _homing = false;
 
  private:
   static inline int cmToSteps(int cm, int stepPerCm) { return cm * stepPerCm; }
@@ -145,7 +150,6 @@ class MovementImpl : public Movement {
   }
 
   void reset();
-  void homing();
   void move(int x, int y);
   void move(const Point& point);
 
@@ -158,6 +162,7 @@ class MovementImpl : public Movement {
                       device::StepperFactory      stepperFactory));
 
   virtual ~MovementImpl();
+  virtual void homing() override;
 
  public slots:
   virtual void start() override;
@@ -165,7 +170,7 @@ class MovementImpl : public Movement {
   virtual void stop() override;
 };
 
-fruit::Component<Movement> getMovementComponent();
+fruit::Component<Movement> getMovementMechanismComponent();
 }  // namespace emmerich::mechanisms
 
 #endif

@@ -24,22 +24,42 @@
  *
  */
 
-#include "devices/limit_switch.h"
+#ifndef SERVICE_H_
+#define SERVICE_H_
 
-namespace emmerich::device {
-LimitSwitchImpl::LimitSwitchImpl(int           pin,
-                                 Logger*       logger,
-                                 DeviceFactory deviceFactory)
-    : LimitSwitch(pin),
-      _limit_switch_device(deviceFactory(pin, device_mode::INPUT)),
-      _logger(std::move(logger)) {
-  _logger->debug("LimitSwitch with pin {} is initialized!", pin);
-}
+#include <fruit/fruit.h>
 
-fruit::Component<LimitSwitchFactory> getLimitSwitchComponent() {
-  return fruit::createComponent()
-      .bind<LimitSwitch, LimitSwitchImpl>()
-      .install(getLoggerComponent)
-      .install(getDeviceComponent);
-}
-}  // namespace emmerich::device
+#include <QObject>
+
+#include "logger.h"
+#include "state.h"
+
+// Create like "observer"
+
+namespace emmerich::services {
+class Service : public QObject {
+  Q_OBJECT
+
+ protected:
+  virtual void run() = 0;
+
+ protected slots:
+  virtual void onStart() {}
+  virtual void onFinish() {}
+
+ public:
+  Service() = default;
+  virtual ~Service() = default;
+
+ public slots:
+  virtual void execute() {
+    onStart();
+    run();
+    onFinish();
+  }
+
+  virtual void stop() = 0;
+};
+}  // namespace emmerich::services
+
+#endif
