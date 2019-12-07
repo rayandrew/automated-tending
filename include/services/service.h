@@ -46,6 +46,7 @@ class Service : public QObject {
  protected slots:
   virtual void onStart() {}
   virtual void onFinish() {}
+  virtual void onStopped() {}
 
  public:
   Service() = default;
@@ -57,7 +58,6 @@ class Service : public QObject {
     run();
     onFinish();
   }
-
   virtual void stop() = 0;
 };
 }  // namespace emmerich::services

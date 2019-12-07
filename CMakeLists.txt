@@ -77,7 +77,7 @@ set(SOURCES
     src/mechanisms/movement.cpp
 
     src/services/service.cpp
-    src/services/movement_service.cpp
+    src/services/tending_service.cpp
     src/services/reset_service.cpp) 
 
 # All .ui files in resources/ui
@@ -108,7 +108,7 @@ set(HEADERS
     include/mechanisms/movement.h
 
     include/services/service.h
-    include/services/movement_service.h
+    include/services/tending_service.h
     include/services/reset_service.h) 
 
 # All .cpp files in tests/

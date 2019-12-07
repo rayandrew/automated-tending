@@ -37,9 +37,11 @@
 #include <QString>
 #include <QThread>
 
+#include <QColor>
 #include <QComboBox>
 #include <QLCDNumber>
 #include <QLabel>
+#include <QPalette>
 #include <QProgressBar>
 #include <QPushButton>
 
@@ -90,11 +92,10 @@ class AppImpl : public App {
  public:
   INJECT(AppImpl(ASSISTED(int) argc,
                  ASSISTED(char**) argv,
-                 Config*               config,
-                 Logger*               logger,
-                 State*                state,
-                 Dispatcher*           dispatcher,
-                 mechanisms::Movement* movement));
+                 Config*     config,
+                 Logger*     logger,
+                 State*      state,
+                 Dispatcher* dispatcher));
   virtual ~AppImpl();
 
   inline virtual int run() override { return _qApp->exec(); }

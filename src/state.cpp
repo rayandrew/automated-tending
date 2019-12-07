@@ -81,14 +81,51 @@ void StateImpl::setProgress(int progress) {
   }
 }
 
-void StateImpl::setMachineState(const task_state& state) {
+void StateImpl::setMachineState(const task_state& new_state) {
   QMutexLocker locker(_mutex.get());
 
-  if (_machineState != state) {
-    _machineState = state;
-    emit machineStateHasChanged(state);
-    emit machineStateStringHasChanged(
-        QString::fromStdString(getTaskStateString(state)).toUpper());
+  if (_machineState != new_state) {
+    bool changed = false;
+
+    // The conditions of state machine :
+    // 1. idle               -> watering
+    //                       -> tending
+    //                       -> reset
+    // 2. watering / tending -> stop
+    //                       -> finish (idle)
+    // 3. stop               -> reset
+    // 4. reset              -> stop
+    //                       -> finish (idle)
+    // 5. else rejected
+
+    if (_machineState == task_state::IDLE && new_state != task_state::STOP) {
+      changed = true;
+    } else if ((_machineState == task_state::WATERING ||
+                _machineState == task_state::TENDING ||
+                _machineState == task_state::RESET) &&
+               (new_state == task_state::STOP ||
+                new_state == task_state::IDLE)) {
+      changed = true;
+    } else if (_machineState == task_state::STOP &&
+               new_state == task_state::RESET) {
+      changed = true;
+    }
+
+    // else if (_machineState == task_state::RESET &&
+    //               new_state == task_state::IDLE) {
+    //      changed = true;
+    //    }
+
+    if (changed) {
+      _logger->debug("CHANGED {} Machine State {} New State {}", changed,
+                     getTaskStateString(_machineState),
+                     getTaskStateString(new_state));
+
+      _machineState = new_state;
+      emit machineStateHasChanged(new_state);
+      emit machineStateStringHasChanged(
+          QString::fromStdString(getTaskStateString(new_state)).toUpper());
+    }
   }
 }
 

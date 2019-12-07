@@ -28,26 +28,35 @@
 
 namespace emmerich::services {
 
-ResetServiceImpl::ResetServiceImpl(Logger*               logger,
-                                   State*                state,
-                                   mechanisms::Movement* movementMechanism)
+ResetServiceImpl::ResetServiceImpl(
+    Logger*                     logger,
+    State*                      state,
+    mechanisms::MovementFactory movementMechanismFactory)
     : _logger(std::move(logger)),
       _state(std::move(state)),
-      _movementMechanism(std::move(movementMechanism)) {
+      _movementMechanism(movementMechanismFactory()) {
   _movementMechanism->moveToThread(_serviceThread.get());
 
-  connect(_movementMechanism, SIGNAL(started()), _serviceThread.get(),
+  connect(_movementMechanism.get(), SIGNAL(started()), _serviceThread.get(),
           SLOT(start()));
-  connect(_serviceThread.get(), &QThread::started, _movementMechanism,
+  connect(_serviceThread.get(), &QThread::started, _movementMechanism.get(),
           &mechanisms::Movement::homing);
-  connect(_movementMechanism, &mechanisms::Movement::finished,
+  connect(_movementMechanism.get(), &mechanisms::Movement::finished,
           _serviceThread.get(), &QThread::quit);
-  connect(_movementMechanism, &mechanisms::Movement::finished, this,
+  connect(_movementMechanism.get(), &mechanisms::Movement::finished, this,
           &ResetServiceImpl::onFinish);
+  connect(_movementMechanism.get(), &mechanisms::Movement::stopped,
+          _serviceThread.get(), &QThread::quit);
+  connect(_movementMechanism.get(), &mechanisms::Movement::stopped, this,
+          &ResetServiceImpl::onStopped);
 }
 
 ResetServiceImpl::~ResetServiceImpl() {
   _serviceThread->quit();
+}
+
+void ResetServiceImpl::run() {
+  _movementMechanism->start();
 }
 
 void ResetServiceImpl::onStart() {
@@ -55,11 +64,13 @@ void ResetServiceImpl::onStart() {
   QThread::msleep(100);
 }
 
-void ResetServiceImpl::run() {
-  _movementMechanism->start();
+void ResetServiceImpl::onStopped() {
+  _logger->debug("Reset service is stopped");
+  QThread::msleep(100);
 }
 
 void ResetServiceImpl::onFinish() {
+  _state->setMachineState(task_state::IDLE);
   _logger->debug("Reset service is finished");
 }
 

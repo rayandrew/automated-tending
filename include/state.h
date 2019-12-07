@@ -60,6 +60,8 @@ struct Point {
 
 enum class task_state { WATERING, TENDING, RESET, STOP, IDLE };
 
+const task_state INITIAL_STATE = task_state::IDLE;
+
 inline const std::string getTaskStateString(const task_state& state) {
   switch (state) {
     case task_state::WATERING:
@@ -114,7 +116,7 @@ class State : public QObject {
  public slots:
   // Global
   virtual void setProgress(int progress) = 0;
-  virtual void setMachineState(const task_state& state) = 0;
+  virtual void setMachineState(const task_state& new_state) = 0;
 
   // Movement
   virtual void setDegree(float degree) = 0;

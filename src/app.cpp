@@ -27,13 +27,12 @@
 #include "app.h"
 
 namespace emmerich {
-AppImpl::AppImpl(int                   argc,
-                 char**                argv,
-                 Config*               config,
-                 Logger*               logger,
-                 State*                state,
-                 Dispatcher*           dispatcher,
-                 mechanisms::Movement* movement)
+AppImpl::AppImpl(int         argc,
+                 char**      argv,
+                 Config*     config,
+                 Logger*     logger,
+                 State*      state,
+                 Dispatcher* dispatcher)
     : _qApp(std::make_unique<QApplication>(argc, argv)),
       _config(std::move(config)),
       _state(std::move(state)),
@@ -97,6 +96,9 @@ void AppImpl::setupSignalsAndSlots() {
   connect(_state, &State::progressHasChanged, progressBar,
           &QProgressBar::setValue);
 
+  stateMachineStatus->setText(
+      QString::fromStdString(getTaskStateString(INITIAL_STATE)).toUpper());
+
   connect(_state, &State::machineStateStringHasChanged, stateMachineStatus,
           &QLabel::setText);
   connect(_state, &State::machineStateHasChanged, _dispatcher,
@@ -117,6 +119,18 @@ void AppImpl::setupServices() {
           [=]() { _state->setMachineState(task_state::RESET); });
   connect(stopButton, &QPushButton::released, this,
           [=]() { _state->setMachineState(task_state::STOP); });
+  // connect(
+  //     _state, &State::machineStateHasChanged, this,
+  //     [=](const task_state& state) {
+  //       if (state == task_state::STOP) {
+  //         stopButton->setStyleSheet(QString("background-color:
+  //         rgb(0,100,0);")); stopButton->setText("RESUME");
+  //       } else {
+  //         stopButton->setStyleSheet(
+  //             QString("background-color: rgb(90, 0, 12);"));
+  //         stopButton->setText("STOP");
+  //       }
+  //     });
 }
 
 void AppImpl::addLogEntry(const QString& msg) {
@@ -136,7 +150,6 @@ fruit::Component<AppFactory> getAppComponent() {
       .install(getConfigComponent)
       .install(getLoggerComponent)
       .install(getStateComponent)
-      .install(getDispatcherComponent)
-      .install(mechanisms::getMovementMechanismComponent);
+      .install(getDispatcherComponent);
 }
 }  // namespace emmerich

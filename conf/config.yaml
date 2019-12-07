@@ -3,9 +3,12 @@ general:
   debug: true
 devices:
   movement:
-    sleep_pin: 16
-    limit_switch_home_pin: 5
-    limit_switch_edge_pin: 6
+    sleep_pin: 1
+    limit_switch_pin:
+      home_x: 1
+      home_y: 5
+      edge: 6
+      bin_detection: 14
     delay_each_step: 500
     x:
       step_pin: 26

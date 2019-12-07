@@ -1,3 +1,4 @@
+
 /*
  * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
@@ -27,15 +28,21 @@
 #ifndef WORKER_H_
 #define WORKER_H_
 
+#include <iostream>
+
+#include <QMutex>
+#include <QMutexLocker>
 #include <QObject>
 #include <QThread>
+#include <QWaitCondition>
 
 namespace emmerich {
 class Worker : public QObject {
   Q_OBJECT
 
  protected:
-  bool _running = false;
+  bool                    _running = false;
+  std::unique_ptr<QMutex> _mutex = std::make_unique<QMutex>();
 
  public:
   Worker() = default;
@@ -43,12 +50,13 @@ class Worker : public QObject {
 
  public slots:
   virtual void start();
-  virtual void run() = 0;
+  virtual void finish();
   virtual void stop();
 
  signals:
   void started();
   void finished();
+  void stopped();
 };
 }  // namespace emmerich
 

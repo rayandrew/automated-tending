@@ -46,9 +46,9 @@ class ResetServiceImpl : public Service {
   Q_OBJECT
 
  private:
-  Logger*                        _logger;
-  State*                         _state;
-  mechanisms::Movement*          _movementMechanism;
+  Logger*                                     _logger;
+  State*                                      _state;
+  const std::unique_ptr<mechanisms::Movement> _movementMechanism;
   const std::unique_ptr<QThread> _serviceThread = std::make_unique<QThread>();
 
  protected:
@@ -56,12 +56,14 @@ class ResetServiceImpl : public Service {
 
  protected slots:
   virtual void onStart() override;
+  virtual void onStopped() override;
   virtual void onFinish() override;
 
  public:
-  INJECT(ResetServiceImpl(Logger*               logger,
-                          State*                state,
-                          mechanisms::Movement* movementMechanism));
+  INJECT(
+      ResetServiceImpl(Logger*                     logger,
+                       State*                      state,
+                       mechanisms::MovementFactory movementMechanismFactory));
   virtual ~ResetServiceImpl();
 
  public slots:

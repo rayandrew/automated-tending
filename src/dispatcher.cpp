@@ -28,24 +28,36 @@
 
 namespace emmerich {
 DispatcherImpl::DispatcherImpl(
+    State*                             state,
     Logger*                            logger,
-    fruit::Provider<services::Service> movementServiceProvider,
+    fruit::Provider<services::Service> tendingServiceProvider,
     fruit::Provider<services::Service> resetServiceProvider)
-    : _logger(std::move(logger)),
-      _movementServiceProvider(std::move(movementServiceProvider)),
+    : _state(std::move(state)),
+      _logger(std::move(logger)),
+      _tendingServiceProvider(std::move(tendingServiceProvider)),
       _resetServiceProvider(std::move(resetServiceProvider)) {}
 
+DispatcherImpl::~DispatcherImpl() {}
+
 void DispatcherImpl::handleTask(const task_state& task) {
+  std::cout << "Dispatcher Thread " << this->thread() << std::endl;
+
   switch (task) {
     case task_state::WATERING:
+      // noop
       break;
     case task_state::TENDING:
-      _movementServiceProvider.get()->execute();
+      _tendingServiceProvider.get()->execute();
       break;
     case task_state::RESET:
       _resetServiceProvider.get()->execute();
       break;
+    case task_state::IDLE:
+      // noop
+      break;
     default:
+      _resetServiceProvider.get()->stop();
+      _tendingServiceProvider.get()->stop();
       break;
   }
 }
@@ -53,8 +65,10 @@ void DispatcherImpl::handleTask(const task_state& task) {
 fruit::Component<Dispatcher> getDispatcherComponent() {
   return fruit::createComponent()
       .bind<Dispatcher, DispatcherImpl>()
+      .install(getStateComponent)
       .install(getLoggerComponent)
-      .install(services::getMovementServiceComponent)
+      .install(mechanisms::getMovementMechanismComponent)
+      .install(services::getTendingServiceComponent)
       .install(services::getResetServiceComponent);
 }
 }  // namespace emmerich

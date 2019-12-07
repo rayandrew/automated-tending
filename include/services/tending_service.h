@@ -40,15 +40,15 @@
 #include "mechanisms/movement.h"
 
 namespace emmerich::services {
-struct MovementService {};
+struct TendingService {};
 
-class MovementServiceImpl : public Service {
+class TendingServiceImpl : public Service {
   Q_OBJECT
 
  private:
-  Logger*                        _logger;
-  State*                         _state;
-  mechanisms::Movement*          _movementMechanism;
+  Logger*                                     _logger;
+  State*                                      _state;
+  const std::unique_ptr<mechanisms::Movement> _movementMechanism;
   const std::unique_ptr<QThread> _serviceThread = std::make_unique<QThread>();
 
  protected:
@@ -56,21 +56,23 @@ class MovementServiceImpl : public Service {
 
  protected slots:
   virtual void onStart() override;
+  virtual void onStopped() override;
   virtual void onFinish() override;
 
  public:
-  INJECT(MovementServiceImpl(Logger*               logger,
-                             State*                state,
-                             mechanisms::Movement* movementMechanism));
-  virtual ~MovementServiceImpl();
+  INJECT(
+      TendingServiceImpl(Logger*                     logger,
+                         State*                      state,
+                         mechanisms::MovementFactory movementMechanismFactory));
+  virtual ~TendingServiceImpl();
 
  public slots:
   virtual void execute() override;
   virtual void stop() override;
 };
 
-fruit::Component<fruit::Annotated<MovementService, Service>>
-getMovementServiceComponent();
+fruit::Component<fruit::Annotated<TendingService, Service>>
+getTendingServiceComponent();
 }  // namespace emmerich::services
 
 #endif

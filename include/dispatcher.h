@@ -34,8 +34,10 @@
 #include "logger.h"
 #include "state.h"
 
-#include "services/movement_service.h"
+#include "mechanisms/movement.h"
+
 #include "services/reset_service.h"
+#include "services/tending_service.h"
 
 namespace emmerich {
 
@@ -50,17 +52,31 @@ class DispatcherImpl : public Dispatcher {
   Q_OBJECT
 
  private:
-  Logger*                            _logger;
-  fruit::Provider<services::Service> _movementServiceProvider;
+  State*  _state;
+  Logger* _logger;
+
+  // mechanisms::Movement* _movementMechanism;
+  // task_state            _prevTaskState = task_state::IDLE;
+
+  fruit::Provider<services::Service> _tendingServiceProvider;
   fruit::Provider<services::Service> _resetServiceProvider;
+
+  // const std::unique_ptr<QThread> _movementThread =
+  // std::make_unique<QThread>();
+
+  // private:
+  // void setupMovementMechanism();
 
  public:
   INJECT(DispatcherImpl(
+      State*  state,
       Logger* logger,
-      ANNOTATED(services::MovementService, fruit::Provider<services::Service>)
-          movementServiceProvider,
+      // mechanisms::Movement* movementMechanism,
+      ANNOTATED(services::TendingService, fruit::Provider<services::Service>)
+          tendingServiceProvider,
       ANNOTATED(services::ResetService, fruit::Provider<services::Service>)
           resetServiceProvider));
+  ~DispatcherImpl();
 
  public slots:
   virtual void handleTask(const task_state& task) override;

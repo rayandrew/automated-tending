@@ -28,14 +28,23 @@
 
 namespace emmerich {
 void Worker::start() {
+  QMutexLocker locker(_mutex.get());
+
   emit started();
-  // QThread::usleep(100);
   _running = true;
 }
 
-void Worker::stop() {
+void Worker::finish() {
+  QMutexLocker locker(_mutex.get());
+
   _running = false;
-  // QThread::usleep(100);
   emit finished();
+}
+
+void Worker::stop() {
+  QMutexLocker locker(_mutex.get());
+
+  _running = false;
+  emit stopped();
 }
 }  // namespace emmerich

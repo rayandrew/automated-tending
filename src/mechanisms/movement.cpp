@@ -48,16 +48,24 @@ MovementImpl::MovementImpl(Config*                     config,
       _stepperY(stepperFactory(
           (*config)["devices"]["movement"]["y"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>())),
-      _limitSwitchHome(inputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_home_pin"].as<int>())),
+      _limitSwitchHomeX(inputDeviceFactory(
+          (*config)["devices"]["movement"]["limit_switch_pin"]["home_x"]
+              .as<int>())),
+      _limitSwitchHomeY(inputDeviceFactory(
+          (*config)["devices"]["movement"]["limit_switch_pin"]["home_y"]
+              .as<int>())),
       _limitSwitchEdge(inputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_edge_pin"]
+          (*config)["devices"]["movement"]["limit_switch_pin"]["edge"]
+              .as<int>())),
+      _limitSwitchBinDetection(inputDeviceFactory(
+          (*config)["devices"]["movement"]["limit_switch_pin"]["bin_detection"]
               .as<int>())) {
   _sleepDevice->setActiveState(false);
   _stepperX->setReverseDirection(
       (*config)["devices"]["movement"]["x"]["reversed"].as<bool>());
   _stepperY->setReverseDirection(
       (*config)["devices"]["movement"]["y"]["reversed"].as<bool>());
+
   loadPathsFromFile();
 }
 
@@ -85,10 +93,9 @@ void MovementImpl::move(int x, int y) {
 
   int step = 1;
 
-  while ((step <= maxStep) &&
-         isStepperRunning(_isLimitSwitchTriggered, _homing)) {
-    _isLimitSwitchTriggered = _limitSwitch->isActive();
+  _isLimitSwitchEdgeTriggered = _limitSwitchEdge->isActive();
 
+  while (_running && (step <= maxStep) && !_isLimitSwitchEdgeTriggered) {
     if (step <= xStep)
       _stepperX->pulseHigh();
 
@@ -119,25 +126,28 @@ void MovementImpl::move(int x, int y) {
 
     _state->setProgress(round(float(step) / float(maxStep) * 100));
     ++step;
+
+    _isLimitSwitchEdgeTriggered = _limitSwitchEdge->isActive();
   }
 
-  if (_isLimitSwitchTriggered) {
-    _logger->debug("Is limit switch triggered {}", _isLimitSwitchTriggered);
+  if (_isLimitSwitchEdgeTriggered) {
+    _logger->debug("Is edge limit switch triggered {}",
+                   _isLimitSwitchEdgeTriggered);
   }
 
-  if (!_isLimitSwitchTriggered || _homing) {
+  if (_running && !_isLimitSwitchEdgeTriggered) {
     _state->setX(x);
     _state->setY(y);
   }
 }
 
-void MovementImpl::run() {
+void MovementImpl::followPaths() {
   std::queue<Point> tempPaths = _paths;
 
-  _logger->debug("Start moving the stepper");
+  _logger->debug("Start moving the stepper according to paths");
 
   _isLimitSwitchEdgeTriggered = _limitSwitchEdge->isActive();
-  while (!_isLimitSwitchTriggered && !tempPaths.empty()) {
+  while (_running && !_isLimitSwitchEdgeTriggered && !tempPaths.empty()) {
     const Point point = tempPaths.front();
     _logger->debug("Moving to x: {} y: {}", point.x, point.y);
     move(point);
@@ -145,40 +155,63 @@ void MovementImpl::run() {
     tempPaths.pop();
   }
 
-  if (_isLimitSwitchTriggered) {
-    homing();
-  }
-
-  stop();
+  if (_running)
+    finish();
 }
 
 void MovementImpl::homing() {
-  _homing = true;
   _stepperX->setDirection(device::stepper_direction::BACKWARD);
   _stepperY->setDirection(device::stepper_direction::BACKWARD);
-  QThread::usleep(100);
-  move(0, 0);
+  QThread::msleep(100);
+
+  while (_running && _limitSwitchBinDetection->isActive()) {
+    _logger->info(
+        "Retry homing every 2s because of bin is still inside the frame");
+    QThread::sleep(2);
+  }
+
+  while (_running && !isHome(_limitSwitchHomeX->isActive(),
+                             _limitSwitchHomeY->isActive())) {
+    _stepperX->pulseHigh();
+    _stepperY->pulseHigh();
+    QThread::usleep(_delay);
+
+    _stepperX->pulseLow();
+    _stepperY->pulseLow();
+    QThread::usleep(_delay);
+  }
+
+  _state->setX(0);
+  _state->setY(0);
+
+  if (_running)
+    finish();
 }
 
 void MovementImpl::start() {
   _sleepDevice->off();
-  QThread::usleep(100);
+  QThread::msleep(100);
   Worker::start();
 }
 
 void MovementImpl::reset() {
-  homing();
-  _homing = false;
   _sleepDevice->on();
   _logger->info("Finger Movement state resetted!");
 }
 
-void MovementImpl::stop() {
-  Worker::stop();
+void MovementImpl::finish() {
   reset();
+  QThread::msleep(100);
+  Worker::finish();
 }
 
-fruit::Component<Movement> getMovementMechanismComponent() {
+void MovementImpl::stop() {
+  reset();
+  QThread::msleep(100);
+  Worker::stop();
+}
+
+fruit::Component<MovementFactory> getMovementMechanismComponent() {
   return fruit::createComponent()
       .bind<Movement, MovementImpl>()
       .install(getConfigComponent)

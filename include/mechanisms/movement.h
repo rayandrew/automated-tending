@@ -67,6 +67,7 @@ class Movement : public Worker {
  public:
   Movement() = default;
   virtual ~Movement() = default;
+  virtual void followPaths() = 0;
   virtual void homing() = 0;
 
   inline virtual const Movement& setStepDelay(useconds_t delay) {
@@ -127,15 +128,16 @@ class MovementImpl : public Movement {
   Logger*                                     _logger;
   const std::unique_ptr<device::Stepper>      _stepperX;
   const std::unique_ptr<device::Stepper>      _stepperY;
-  const std::unique_ptr<device::InputDevice>  _limitSwitchHome;
+  const std::unique_ptr<device::InputDevice>  _limitSwitchHomeX;
+  const std::unique_ptr<device::InputDevice>  _limitSwitchHomeY;
   const std::unique_ptr<device::InputDevice>  _limitSwitchEdge;
+  const std::unique_ptr<device::InputDevice>  _limitSwitchBinDetection;
   const std::unique_ptr<device::OutputDevice> _sleepDevice;
   const int                                   _xStepPerCm;
   const int                                   _yStepPerCm;
 
  private:  // internal state
   bool _isLimitSwitchEdgeTriggered = false;
-  bool _homing = false;
 
  private:
   static inline int cmToSteps(int cm, int stepPerCm) { return cm * stepPerCm; }
@@ -144,9 +146,8 @@ class MovementImpl : public Movement {
     return steps / stepPerCm;
   }
 
-  static inline bool isStepperRunning(bool limitSwitchStatus,
-                                      bool homingStatus) {
-    return !limitSwitchStatus || homingStatus;
+  static inline bool isHome(bool limitSwitchHomeX, bool limitSwitchHomeY) {
+    return limitSwitchHomeX && limitSwitchHomeY;
   }
 
   void reset();
@@ -163,14 +164,17 @@ class MovementImpl : public Movement {
 
   virtual ~MovementImpl();
   virtual void homing() override;
+  virtual void followPaths() override;
 
  public slots:
   virtual void start() override;
-  virtual void run() override;
+  virtual void finish() override;
   virtual void stop() override;
 };
 
-fruit::Component<Movement> getMovementMechanismComponent();
+using MovementFactory = std::function<std::unique_ptr<Movement>()>;
+
+fruit::Component<MovementFactory> getMovementMechanismComponent();
 }  // namespace emmerich::mechanisms
 
 #endif
