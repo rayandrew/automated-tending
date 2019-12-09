@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,42 +24,22 @@
  *
  */
 
-#ifndef SERVICE_H_
-#define SERVICE_H_
+#include "devices/digital/input.h"
 
-#include <fruit/fruit.h>
+namespace emmerich::device {
+DigitalInputDeviceImpl::DigitalInputDeviceImpl(
+    int                  pin,
+    Logger*              logger,
+    DigitalDeviceFactory digitalDeviceFactory)
+    : _device(digitalDeviceFactory(pin, device_mode::INPUT)),
+      _logger(std::move(logger)) {
+  _logger->debug("DigitalInputDevice with pin {} is initialized!", pin);
+}
 
-#include <QObject>
-
-#include "logger.h"
-#include "state.h"
-
-// Create like "observer"
-
-namespace emmerich::service {
-class Service : public QObject {
-  Q_OBJECT
-
- protected:
-  virtual void run() = 0;
-
- protected slots:
-  virtual void onStart() {}
-  virtual void onFinish() {}
-  virtual void onStopped() {}
-
- public:
-  Service() = default;
-  virtual ~Service() = default;
-
- public slots:
-  virtual void execute() {
-    onStart();
-    run();
-    onFinish();
-  }
-  virtual void stop() = 0;
-};
-}  // namespace emmerich::service
-
-#endif
+fruit::Component<DigitalInputDeviceFactory> getDigitalInputDeviceComponent() {
+  return fruit::createComponent()
+      .bind<DigitalInputDevice, DigitalInputDeviceImpl>()
+      .install(getLoggerComponent)
+      .install(getDigitalDeviceComponent);
+}
+}  // namespace emmerich::device

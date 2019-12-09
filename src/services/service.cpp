@@ -26,4 +26,4 @@
 
 #include "services/service.h"
 
-namespace emmerich {}  // namespace emmerich
+namespace emmerich::service {}  // namespace emmerich::service

@@ -58,8 +58,8 @@ class DispatcherImpl : public Dispatcher {
   // mechanisms::Movement* _movementMechanism;
   // task_state            _prevTaskState = task_state::IDLE;
 
-  fruit::Provider<services::Service> _tendingServiceProvider;
-  fruit::Provider<services::Service> _resetServiceProvider;
+  fruit::Provider<service::Service> _tendingServiceProvider;
+  fruit::Provider<service::Service> _resetServiceProvider;
 
   // const std::unique_ptr<QThread> _movementThread =
   // std::make_unique<QThread>();
@@ -72,9 +72,9 @@ class DispatcherImpl : public Dispatcher {
       State*  state,
       Logger* logger,
       // mechanisms::Movement* movementMechanism,
-      ANNOTATED(services::TendingService, fruit::Provider<services::Service>)
+      ANNOTATED(service::TendingService, fruit::Provider<service::Service>)
           tendingServiceProvider,
-      ANNOTATED(services::ResetService, fruit::Provider<services::Service>)
+      ANNOTATED(service::ResetService, fruit::Provider<service::Service>)
           resetServiceProvider));
   ~DispatcherImpl();
 

@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,42 +24,47 @@
  *
  */
 
-#ifndef SERVICE_H_
-#define SERVICE_H_
+#ifndef ANALOG_DEVICE_H_
+#define ANALOG_DEVICE_H_
 
+#include <iostream>
+
+#include <fmt/format.h>
 #include <fruit/fruit.h>
 
-#include <QObject>
-
 #include "logger.h"
-#include "state.h"
 
-// Create like "observer"
+#include "gpio.h"
 
-namespace emmerich::service {
-class Service : public QObject {
-  Q_OBJECT
+namespace emmerich::device {
+/** @brief Analog SPI Interface
+
+    This is the wrapper of SPI ADC devices.
+
+    @author Ray Andrew
+    @date December 2019
+*/
+class AnalogDevice {
+ protected:
+  const unsigned char _address;
+  const unsigned char _bus;
+  const unsigned char _flags;
+  int                 _handle;
 
  protected:
-  virtual void run() = 0;
+  AnalogDevice(unsigned char address, unsigned char bus, unsigned char flags);
+  virtual ~AnalogDevice();
 
- protected slots:
-  virtual void onStart() {}
-  virtual void onFinish() {}
-  virtual void onStopped() {}
+  virtual int writeDevice(char* buf, unsigned count);
+  virtual int readDevice(char* buf, unsigned count);
+
+  virtual int writeByte(unsigned val);
+  virtual int readByte();
 
  public:
-  Service() = default;
-  virtual ~Service() = default;
-
- public slots:
-  virtual void execute() {
-    onStart();
-    run();
-    onFinish();
-  }
-  virtual void stop() = 0;
+  virtual int read(unsigned char pin) = 0;
+  virtual int write(unsigned char pin, unsigned int val) = 0;
 };
-}  // namespace emmerich::service
+}  // namespace emmerich::device
 
 #endif

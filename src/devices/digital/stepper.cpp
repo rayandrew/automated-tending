@@ -24,37 +24,28 @@
  *
  */
 
-#include "devices/stepper.h"
+#include "devices/digital/stepper.h"
 
 namespace emmerich::device {
-StepperImpl::StepperImpl(int           step_pin,
-                         int           direction_pin,
-                         Logger*       logger,
-                         DeviceFactory deviceFactory)
+StepperImpl::StepperImpl(int                        step_pin,
+                         int                        direction_pin,
+                         Logger*                    logger,
+                         DigitalOutputDeviceFactory digitalOutputDeviceFactory)
     : Stepper(step_pin, direction_pin),
-      _step_device(deviceFactory(step_pin, device_mode::OUTPUT)),
-      _direction_device(deviceFactory(direction_pin, device_mode::OUTPUT)),
+      _step_device(digitalOutputDeviceFactory(step_pin)),
+      _direction_device(digitalOutputDeviceFactory(direction_pin)),
       _logger(std::move(logger)) {
   _logger->debug(
-      "Stepper with step pin {} and direction pin {} is initialized!", step_pin,
-      direction_pin);
+      "StepperDevice with step pin {} and direction pin {} is initialized!",
+      step_pin, direction_pin);
 }
 
 const Stepper& StepperImpl::setDirection(
     const stepper_direction& step_direction) const {
   _logger->debug("Set step direction : {}",
                  getStepperDirectionString(step_direction));
-
-  device_output stepDirectionOutput =
-      step_direction == stepper_direction::FORWARD ? device_output::HIGH
-                                                   : device_output::LOW;
-  ;
-
-  if (_reverseDirection) {
-    stepDirectionOutput = inverseOutput(stepDirectionOutput);
-  }
-
-  _direction_device->write(stepDirectionOutput);
+  _direction_device->setActiveState(!_reverseDirection);
+  _direction_device->on();
   return *this;
 }
 
@@ -64,17 +55,17 @@ void StepperImpl::setReverseDirection(bool reverseDirection) {
 }
 
 void StepperImpl::pulseHigh() {
-  _step_device->write(device_output::HIGH);
+  _step_device->on();
 }
 
 void StepperImpl::pulseLow() {
-  _step_device->write(device_output::LOW);
+  _step_device->off();
 }
 
 fruit::Component<StepperFactory> getStepperComponent() {
   return fruit::createComponent()
       .bind<Stepper, StepperImpl>()
       .install(getLoggerComponent)
-      .install(getDeviceComponent);
+      .install(getDigitalOutputDeviceComponent);
 }
 }  // namespace emmerich::device

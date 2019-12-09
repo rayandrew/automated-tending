@@ -85,8 +85,6 @@ void StateImpl::setMachineState(const task_state& new_state) {
   QMutexLocker locker(_mutex.get());
 
   if (_machineState != new_state) {
-    bool changed = false;
-
     // The conditions of state machine :
     // 1. idle               -> watering
     //                       -> tending
@@ -97,6 +95,8 @@ void StateImpl::setMachineState(const task_state& new_state) {
     // 4. reset              -> stop
     //                       -> finish (idle)
     // 5. else rejected
+
+    bool changed = false;
 
     if (_machineState == task_state::IDLE && new_state != task_state::STOP) {
       changed = true;

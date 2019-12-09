@@ -26,54 +26,91 @@
 
 #include "services/tending_service.h"
 
-namespace emmerich::services {
+namespace emmerich::service {
 
 TendingServiceImpl::TendingServiceImpl(
-    Logger*                     logger,
-    State*                      state,
-    mechanisms::MovementFactory movementMechanismFactory)
+    Logger*                    logger,
+    State*                     state,
+    mechanism::MovementFactory movementMechanismFactory,
+    mechanism::RotationFactory rotationMechanismFactory)
     : _logger(std::move(logger)),
       _state(std::move(state)),
-      _movementMechanism(movementMechanismFactory()) {
-  _movementMechanism->moveToThread(_serviceThread.get());
+      _movementMechanism(movementMechanismFactory()),
+      _rotationMechanism(rotationMechanismFactory()) {
+  setupMovementMechanism();
+  setupRotationMechanism();
 
-  connect(_movementMechanism.get(), SIGNAL(started()), _serviceThread.get(),
-          SLOT(start()));
-  connect(_serviceThread.get(), &QThread::started, _movementMechanism.get(),
-          &mechanisms::Movement::followPaths);
-
-  connect(_movementMechanism.get(), &mechanisms::Movement::finished,
-          _serviceThread.get(), &QThread::quit, Qt::DirectConnection);
-  connect(_movementMechanism.get(), &mechanisms::Movement::stopped,
-          _serviceThread.get(), &QThread::quit, Qt::DirectConnection);
-
-  connect(_movementMechanism.get(), &mechanisms::Movement::finished, this,
-          &TendingServiceImpl::onFinish);
-  connect(_movementMechanism.get(), &mechanisms::Movement::stopped, this,
+  _signalMergeStopped->connect(_movementMechanism.get(), SLOT(stopped()));
+  _signalMergeStopped->connect(_rotationMechanism.get(), SLOT(stopped()));
+  connect(_signalMergeStopped.get(), &SignalMerge::merged, this,
           &TendingServiceImpl::onStopped);
+
+  // _signalMergeFinished->connect(_movementMechanism.get(), SLOT(finished()),
+  //                               Qt::DirectConnection);
+  // _signalMergeFinished->connect(_rotationMechanism.get(), SLOT(finished()),
+  //                               Qt::DirectConnection);
+  // connect(_signalMergeFinished.get(), &SignalMerge::merged, this,
+  //         &TendingServiceImpl::onFinish);
 }
 
 TendingServiceImpl::~TendingServiceImpl() {
-  _serviceThread->quit();
+  _movementThread->quit();
+  _rotationThread->quit();
+}
+
+void TendingServiceImpl::setupMovementMechanism() {
+  _movementMechanism->moveToThread(_movementThread.get());
+
+  connect(_movementMechanism.get(), SIGNAL(started()), _movementThread.get(),
+          SLOT(start()));
+  connect(_movementThread.get(), &QThread::started, _movementMechanism.get(),
+          &mechanism::Movement::followPaths);
+
+  connect(_movementMechanism.get(), &mechanism::Movement::finished, this,
+          &TendingServiceImpl::onFinish);
+
+  connect(_movementMechanism.get(), &mechanism::Movement::finished,
+          _movementThread.get(), &QThread::quit, Qt::DirectConnection);
+  connect(_movementMechanism.get(), &mechanism::Movement::stopped,
+          _movementThread.get(), &QThread::quit, Qt::DirectConnection);
+}
+
+void TendingServiceImpl::setupRotationMechanism() {
+  _rotationMechanism->moveToThread(_rotationThread.get());
+
+  connect(_rotationMechanism.get(), SIGNAL(started()), _rotationThread.get(),
+          SLOT(start()));
+  connect(_rotationThread.get(), &QThread::started, _rotationMechanism.get(),
+          &mechanism::Rotation::run);
+
+  connect(_movementMechanism.get(), &mechanism::Movement::finished,
+          [this]() { _rotationMechanism->finish(); });
+
+  connect(_rotationMechanism.get(), &mechanism::Rotation::finished,
+          _rotationThread.get(), &QThread::quit, Qt::DirectConnection);
+  connect(_rotationMechanism.get(), &mechanism::Rotation::stopped,
+          _rotationThread.get(), &QThread::quit, Qt::DirectConnection);
 }
 
 void TendingServiceImpl::run() {
+  _rotationMechanism->start();
+  QThread::usleep(200);
   _movementMechanism->start();
 }
 
 void TendingServiceImpl::onStart() {
-  _logger->debug("Finger movement service is starting");
+  _logger->debug("Tending Service is starting");
   QThread::msleep(100);
 }
 
 void TendingServiceImpl::onStopped() {
-  _logger->debug("Finger movement service is stopped!");
+  _logger->debug("Tending Service is stopped!");
 }
 
 void TendingServiceImpl::onFinish() {
   // set state back to idle
   _state->setMachineState(task_state::IDLE);
-  _logger->debug("Finger movement service is finished");
+  _logger->debug("Tending Service is finished");
 }
 
 void TendingServiceImpl::execute() {
@@ -83,7 +120,7 @@ void TendingServiceImpl::execute() {
 
 void TendingServiceImpl::stop() {
   _movementMechanism->stop();
-  _logger->debug("Movement Service is stopped!");
+  _rotationMechanism->stop();
 }
 
 fruit::Component<fruit::Annotated<TendingService, Service>>
@@ -92,6 +129,7 @@ getTendingServiceComponent() {
       .bind<fruit::Annotated<TendingService, Service>, TendingServiceImpl>()
       .install(getStateComponent)
       .install(getLoggerComponent)
-      .install(mechanisms::getMovementMechanismComponent);
+      .install(mechanism::getMovementMechanismComponent)
+      .install(mechanism::getRotationMechanismComponent);
 }
-}  // namespace emmerich::services
+}  // namespace emmerich::service

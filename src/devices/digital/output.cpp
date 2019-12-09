@@ -24,50 +24,35 @@
  *
  */
 
-#ifndef OUTPUT_DEVICE_H_
-#define OUTPUT_DEVICE_H_
-
-#include <exception>
-#include <iostream>
-#include <sstream>
-
-#include <fmt/format.h>
-#include <fruit/fruit.h>
-
-#include "devices/device.h"
-#include "logger.h"
+#include "devices/digital/output.h"
 
 namespace emmerich::device {
-class OutputDevice {
- public:
-  OutputDevice() = default;
-  virtual ~OutputDevice() = default;
+DigitalOutputDeviceImpl::DigitalOutputDeviceImpl(
+    int                  pin,
+    Logger*              logger,
+    DigitalDeviceFactory digitalDeviceFactory)
+    : _device(digitalDeviceFactory(pin, device_mode::OUTPUT)),
+      _logger(std::move(logger)) {
+  _logger->debug("DigitalOutputDevice with pin {} is initialized!", pin);
+}
 
-  virtual void setActiveState(bool activeState) = 0;
-  virtual void on() = 0;
-  virtual void off() = 0;
-};
+void DigitalOutputDeviceImpl::setActiveState(bool activeState) {
+  _activeState = activeState;
+}
 
-class OutputDeviceImpl : public OutputDevice {
- private:
-  std::unique_ptr<Device> _device;
-  Logger*                 _logger;
-  bool                    _activeState = true;
+void DigitalOutputDeviceImpl::on() {
+  _device->write(_activeState ? device_output::HIGH : device_output::LOW);
+}
 
- public:
-  INJECT(OutputDeviceImpl(ASSISTED(int) pin,
-                          Logger*       logger,
-                          DeviceFactory deviceFactory));
-  virtual ~OutputDeviceImpl() = default;
+void DigitalOutputDeviceImpl::off() {
+  _device->write(_activeState ? device_output::LOW : device_output::HIGH);
+}
 
-  virtual void setActiveState(bool activeState) override;
-  virtual void on() override;
-  virtual void off() override;
-};
+fruit::Component<DigitalOutputDeviceFactory> getDigitalOutputDeviceComponent() {
+  return fruit::createComponent()
+      .bind<DigitalOutputDevice, DigitalOutputDeviceImpl>()
+      .install(getLoggerComponent)
+      .install(getDigitalDeviceComponent);
+}
 
-using OutputDeviceFactory = std::function<std::unique_ptr<OutputDevice>(int)>;
-
-fruit::Component<OutputDeviceFactory> getOutputDeviceComponent();
 }  // namespace emmerich::device
-
-#endif

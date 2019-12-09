@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,42 +24,37 @@
  *
  */
 
-#ifndef SERVICE_H_
-#define SERVICE_H_
+#include "devices/analog/PCF8591.h"
 
-#include <fruit/fruit.h>
+namespace emmerich::device {
+PCF8591Impl::PCF8591Impl(Logger* logger)
+    : AnalogDevice(0x48, 1, 0), _logger(logger) {
+  _logger->debug(
+      "PCF8591Device with address {}, bus {}, and flags {} is initialized",
+      _address, _bus, _flags);
+}
 
-#include <QObject>
+PCF8591Impl::~PCF8591Impl() {}
 
-#include "logger.h"
-#include "state.h"
+int PCF8591Impl::read(unsigned char pin) {
+  unsigned char command[1];
+  command[0] = 0x40 | (pin & 0x03);
+  writeDevice(reinterpret_cast<char*>(&command), 1);
+  return readByte();
+}
 
-// Create like "observer"
+int PCF8591Impl::write(unsigned char pin, unsigned int val) {
+  unsigned char command[2];
+  command[0] = 0x40 | (pin & 0x03);
+  command[1] = val;
+  writeDevice(reinterpret_cast<char*>(&command), 2);
+  return readByte();
+}
 
-namespace emmerich::service {
-class Service : public QObject {
-  Q_OBJECT
-
- protected:
-  virtual void run() = 0;
-
- protected slots:
-  virtual void onStart() {}
-  virtual void onFinish() {}
-  virtual void onStopped() {}
-
- public:
-  Service() = default;
-  virtual ~Service() = default;
-
- public slots:
-  virtual void execute() {
-    onStart();
-    run();
-    onFinish();
-  }
-  virtual void stop() = 0;
-};
-}  // namespace emmerich::service
-
-#endif
+fruit::Component<fruit::Annotated<PCF8591, AnalogDevice>>
+getPCF8591DeviceComponent() {
+  return fruit::createComponent()
+      .bind<fruit::Annotated<PCF8591, AnalogDevice>, PCF8591Impl>()
+      .install(getLoggerComponent);
+}
+}  // namespace emmerich::device

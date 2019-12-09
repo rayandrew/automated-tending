@@ -26,12 +26,12 @@
 
 #include "services/reset_service.h"
 
-namespace emmerich::services {
+namespace emmerich::service {
 
 ResetServiceImpl::ResetServiceImpl(
-    Logger*                     logger,
-    State*                      state,
-    mechanisms::MovementFactory movementMechanismFactory)
+    Logger*                    logger,
+    State*                     state,
+    mechanism::MovementFactory movementMechanismFactory)
     : _logger(std::move(logger)),
       _state(std::move(state)),
       _movementMechanism(movementMechanismFactory()) {
@@ -40,14 +40,14 @@ ResetServiceImpl::ResetServiceImpl(
   connect(_movementMechanism.get(), SIGNAL(started()), _serviceThread.get(),
           SLOT(start()));
   connect(_serviceThread.get(), &QThread::started, _movementMechanism.get(),
-          &mechanisms::Movement::homing);
-  connect(_movementMechanism.get(), &mechanisms::Movement::finished,
+          &mechanism::Movement::homing);
+  connect(_movementMechanism.get(), &mechanism::Movement::finished,
           _serviceThread.get(), &QThread::quit);
-  connect(_movementMechanism.get(), &mechanisms::Movement::finished, this,
+  connect(_movementMechanism.get(), &mechanism::Movement::finished, this,
           &ResetServiceImpl::onFinish);
-  connect(_movementMechanism.get(), &mechanisms::Movement::stopped,
+  connect(_movementMechanism.get(), &mechanism::Movement::stopped,
           _serviceThread.get(), &QThread::quit);
-  connect(_movementMechanism.get(), &mechanisms::Movement::stopped, this,
+  connect(_movementMechanism.get(), &mechanism::Movement::stopped, this,
           &ResetServiceImpl::onStopped);
 }
 
@@ -90,6 +90,6 @@ getResetServiceComponent() {
       .bind<fruit::Annotated<ResetService, Service>, ResetServiceImpl>()
       .install(getStateComponent)
       .install(getLoggerComponent)
-      .install(mechanisms::getMovementMechanismComponent);
+      .install(mechanism::getMovementMechanismComponent);
 }
-}  // namespace emmerich::services
+}  // namespace emmerich::service

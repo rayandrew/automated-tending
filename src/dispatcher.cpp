@@ -28,10 +28,10 @@
 
 namespace emmerich {
 DispatcherImpl::DispatcherImpl(
-    State*                             state,
-    Logger*                            logger,
-    fruit::Provider<services::Service> tendingServiceProvider,
-    fruit::Provider<services::Service> resetServiceProvider)
+    State*                            state,
+    Logger*                           logger,
+    fruit::Provider<service::Service> tendingServiceProvider,
+    fruit::Provider<service::Service> resetServiceProvider)
     : _state(std::move(state)),
       _logger(std::move(logger)),
       _tendingServiceProvider(std::move(tendingServiceProvider)),
@@ -67,8 +67,8 @@ fruit::Component<Dispatcher> getDispatcherComponent() {
       .bind<Dispatcher, DispatcherImpl>()
       .install(getStateComponent)
       .install(getLoggerComponent)
-      .install(mechanisms::getMovementMechanismComponent)
-      .install(services::getTendingServiceComponent)
-      .install(services::getResetServiceComponent);
+      .install(mechanism::getMovementMechanismComponent)
+      .install(service::getTendingServiceComponent)
+      .install(service::getResetServiceComponent);
 }
 }  // namespace emmerich

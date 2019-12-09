@@ -119,18 +119,32 @@ void AppImpl::setupServices() {
           [=]() { _state->setMachineState(task_state::RESET); });
   connect(stopButton, &QPushButton::released, this,
           [=]() { _state->setMachineState(task_state::STOP); });
-  // connect(
-  //     _state, &State::machineStateHasChanged, this,
-  //     [=](const task_state& state) {
-  //       if (state == task_state::STOP) {
-  //         stopButton->setStyleSheet(QString("background-color:
-  //         rgb(0,100,0);")); stopButton->setText("RESUME");
-  //       } else {
-  //         stopButton->setStyleSheet(
-  //             QString("background-color: rgb(90, 0, 12);"));
-  //         stopButton->setText("STOP");
-  //       }
-  //     });
+  connect(_state, &State::machineStateHasChanged, this,
+          [=](const task_state& state) {
+            tendingButton->setEnabled(false);
+            wateringButton->setEnabled(false);
+            stopButton->setEnabled(false);
+            resetButton->setEnabled(false);
+
+            switch (state) {
+              case task_state::STOP:
+                resetButton->setEnabled(true);
+                break;
+
+              case task_state::WATERING:
+              case task_state::TENDING:
+              case task_state::RESET:
+                stopButton->setEnabled(true);
+                break;
+
+              default:
+                tendingButton->setEnabled(true);
+                wateringButton->setEnabled(true);
+                stopButton->setEnabled(false);
+                resetButton->setEnabled(true);
+                break;
+            }
+          });
 }
 
 void AppImpl::addLogEntry(const QString& msg) {

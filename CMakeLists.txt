@@ -69,12 +69,15 @@ set(SOURCES
 
     src/windows/main_window.cpp
 
-    src/devices/stepper.cpp
-    src/devices/device.cpp
-    src/devices/input_device.cpp
-    src/devices/output_device.cpp
+    src/devices/analog/device.cpp
+    src/devices/analog/PCF8591.cpp
+    src/devices/digital/device.cpp
+    src/devices/digital/stepper.cpp
+    src/devices/digital/input.cpp
+    src/devices/digital/output.cpp
 
     src/mechanisms/movement.cpp
+    src/mechanisms/rotation.cpp
 
     src/services/service.cpp
     src/services/tending_service.cpp
@@ -100,12 +103,15 @@ set(HEADERS
     
     include/windows/main_window.h
 
-    include/devices/stepper.h
-    include/devices/device.h
-    include/devices/input_device.h
-    include/devices/output_device.h
+    include/devices/analog/device.h
+    include/devices/analog/PCF8591.h
+    include/devices/digital/device.h
+    include/devices/digital/stepper.h
+    include/devices/digital/input.h
+    include/devices/digital/output.h
 
     include/mechanisms/movement.h
+    include/mechanisms/rotation.h
 
     include/services/service.h
     include/services/tending_service.h

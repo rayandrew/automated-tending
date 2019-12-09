@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef DEVICE_STEPPER_H_
-#define DEVICE_STEPPER_H_
+#ifndef STEPPER_DEVICE_H_
+#define STEPPER_DEVICE_H_
 
 #include <unistd.h>
 
@@ -36,7 +36,7 @@
 #include <fmt/format.h>
 #include <fruit/fruit.h>
 
-#include "devices/device.h"
+#include "devices/digital/output.h"
 #include "logger.h"
 
 namespace emmerich::device {
@@ -72,16 +72,16 @@ class Stepper {
 
 class StepperImpl : public Stepper {
  private:
-  std::unique_ptr<Device> _step_device;
-  std::unique_ptr<Device> _direction_device;
-  Logger*                 _logger;
-  bool                    _reverseDirection = false;
+  const std::unique_ptr<DigitalOutputDevice> _step_device;
+  const std::unique_ptr<DigitalOutputDevice> _direction_device;
+  Logger*                                    _logger;
+  bool                                       _reverseDirection = false;
 
  public:
   INJECT(StepperImpl(ASSISTED(int) step_pin,
                      ASSISTED(int) direction_pin,
-                     Logger*       logger,
-                     DeviceFactory deviceFactory));
+                     Logger*                    logger,
+                     DigitalOutputDeviceFactory digitalOutputDeviceFactory));
 
   virtual ~StepperImpl() = default;
 

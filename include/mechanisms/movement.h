@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef FINGER_MOVEMENT_H_
-#define FINGER_MOVEMENT_H_
+#ifndef MECHANISM_MOVEMENT_H_
+#define MECHANISM_MOVEMENT_H_
 
 #include <unistd.h>
 #include <algorithm>
@@ -49,14 +49,13 @@
 
 #include "general_config.h"
 
-#include "utils/signal_merge.h"
 #include "utils/worker.h"
 
-#include "devices/input_device.h"
-#include "devices/output_device.h"
-#include "devices/stepper.h"
+#include "devices/digital/input.h"
+#include "devices/digital/output.h"
+#include "devices/digital/stepper.h"
 
-namespace emmerich::mechanisms {
+namespace emmerich::mechanism {
 class Movement : public Worker {
   Q_OBJECT
 
@@ -123,18 +122,18 @@ class MovementImpl : public Movement {
   Q_OBJECT
 
  private:  // injected state
-  Config*                                     _config;
-  State*                                      _state;
-  Logger*                                     _logger;
-  const std::unique_ptr<device::Stepper>      _stepperX;
-  const std::unique_ptr<device::Stepper>      _stepperY;
-  const std::unique_ptr<device::InputDevice>  _limitSwitchHomeX;
-  const std::unique_ptr<device::InputDevice>  _limitSwitchHomeY;
-  const std::unique_ptr<device::InputDevice>  _limitSwitchEdge;
-  const std::unique_ptr<device::InputDevice>  _limitSwitchBinDetection;
-  const std::unique_ptr<device::OutputDevice> _sleepDevice;
-  const int                                   _xStepPerCm;
-  const int                                   _yStepPerCm;
+  Config*                                            _config;
+  State*                                             _state;
+  Logger*                                            _logger;
+  const std::unique_ptr<device::Stepper>             _stepperX;
+  const std::unique_ptr<device::Stepper>             _stepperY;
+  const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchHomeX;
+  const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchHomeY;
+  const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchEdge;
+  const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchBinDetection;
+  const std::unique_ptr<device::DigitalOutputDevice> _sleepDevice;
+  const int                                          _xStepPerCm;
+  const int                                          _yStepPerCm;
 
  private:  // internal state
   bool _isLimitSwitchEdgeTriggered = false;
@@ -155,12 +154,13 @@ class MovementImpl : public Movement {
   void move(const Point& point);
 
  public:
-  INJECT(MovementImpl(Config*                     config,
-                      State*                      state,
-                      Logger*                     logger,
-                      device::InputDeviceFactory  inputDeviceFactory,
-                      device::OutputDeviceFactory outputDeviceFactory,
-                      device::StepperFactory      stepperFactory));
+  INJECT(MovementImpl(
+      Config*                            config,
+      State*                             state,
+      Logger*                            logger,
+      device::DigitalInputDeviceFactory  digitalInputDeviceFactory,
+      device::DigitalOutputDeviceFactory digitalOutputDeviceFactory,
+      device::StepperFactory             stepperFactory));
 
   virtual ~MovementImpl();
   virtual void homing() override;
@@ -175,6 +175,6 @@ class MovementImpl : public Movement {
 using MovementFactory = std::function<std::unique_ptr<Movement>()>;
 
 fruit::Component<MovementFactory> getMovementMechanismComponent();
-}  // namespace emmerich::mechanisms
+}  // namespace emmerich::mechanism
 
 #endif

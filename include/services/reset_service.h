@@ -39,16 +39,16 @@
 
 #include "mechanisms/movement.h"
 
-namespace emmerich::services {
+namespace emmerich::service {
 struct ResetService {};
 
 class ResetServiceImpl : public Service {
   Q_OBJECT
 
  private:
-  Logger*                                     _logger;
-  State*                                      _state;
-  const std::unique_ptr<mechanisms::Movement> _movementMechanism;
+  Logger*                                    _logger;
+  State*                                     _state;
+  const std::unique_ptr<mechanism::Movement> _movementMechanism;
   const std::unique_ptr<QThread> _serviceThread = std::make_unique<QThread>();
 
  protected:
@@ -60,10 +60,9 @@ class ResetServiceImpl : public Service {
   virtual void onFinish() override;
 
  public:
-  INJECT(
-      ResetServiceImpl(Logger*                     logger,
-                       State*                      state,
-                       mechanisms::MovementFactory movementMechanismFactory));
+  INJECT(ResetServiceImpl(Logger*                    logger,
+                          State*                     state,
+                          mechanism::MovementFactory movementMechanismFactory));
   virtual ~ResetServiceImpl();
 
  public slots:
@@ -73,6 +72,6 @@ class ResetServiceImpl : public Service {
 
 fruit::Component<fruit::Annotated<ResetService, Service>>
 getResetServiceComponent();
-}  // namespace emmerich::services
+}  // namespace emmerich::service
 
 #endif

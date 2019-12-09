@@ -49,8 +49,8 @@ struct Point;
 enum class task_state;
 }  // namespace emmerich
 
-Q_DECLARE_METATYPE(emmerich::Point);
-Q_DECLARE_METATYPE(emmerich::task_state);
+Q_DECLARE_METATYPE(emmerich::Point)
+Q_DECLARE_METATYPE(emmerich::task_state)
 
 namespace emmerich {
 struct Point {
@@ -58,7 +58,7 @@ struct Point {
   int y = 0;
 };
 
-enum class task_state { WATERING, TENDING, RESET, STOP, IDLE };
+enum class task_state { IDLE, WATERING, TENDING, RESET, STOP };
 
 const task_state INITIAL_STATE = task_state::IDLE;
 

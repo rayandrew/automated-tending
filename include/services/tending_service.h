@@ -38,18 +38,32 @@
 #include "services/service.h"
 
 #include "mechanisms/movement.h"
+#include "mechanisms/rotation.h"
 
-namespace emmerich::services {
+#include "utils/signal_merge.h"
+
+namespace emmerich::service {
 struct TendingService {};
 
 class TendingServiceImpl : public Service {
   Q_OBJECT
 
  private:
-  Logger*                                     _logger;
-  State*                                      _state;
-  const std::unique_ptr<mechanisms::Movement> _movementMechanism;
-  const std::unique_ptr<QThread> _serviceThread = std::make_unique<QThread>();
+  Logger* _logger;
+  State*  _state;
+
+  const std::unique_ptr<mechanism::Movement> _movementMechanism;
+  const std::unique_ptr<mechanism::Rotation> _rotationMechanism;
+
+  const std::unique_ptr<QThread> _movementThread = std::make_unique<QThread>();
+  const std::unique_ptr<QThread> _rotationThread = std::make_unique<QThread>();
+
+  const std::unique_ptr<SignalMerge> _signalMergeStopped =
+      std::make_unique<SignalMerge>();
+
+ private:
+  void setupMovementMechanism();
+  void setupRotationMechanism();
 
  protected:
   virtual void run() override;
@@ -61,9 +75,10 @@ class TendingServiceImpl : public Service {
 
  public:
   INJECT(
-      TendingServiceImpl(Logger*                     logger,
-                         State*                      state,
-                         mechanisms::MovementFactory movementMechanismFactory));
+      TendingServiceImpl(Logger*                    logger,
+                         State*                     state,
+                         mechanism::MovementFactory movementMechanismFactory,
+                         mechanism::RotationFactory rotationMechanismFactory));
   virtual ~TendingServiceImpl();
 
  public slots:
@@ -73,6 +88,6 @@ class TendingServiceImpl : public Service {
 
 fruit::Component<fruit::Annotated<TendingService, Service>>
 getTendingServiceComponent();
-}  // namespace emmerich::services
+}  // namespace emmerich::service
 
 #endif

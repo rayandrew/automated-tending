@@ -92,10 +92,10 @@ class AppImpl : public App {
  public:
   INJECT(AppImpl(ASSISTED(int) argc,
                  ASSISTED(char**) argv,
-                 Config*     config,
-                 Logger*     logger,
-                 State*      state,
-                 Dispatcher* dispatcher));
+                 Config*               config,
+                 Logger*               logger,
+                 State*                state,
+                 Dispatcher*           dispatcher));
   virtual ~AppImpl();
 
   inline virtual int run() override { return _qApp->exec(); }

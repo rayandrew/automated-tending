@@ -24,34 +24,33 @@
  *
  */
 
-#include "devices/output_device.h"
+#include "devices/analog/device.h"
 
 namespace emmerich::device {
-OutputDeviceImpl::OutputDeviceImpl(int           pin,
-                                   Logger*       logger,
-                                   DeviceFactory deviceFactory)
-    : _device(deviceFactory(pin, device_mode::OUTPUT)),
-      _logger(std::move(logger)) {
-  _logger->debug("Output Device with pin {} is initialized!", pin);
+AnalogDevice::AnalogDevice(unsigned char address,
+                           unsigned char bus,
+                           unsigned char flags)
+    : _address(address), _bus(bus), _flags(flags) {
+  _handle = i2cOpen(bus, address, flags);
 }
 
-void OutputDeviceImpl::setActiveState(bool activeState) {
-  _activeState = activeState;
+AnalogDevice::~AnalogDevice() {
+  i2cClose(_handle);
 }
 
-void OutputDeviceImpl::on() {
-  _device->write(_activeState ? device_output::HIGH : device_output::LOW);
+int AnalogDevice::writeDevice(char* buf, unsigned int count) {
+  return i2cWriteDevice(_handle, buf, count);
 }
 
-void OutputDeviceImpl::off() {
-  _device->write(_activeState ? device_output::LOW : device_output::HIGH);
+int AnalogDevice::readDevice(char* buf, unsigned int count) {
+  return i2cReadDevice(_handle, buf, count);
 }
 
-fruit::Component<OutputDeviceFactory> getOutputDeviceComponent() {
-  return fruit::createComponent()
-      .bind<OutputDevice, OutputDeviceImpl>()
-      .install(getLoggerComponent)
-      .install(getDeviceComponent);
+int AnalogDevice::writeByte(unsigned int val) {
+  return i2cWriteByte(_handle, val);
 }
 
+int AnalogDevice::readByte() {
+  return i2cReadByte(_handle);
+}
 }  // namespace emmerich::device

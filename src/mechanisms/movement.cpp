@@ -26,13 +26,14 @@
 
 #include "mechanisms/movement.h"
 
-namespace emmerich::mechanisms {
-MovementImpl::MovementImpl(Config*                     config,
-                           State*                      state,
-                           Logger*                     logger,
-                           device::InputDeviceFactory  inputDeviceFactory,
-                           device::OutputDeviceFactory outputDeviceFactory,
-                           device::StepperFactory      stepperFactory)
+namespace emmerich::mechanism {
+MovementImpl::MovementImpl(
+    Config*                            config,
+    State*                             state,
+    Logger*                            logger,
+    device::DigitalInputDeviceFactory  digitalInputDeviceFactory,
+    device::DigitalOutputDeviceFactory digitalOutputDeviceFactory,
+    device::StepperFactory             stepperFactory)
     : _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
@@ -40,7 +41,7 @@ MovementImpl::MovementImpl(Config*                     config,
           (*config)["devices"]["movement"]["x"]["step_per_cm"].as<float>())),
       _yStepPerCm(ceil(
           (*config)["devices"]["movement"]["y"]["step_per_cm"].as<float>())),
-      _sleepDevice(outputDeviceFactory(
+      _sleepDevice(digitalOutputDeviceFactory(
           (*config)["devices"]["movement"]["sleep_pin"].as<int>())),
       _stepperX(stepperFactory(
           (*config)["devices"]["movement"]["x"]["step_pin"].as<int>(),
@@ -48,18 +49,19 @@ MovementImpl::MovementImpl(Config*                     config,
       _stepperY(stepperFactory(
           (*config)["devices"]["movement"]["y"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>())),
-      _limitSwitchHomeX(inputDeviceFactory(
+      _limitSwitchHomeX(digitalInputDeviceFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"]["home_x"]
               .as<int>())),
-      _limitSwitchHomeY(inputDeviceFactory(
+      _limitSwitchHomeY(digitalInputDeviceFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"]["home_y"]
               .as<int>())),
-      _limitSwitchEdge(inputDeviceFactory(
+      _limitSwitchEdge(digitalInputDeviceFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"]["edge"]
               .as<int>())),
-      _limitSwitchBinDetection(inputDeviceFactory(
+      _limitSwitchBinDetection(digitalInputDeviceFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"]["bin_detection"]
               .as<int>())) {
+  _logger->debug("Movement mechanism is initialized!");
   _sleepDevice->setActiveState(false);
   _stepperX->setReverseDirection(
       (*config)["devices"]["movement"]["x"]["reversed"].as<bool>());
@@ -217,8 +219,8 @@ fruit::Component<MovementFactory> getMovementMechanismComponent() {
       .install(getConfigComponent)
       .install(getStateComponent)
       .install(getLoggerComponent)
-      .install(device::getInputDeviceComponent)
-      .install(device::getOutputDeviceComponent)
+      .install(device::getDigitalInputDeviceComponent)
+      .install(device::getDigitalOutputDeviceComponent)
       .install(device::getStepperComponent);
 }
-}  // namespace emmerich::mechanisms
+}  // namespace emmerich::mechanism

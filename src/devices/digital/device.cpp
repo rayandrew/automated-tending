@@ -24,26 +24,23 @@
  *
  */
 
-#include <spdlog/spdlog.h>
-
-#include "devices/device.h"
-#include "logger.h"
+#include "devices/digital/device.h"
 
 namespace emmerich::device {
-DeviceException::DeviceException(Logger*              logger,
-                                 const std::string&   message,
-                                 const int            pin,
-                                 const device_mode&   mode,
-                                 const device_output& output)
+DigitalDeviceException::DigitalDeviceException(Logger*              logger,
+                                               const std::string&   message,
+                                               const int            pin,
+                                               const device_mode&   mode,
+                                               const device_output& output)
     : _logger(std::move(logger)),
       _message(std::move(message)),
       _pin(std::move(pin)),
       _mode(std::move(mode)),
       _output(std::move(output)) {}
 
-const char* DeviceException::what() const noexcept {
+const char* DigitalDeviceException::what() const noexcept {
   std::stringstream temp;
-  temp << "Device Exception :" << std::endl;
+  temp << "Digital Device Exception" << std::endl;
   temp << "Pin       : " << _pin << std::endl;
   temp << "Mode      : " << getDeviceModeString(_mode) << std::endl;
   temp << "Output    : " << getOutputModeString(_output) << std::endl;
@@ -56,12 +53,14 @@ const char* DeviceException::what() const noexcept {
   return message.c_str();
 }
 
-DeviceImpl::DeviceImpl(int pin, const device_mode& mode, Logger* logger)
-    : Device(pin, mode), _logger(std::move(logger)) {
+DigitalDeviceImpl::DigitalDeviceImpl(int                pin,
+                                     const device_mode& mode,
+                                     Logger*            logger)
+    : DigitalDevice(pin, mode), _logger(std::move(logger)) {
   setMode(mode);
 }
 
-Device& DeviceImpl::setMode(const device_mode& mode) {
+DigitalDevice& DigitalDeviceImpl::setMode(const device_mode& mode) {
   _mode = mode;
 
   if (mode == device_mode::INPUT) {
@@ -73,11 +72,11 @@ Device& DeviceImpl::setMode(const device_mode& mode) {
   return *this;
 }
 
-void DeviceImpl::write(const device_output& output) {
+void DigitalDeviceImpl::write(const device_output& output) {
   if (_mode == device_mode::INPUT) {
-    throw DeviceException(_logger,
-                          "DEVICE_MODE 'INPUT' cannot send output to pin", _pin,
-                          _mode, output);
+    throw DigitalDeviceException(
+        _logger, "DEVICE_MODE 'INPUT' cannot send output to pin", _pin, _mode,
+        output);
   }
 
   switch (output) {
@@ -88,16 +87,16 @@ void DeviceImpl::write(const device_output& output) {
       gpioWrite(_pin, PI_HIGH);
       break;
     default:
-      throw DeviceException(_logger, "Device output should not reach here",
-                            _pin, _mode, output);
+      throw DigitalDeviceException(
+          _logger, "Device output should not reach here", _pin, _mode, output);
   }
 }
 
-device_output DeviceImpl::read() const {
+device_output DigitalDeviceImpl::read() const {
   if (_mode == device_mode::OUTPUT) {
-    throw DeviceException(_logger,
-                          "DEVICE_MODE 'OUTPUT' cannot get input from the pin",
-                          _pin, _mode, device_output::LOW);
+    throw DigitalDeviceException(
+        _logger, "DEVICE_MODE 'OUTPUT' cannot get input from the pin", _pin,
+        _mode, device_output::LOW);
   }
 
   int value = gpioRead(_pin);
@@ -105,8 +104,9 @@ device_output DeviceImpl::read() const {
   return value == 0 ? device_output::LOW : device_output::HIGH;
 }
 
-fruit::Component<DeviceFactory> getDeviceComponent() {
-  return fruit::createComponent().bind<Device, DeviceImpl>().install(
-      getLoggerComponent);
+fruit::Component<DigitalDeviceFactory> getDigitalDeviceComponent() {
+  return fruit::createComponent()
+      .bind<DigitalDevice, DigitalDeviceImpl>()
+      .install(getLoggerComponent);
 }
 }  // namespace emmerich::device

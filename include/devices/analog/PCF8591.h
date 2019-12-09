@@ -24,21 +24,35 @@
  *
  */
 
-#include "devices/input_device.h"
+#ifndef PCF8591_ANALOG_DEVICE_H_
+#define PCF8591_ANALOG_DEVICE_H_
+
+#include <iostream>
+
+#include <fmt/format.h>
+#include <fruit/fruit.h>
+
+#include "logger.h"
+
+#include "devices/analog/device.h"
 
 namespace emmerich::device {
-InputDeviceImpl::InputDeviceImpl(int           pin,
-                                 Logger*       logger,
-                                 DeviceFactory deviceFactory)
-    : _device(deviceFactory(pin, device_mode::INPUT)),
-      _logger(std::move(logger)) {
-  _logger->debug("InputDevice with pin {} is initialized!", pin);
-}
+struct PCF8591 {};
 
-fruit::Component<InputDeviceFactory> getInputDeviceComponent() {
-  return fruit::createComponent()
-      .bind<InputDevice, InputDeviceImpl>()
-      .install(getLoggerComponent)
-      .install(getDeviceComponent);
-}
+class PCF8591Impl : public AnalogDevice {
+ private:
+  Logger* _logger;
+
+ public:
+  INJECT(PCF8591Impl(Logger* logger));
+  virtual ~PCF8591Impl();
+
+  virtual int read(unsigned char pin) override;
+  virtual int write(unsigned char pin, unsigned int val) override;
+};
+
+fruit::Component<fruit::Annotated<PCF8591, AnalogDevice>>
+getPCF8591DeviceComponent();
 }  // namespace emmerich::device
+
+#endif

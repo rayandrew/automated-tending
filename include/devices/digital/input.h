@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef INPUT_DEVICE_H_
-#define INPUT_DEVICE_H_
+#ifndef DIGITAL_INPUT_DEVICE_H_
+#define DIGITAL_INPUT_DEVICE_H_
 
 #include <exception>
 #include <iostream>
@@ -34,31 +34,31 @@
 #include <fmt/format.h>
 #include <fruit/fruit.h>
 
-#include "devices/device.h"
+#include "devices/digital/device.h"
 #include "logger.h"
 
 namespace emmerich::device {
-class InputDevice {
+class DigitalInputDevice {
  public:
-  InputDevice() = default;
-  virtual ~InputDevice() = default;
+  DigitalInputDevice() = default;
+  virtual ~DigitalInputDevice() = default;
 
   virtual void                 setActiveState(bool activeState) = 0;
   virtual inline device_output getStatus() const = 0;
   virtual bool                 isActive() const = 0;
 };
 
-class InputDeviceImpl : public InputDevice {
+class DigitalInputDeviceImpl : public DigitalInputDevice {
  private:
-  std::unique_ptr<Device> _device;
-  Logger*                 _logger;
-  bool                    _activeState = true;
+  std::unique_ptr<DigitalDevice> _device;
+  Logger*                        _logger;
+  bool                           _activeState = true;
 
  public:
-  INJECT(InputDeviceImpl(ASSISTED(int) pin,
-                         Logger*       logger,
-                         DeviceFactory deviceFactory));
-  virtual ~InputDeviceImpl() = default;
+  INJECT(DigitalInputDeviceImpl(ASSISTED(int) pin,
+                                Logger*              logger,
+                                DigitalDeviceFactory digitalDeviceFactory));
+  virtual ~DigitalInputDeviceImpl() = default;
 
   virtual inline void setActiveState(bool activeState) override {
     _activeState = activeState;
@@ -77,9 +77,10 @@ class InputDeviceImpl : public InputDevice {
   }
 };
 
-using InputDeviceFactory = std::function<std::unique_ptr<InputDevice>(int)>;
+using DigitalInputDeviceFactory =
+    std::function<std::unique_ptr<DigitalInputDevice>(int)>;
 
-fruit::Component<InputDeviceFactory> getInputDeviceComponent();
+fruit::Component<DigitalInputDeviceFactory> getDigitalInputDeviceComponent();
 }  // namespace emmerich::device
 
 #endif
