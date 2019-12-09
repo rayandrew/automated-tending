@@ -45,8 +45,9 @@ RotationImpl::RotationImpl(
 RotationImpl::~RotationImpl() {}
 
 void RotationImpl::run() {
+  _motor->on();
+
   while (_running) {
-    _motor->on();
     _state->setDegree(readRotaryDegree());
   }
 
