@@ -70,11 +70,15 @@ void RotationImpl::start() {
 
 void RotationImpl::finish() {
   reset();
+  QThread::sleep(1);
+  _state->setDegree(readRotaryDegree());
   Worker::finish();
 }
 
 void RotationImpl::stop() {
   reset();
+  QThread::sleep(1);
+  _state->setDegree(readRotaryDegree());
   Worker::stop();
 }
 

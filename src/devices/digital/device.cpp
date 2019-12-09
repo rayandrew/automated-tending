@@ -62,13 +62,7 @@ DigitalDeviceImpl::DigitalDeviceImpl(int                pin,
 
 DigitalDevice& DigitalDeviceImpl::setMode(const device_mode& mode) {
   _mode = mode;
-
-  if (mode == device_mode::INPUT) {
-    gpioSetMode(_pin, PI_INPUT);
-  } else {
-    gpioSetMode(_pin, PI_OUTPUT);
-  }
-
+  gpioSetMode(_pin, mode == device_mode::INPUT ? PI_INPUT : PI_OUTPUT);
   return *this;
 }
 
