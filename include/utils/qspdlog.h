@@ -1,8 +1,10 @@
 /*
- * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
- * SPDX-License-Identifier: MIT
+ * Copyright (c) 2018 Stefan Broekman.
+ * Modified by Ray Andrew <raydreww@gmail.com>
  *
- * Copyright (c) 2019 Ray Andrew
+ *  This file is distributed under the MIT license.
+ *  See: https://stefanbroekman.nl
+ *  See: https://github.com/Broekman/Qt5_template
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,50 +26,33 @@
  *
  */
 
-#ifndef DEVICE_STEPPER_H_
-#define DEVICE_STEPPER_H_
+#ifndef QSPDLOG_H_
+#define QSPDLOG_H_
 
-#pragma once
+#include <memory>
 
-#include <unistd.h>
+#include <QString>
+#include <QWidget>
 
 #include <fmt/format.h>
-#include <fruit/fruit.h>
+#include <spdlog/async_logger.h>
+#include <spdlog/sinks/base_sink.h>
 
-#include "devices/device.h"
-#include "logger.h"
-
-namespace emmerich::device {
-enum class stepper_direction {
-  FORWARD,
-  BACKWARD,
-};
-
-inline const std::string getStepperDirectionString(
-    const stepper_direction& step_direction) {
-  if (step_direction == stepper_direction::FORWARD) {
-    return "forward";
-  } else {
-    return "backward";
-  }
-}
-
-class Stepper {
- protected:
-  const int _step_pin;
-  const int _direction_pin;
+namespace emmerich {
+class QSpdlog : public QWidget, public spdlog::sinks::base_sink<std::mutex> {
+  Q_OBJECT
 
  public:
-  Stepper(int step_pin, int direction_pin)
-      : _step_pin(step_pin), _direction_pin(direction_pin) {}
-  virtual void     step(int n, useconds_t step_delay = 5000) = 0;
-  virtual Stepper& set_direction(const stepper_direction& step_direction) = 0;
-  virtual ~Stepper() = default;
+  QSpdlog(QWidget* parent = nullptr) : QWidget(parent) {}
+  virtual ~QSpdlog() = default;
+
+ protected:
+  virtual void sink_it_(const spdlog::details::log_msg& msg) override;
+  virtual void flush_() override;
+
+ signals:
+  void newLogEntry(const QString& msg);
 };
-
-using StepperFactory = std::function<std::unique_ptr<Stepper>(int, int)>;
-
-fruit::Component<StepperFactory> getStepperComponent();
-}  // namespace emmerich::device
+}  // namespace emmerich
 
 #endif

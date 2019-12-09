@@ -27,8 +27,6 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 
-#pragma once
-
 #include <iostream>
 #include <memory>
 
@@ -56,6 +54,12 @@ class Logger {
 
   inline const std::shared_ptr<spdlog::logger>& getLogger() const {
     return _logger;
+  }
+
+  inline spdlog::level::level_enum level() const { return _logger->level(); }
+
+  inline void set_level(const spdlog::level::level_enum& log_level) {
+    _logger->set_level(log_level);
   }
 
   template <typename... Args>
@@ -89,10 +93,7 @@ class Logger {
   }
 };
 
-using LoggerFactory =
-    std::function<std::unique_ptr<Logger>(const std::string&)>;
-
-fruit::Component<LoggerFactory> getLoggerComponent();
+fruit::Component<Logger> getLoggerComponent();
 }  // namespace emmerich
 
 #endif

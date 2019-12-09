@@ -27,29 +27,129 @@
 #include "state.h"
 
 namespace emmerich {
-StateImpl::StateImpl(LoggerFactory loggerFactory)
-    : _logger(loggerFactory("AppState")) {}
+std::ostream& operator<<(std::ostream& os, const State& state) {
+  os << fmt::format("[positioning: [x : {}, y: {}], degree: {}]", state.getX(),
+                    state.getY(), state.getDegree());
+  return os;
+}
+
+YAML::Emitter& operator<<(YAML::Emitter& out, const State& state) {
+  std::map<std::string, int> coordinate;
+  coordinate["x"] = state.getX();
+  coordinate["y"] = state.getY();
+
+  out << YAML::BeginMap;
+  out << YAML::Key << "positioning" << YAML::Value << coordinate;
+  out << YAML::Key << "degree" << YAML::Value << state.getDegree();
+  out << YAML::EndMap;
+  return out;
+}
+
+void State::load(const std::string& filename) {
+  YAML::Node configFile = YAML::LoadFile(filename);
+  setDegree(configFile["degree"].as<float>());
+  setX(configFile["positioning"]["x"].as<int>());
+  setY(configFile["positioning"]["y"].as<int>());
+}
+
+void State::save(const std::string& filename) {
+  YAML::Emitter out;
+  out << *this;
+
+  std::ofstream fout(filename);
+  fout << out.c_str();
+}
+
+StateImpl::StateImpl(Logger* logger)
+    : _logger(std::move(logger)), _mutex(std::make_unique<QMutex>()) {}
+
+void StateImpl::setDegree(float degree) {
+  QMutexLocker locker(_mutex.get());
+
+  if (degree != _degree) {
+    _degree = degree;
+    emit degreeHasChanged(QString::number(degree));
+  }
+}
+
+void StateImpl::setProgress(int progress) {
+  QMutexLocker locker(_mutex.get());
+
+  if (_progress != progress && progress >= 0 && progress <= 100) {
+    _progress = progress;
+    emit progressHasChanged(progress);
+  }
+}
+
+void StateImpl::setMachineState(const task_state& new_state) {
+  QMutexLocker locker(_mutex.get());
+
+  if (_machineState != new_state) {
+    // The conditions of state machine :
+    // 1. idle               -> watering
+    //                       -> tending
+    //                       -> reset
+    // 2. watering / tending -> stop
+    //                       -> finish (idle)
+    // 3. stop               -> reset
+    // 4. reset              -> stop
+    //                       -> finish (idle)
+    // 5. else rejected
+
+    bool changed = false;
+
+    if (_machineState == task_state::IDLE && new_state != task_state::STOP) {
+      changed = true;
+    } else if ((_machineState == task_state::WATERING ||
+                _machineState == task_state::TENDING ||
+                _machineState == task_state::RESET) &&
+               (new_state == task_state::STOP ||
+                new_state == task_state::IDLE)) {
+      changed = true;
+    } else if (_machineState == task_state::STOP &&
+               new_state == task_state::RESET) {
+      changed = true;
+    }
+
+    // else if (_machineState == task_state::RESET &&
+    //               new_state == task_state::IDLE) {
+    //      changed = true;
+    //    }
+
+    if (changed) {
+      _logger->debug("CHANGED {} Machine State {} New State {}", changed,
+                     getTaskStateString(_machineState),
+                     getTaskStateString(new_state));
+
+      _machineState = new_state;
+      emit machineStateHasChanged(new_state);
+      emit machineStateStringHasChanged(
+          QString::fromStdString(getTaskStateString(new_state)).toUpper());
+    }
+  }
+}
 
 void StateImpl::setX(int x) {
+  QMutexLocker locker(_mutex.get());
+
   if (x != _coordinate.x) {
     _coordinate.x = x;
-    emit xHasChanged(x);
-    _logger->info(fmt::format("Coordinate X has changed into {}", x));
+    emit xHasChanged(QString::number(x));
   }
-};
+}
 
 void StateImpl::setY(int y) {
+  QMutexLocker locker(_mutex.get());
   if (y != _coordinate.y) {
     _coordinate.y = y;
-    emit yHasChanged(y);
-    _logger->info(fmt::format("Coordinate Y has changed into {}", y));
+    emit yHasChanged(QString::number(y));
   }
-};
+}
 
-void StateImpl::setCoordinate(const Coordinate& coordinate) {
+void StateImpl::setCoordinate(const Point& coordinate) {
   setX(coordinate.x);
   setY(coordinate.y);
-};
+}
 
 fruit::Component<State> getStateComponent() {
   return fruit::createComponent().bind<State, StateImpl>().install(

@@ -26,17 +26,15 @@
 
 #include "windows/main_window.h"
 
-namespace emmerich::ui {
 MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent), _ui(std::make_shared<Ui::MainWindow>()) {
-  _ui->setupUi(this);
+    : QMainWindow(parent), ui(new Ui::MainWindow) {
+  ui->setupUi(this);
 }
 
 MainWindow::~MainWindow() {
-  _ui.reset();
+  delete ui;
 }
 
 void MainWindow::on_actionExit_triggered() {
   this->close();
 }
-}  // namespace emmerich::ui

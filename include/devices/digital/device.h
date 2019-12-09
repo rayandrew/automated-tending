@@ -24,10 +24,8 @@
  *
  */
 
-#ifndef DEVICE_H_
-#define DEVICE_H_
-
-#pragma once
+#ifndef DIGITAL_DEVICE_H_
+#define DIGITAL_DEVICE_H_
 
 #include <exception>
 #include <iostream>
@@ -60,60 +58,72 @@ enum class device_output {
 };
 
 inline const std::string getOutputModeString(const device_output& output) {
-  if (output == device_output::LOW) {
-    return "low";
-  } else {
-    return "high";
-  }
+  return output == device_output::LOW ? "low" : "high";
 }
 
-class DeviceException : public std::exception {
+inline device_output inverseOutput(const device_output& output) {
+  return output == device_output::LOW ? device_output::HIGH
+                                      : device_output::LOW;
+}
+
+inline bool getOutputModeBool(const device_output& output) {
+  return output == device_output::HIGH;
+}
+
+class DigitalDeviceException : public std::exception {
  private:
+  Logger*             _logger;
   const std::string   _message;
   const int           _pin;
   const device_mode   _mode;
   const device_output _output;
 
  public:
-  DeviceException(const std::string&   message,
-                  const int            pin,
-                  const device_mode&   mode,
-                  const device_output& output);
+  DigitalDeviceException(Logger*              logger,
+                         const std::string&   message,
+                         const int            pin,
+                         const device_mode&   mode,
+                         const device_output& output);
   const char* what() const noexcept;
 };
 
-class Device {
+class DigitalDevice {
  protected:
   const int   _pin;
   device_mode _mode;
 
  public:
-  Device() = default;
-  Device(int pin) : _pin(pin) {}
-  Device(int pin, const device_mode& mode) : _pin(pin), _mode(mode) {}
-  virtual ~Device() = default;
+  DigitalDevice(int pin) : _pin(pin) {}
+  DigitalDevice(int pin, const device_mode& mode) : _pin(pin), _mode(mode) {}
+  virtual ~DigitalDevice() = default;
 
-  virtual Device&       setMode(const device_mode& mode) = 0;
-  virtual void          write(const device_output& level) = 0;
-  virtual device_output read() const = 0;
-  inline int            getPin() const { return _pin; }
-  inline device_mode    getMode() const { return _mode; }
+  virtual DigitalDevice& setMode(const device_mode& mode) = 0;
+  virtual void           write(const device_output& level) = 0;
+  virtual device_output  read() const = 0;
+  inline int             getPin() const { return _pin; }
+  inline device_mode     getMode() const { return _mode; }
 };
 
-using DeviceFactory =
-    std::function<std::unique_ptr<Device>(int, const device_mode&)>;
+class DigitalDeviceImpl : public DigitalDevice {
+ private:
+  Logger* _logger;
 
-fruit::Component<DeviceFactory> getDeviceComponent();
+ public:
+  INJECT(DigitalDeviceImpl(ASSISTED(int) pin,
+                           ASSISTED(const device_mode&) mode,
+                           Logger* logger));
+  DigitalDeviceImpl(int pin) : DigitalDevice(pin) {}
+  virtual ~DigitalDeviceImpl() = default;
 
-// class Device : public AbstractDevice {
-//  protected:
-//   Device(int pin);
-//   Device(int pin, const device_mode& mode);
-//   virtual ~Device() = default;
-//   virtual AbstractDevice& setMode(const device_mode& mode);
-//   virtual void            write(const device_output& output);
-//   virtual device_output   read() const;
-// };
+  virtual DigitalDevice& setMode(const device_mode& mode) override;
+  virtual void           write(const device_output& level) override;
+  virtual device_output  read() const override;
+};
+
+using DigitalDeviceFactory =
+    std::function<std::unique_ptr<DigitalDevice>(int, const device_mode&)>;
+
+fruit::Component<DigitalDeviceFactory> getDigitalDeviceComponent();
 }  // namespace emmerich::device
 
 #endif

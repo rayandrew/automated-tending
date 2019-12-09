@@ -26,11 +26,6 @@
 
 #ifdef MOCK_GPIO
 
-#include "logger.h"
-
-// const std::shared_ptr<spdlog::logger> logger =
-//     emmerich::Logger::getInstance().getLogger();
-
 #define PI_OFF 0
 #define PI_ON 1
 
@@ -49,11 +44,24 @@
 #define PI_ALT4 3
 #define PI_ALT5 2
 
+// General
 int  gpioInitialise(void);
 void gpioTerminate(void);
-int  gpioSetMode(int gpio, int mode);
-int  gpioRead(int gpio);
-int  gpioWrite(int gpio, int level);
+
+// Digital
+int gpioSetMode(int gpio, int mode);
+int gpioRead(int gpio);
+int gpioWrite(int gpio, int level);
+
+// SPI
+int i2cOpen(unsigned i2cBus, unsigned i2cAddr, unsigned i2cFlags);
+int i2cClose(unsigned handle);
+
+int i2cWriteDevice(unsigned handle, char* buf, unsigned count);
+int i2cReadDevice(unsigned handle, char* buf, unsigned count);
+
+int i2cWriteByte(unsigned handle, unsigned bVal);
+int i2cReadByte(unsigned handle);
 
 #else
 

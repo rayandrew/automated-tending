@@ -40,3 +40,5 @@ build/
 
 # OS file
 .DS_Store
+
+CMakeLists.txt.user

@@ -9,7 +9,7 @@ cache:
   directories:
     - $HOME/Library/Caches/Homebrew
 
-# Define builds on mulitple OS/compiler combinations. 
+# Define builds on mulitple OS/compiler combinations.
 # Feel free to add/remove entries from this list.
 matrix:
   include:
@@ -18,9 +18,16 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - ubuntu-sdk-team-ppa
           packages:
             - lcov
             - g++-7
+            - qtbase5-dev
+            - qtdeclarative5-dev
+            - libqt5webkit5-dev
+            - libsqlite3-dev
+            - qt5-default
+            - qttools5-dev-tools
       env:
         - MATRIX_EVAL="CXX_COMPILER=g++-7; sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-7 90"
 
@@ -29,10 +36,10 @@ matrix:
       # addons:
       #   homebrew:
       #     packages:
-      #     - lcov 
+      #     - lcov
       env:
         - MATRIX_EVAL="CXX_COMPILER=clang++"
-    
+
 before_cache:
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 
@@ -41,10 +48,11 @@ before_install:
   - PARENTDIR=$(pwd)
   - mkdir $PARENTDIR/build
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew pin lcov; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew update; fi 
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew update; fi
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install lcov; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew install qt5; fi
 
-install: 
+install:
   - cd $PARENTDIR/build
   - cmake $PARENTDIR -DCMAKE_BUILD_TYPE=Coverage -DCMAKE_CXX_COMPILER=$CXX_COMPILER
   - make
@@ -54,5 +62,5 @@ script:
 
 after_success:
   - cd $PARENTDIR/build
-  - lcov --list coverage_out.info.cleaned  # Show test report in travis log.
+  - lcov --list coverage_out.info.cleaned # Show test report in travis log.
   - bash <(curl -s https://codecov.io/bash) -f coverage_out.info.cleaned || echo "Codecov did not collect coverage reports"

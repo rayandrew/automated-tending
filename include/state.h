@@ -27,73 +27,136 @@
 #ifndef STATE_H_
 #define STATE_H_
 
+#include <fstream>
+#include <map>
+
 #include <QObject>
+#include <QString>
+
+#include <QMutex>
+#include <QMutexLocker>
 
 #include <fmt/format.h>
 #include <fruit/fruit.h>
+#include <yaml-cpp/yaml.h>
 
 #include "logger.h"
 
-#pragma once
+#include "general_config.h"
 
 namespace emmerich {
-struct Coordinate {
+struct Point;
+enum class task_state;
+}  // namespace emmerich
+
+Q_DECLARE_METATYPE(emmerich::Point)
+Q_DECLARE_METATYPE(emmerich::task_state)
+
+namespace emmerich {
+struct Point {
   int x = 0;
   int y = 0;
 };
 
+enum class task_state { IDLE, WATERING, TENDING, RESET, STOP };
+
+const task_state INITIAL_STATE = task_state::IDLE;
+
+inline const std::string getTaskStateString(const task_state& state) {
+  switch (state) {
+    case task_state::WATERING:
+      return "watering";
+    case task_state::TENDING:
+      return "tending";
+    case task_state::STOP:
+      return "stop";
+    case task_state::RESET:
+      return "reset";
+    case task_state::IDLE:
+      return "idle";
+    default:
+      return "unk";
+  }
+}
+
 class State : public QObject {
   Q_OBJECT
+  Q_DISABLE_COPY(State)
 
  protected:
-  Coordinate _coordinate;
+  // Global
+  int _progress = 0;
 
-  //  protected:
-  //   virtual void _setX(int x) { _coordinate.x = x; }
-  //   virtual void _setY(int y) { _coordinate.y = y; }
-  //   virtual void _setCoordinate(const Coordinate& coordinate) {
-  //     _coordinate = coordinate;
-  //   }
+  // Movement
+  Point      _coordinate;
+  float      _degree = 0.0;
+  task_state _machineState = task_state::IDLE;
 
  public:
   State() = default;
   virtual ~State() = default;
 
-  inline const Coordinate& getCoordinate() const { return _coordinate; }
-  inline int               getX() { return _coordinate.x; };
-  inline int               getY() { return _coordinate.y; };
+  // Global
+  inline int               getProgress() const { return _progress; }
+  inline const task_state& getMachineState() const { return _machineState; }
 
-  // singleton stuffs
-  // State(State const&) = delete;
-  // State(State&&) = delete;
-  // State&               operator=(State const&) = delete;
-  // State&               operator=(State&&) = delete;
+  // Movement
+  inline float        getDegree() const { return _degree; }
+  inline const Point& getCoordinate() const { return _coordinate; }
+  inline int          getX() const { return _coordinate.x; }
+  inline int          getY() const { return _coordinate.y; }
+
+  // Formatter
+  friend std::ostream&  operator<<(std::ostream& os, const State& state);
+  friend YAML::Emitter& operator<<(YAML::Emitter& out, const State& state);
+
+  virtual void load(const std::string& filename = PROJECT_STATE_FILE);
+  virtual void save(const std::string& filename = PROJECT_STATE_FILE);
 
  public slots:
+  // Global
+  virtual void setProgress(int progress) = 0;
+  virtual void setMachineState(const task_state& new_state) = 0;
+
+  // Movement
+  virtual void setDegree(float degree) = 0;
   virtual void setX(int x) = 0;
   virtual void setY(int y) = 0;
-  virtual void setCoordinate(const Coordinate& coordinate) = 0;
+  virtual void setCoordinate(const Point& coordinate) = 0;
 
  signals:
-  void xHasChanged(int new_x);
-  void yHasChanged(int new_y);
+  // Global
+  void progressHasChanged(int new_progress);
+  void machineStateHasChanged(const task_state& new_machine_state);
+  void machineStateStringHasChanged(const QString& new_machine_state);
+
+  // Movement
+  void degreeHasChanged(const QString& new_degree);
+  void xHasChanged(const QString& new_x);
+  void yHasChanged(const QString& new_y);
 };
 
 class StateImpl : public State {
   Q_OBJECT
 
  private:
-  std::unique_ptr<Logger> _logger;
+  Logger*                       _logger;
+  const std::unique_ptr<QMutex> _mutex;
 
  public:
-  INJECT(StateImpl(LoggerFactory loggerFactory));
-
+  INJECT(StateImpl(Logger* logger));
   virtual ~StateImpl() = default;
 
  public slots:
-  virtual void setX(int x);
-  virtual void setY(int y);
-  virtual void setCoordinate(const Coordinate& coordinate);
+  // Global
+  virtual void setProgress(int progress) override;
+  virtual void setMachineState(const task_state& state) override;
+
+  // Movement
+  virtual void setDegree(float degree) override;
+  virtual void setX(int x) override;
+  virtual void setY(int y) override;
+  virtual void setCoordinate(const Point& coordinate) override;
 };
 
 fruit::Component<State> getStateComponent();

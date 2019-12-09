@@ -26,14 +26,14 @@
 
 #ifdef MOCK_GPIO
 
-#include <spdlog/spdlog.h>
-
+// General
 int gpioInitialise(void) {
   return 0;
 }
 
 void gpioTerminate(void) {}
 
+// Digital
 int gpioSetMode(int gpio, int mode) {
   return 0;
 }
@@ -43,6 +43,31 @@ int gpioRead(int gpio) {
 }
 
 int gpioWrite(int gpio, int level) {
+  return 0;
+}
+
+// SPI
+int i2cOpen(unsigned i2cBus, unsigned i2cAddr, unsigned i2cFlags) {
+  return 0;
+}
+
+int i2cClose(unsigned handle) {
+  return 0;
+}
+
+int i2cWriteDevice(unsigned handle, char* buf, unsigned count) {
+  return 0;
+}
+
+int i2cReadDevice(unsigned handle, char* buf, unsigned count) {
+  return 0;
+}
+
+int i2cWriteByte(unsigned handle, unsigned bVal) {
+  return 0;
+}
+
+int i2cReadByte(unsigned handle) {
   return 0;
 }
 

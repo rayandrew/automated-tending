@@ -177,6 +177,7 @@ SHORT_NAMES            = NO
 # description.)
 # The default value is: NO.
 
+JAVADOC_BANNER         = YES
 JAVADOC_AUTOBRIEF      = NO
 
 # If the QT_AUTOBRIEF tag is set to YES then doxygen will interpret the first

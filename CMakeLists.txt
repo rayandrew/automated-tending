@@ -9,18 +9,13 @@ option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defi
 option(ENABLE_LTO "Enable link time optimization" ON)
 option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code. Tests in tests/*.cpp will still be enabled." OFF)
 option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work" ON)
-# option(FRUIT_USES_BOOST "Not using any boost library for Fruit dependencies" OFF)
-# option(SPDLOG_FMT_EXTERNAL "Using external FMT for SPDLOG" OFF)
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    add_definitions(-DMOCK_GPIO)
-endif()
-
-# Include stuff. No change needed.
+# Include stuffs
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 include(ConfigSafeGuards)
 include(Colors)
+include(Cotire)
 include(CTest)
 include(Doctest)
 include(Fruit)
@@ -32,6 +27,17 @@ include(Spdlog)
 include(Warnings)
 include(Yaml)
 
+set(RASPI_LIB "")
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  add_definitions(-DMOCK_GPIO)
+else()
+  find_package(pigpio REQUIRED)
+  LIST(APPEND RASPI_LIB "pigpio")
+  LIST(APPEND RASPI_LIB "rt")
+endif()
+
+
 # Check for LTO support.
 find_lto(CXX)
 
@@ -41,57 +47,89 @@ find_package(Qt5 COMPONENTS REQUIRED
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
-# set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # --------------------------------------------------------------------------------
-#                         Locate files (change as needed).
+# Locate files 
 # --------------------------------------------------------------------------------
 
-set(SOURCES                     # All .cpp files in src/
+# All .cpp files in src/
+set(SOURCES
     src/app.cpp
     src/config.cpp
     src/state.cpp
     src/logger.cpp
     src/gpio.cpp
+    src/dispatcher.cpp
+    
+    src/utils/qspdlog.cpp
+    src/utils/worker.cpp
+    src/utils/simple_worker.cpp
+    src/utils/signal_merge.cpp
+
     src/windows/main_window.cpp
-    src/devices/stepper.cpp
-    src/devices/device.cpp
-    src/mechanisms/finger/movement.cpp) 
 
-file (GLOB_RECURSE
-      UI_SOURCES
-      RELATIVE
-      ${CMAKE_SOURCE_DIR} "resources/ui/*.ui") # All .ui files in resources/ui
+    src/devices/analog/device.cpp
+    src/devices/analog/PCF8591.cpp
+    src/devices/digital/device.cpp
+    src/devices/digital/stepper.cpp
+    src/devices/digital/input.cpp
+    src/devices/digital/output.cpp
 
-set(QT5_SOURCES                     # All .h files in include/
+    src/mechanisms/movement.cpp
+    src/mechanisms/rotation.cpp
+
+    src/services/service.cpp
+    src/services/tending_service.cpp
+    src/services/reset_service.cpp) 
+
+# All .ui files in resources/ui
+set(UI_SOURCES
+    resources/ui/main_window.ui)
+
+# All .h files in include/
+set(HEADERS
     include/app.h
     include/config.h
     include/state.h
     include/logger.h
     include/gpio.h
+    include/dispatcher.h
+
+    include/utils/qspdlog.h
+    include/utils/worker.h
+    include/utils/simple_worker.h
+    include/utils/signal_merge.h
+    
     include/windows/main_window.h
-    include/devices/stepper.h
-    include/devices/device.h
-    include/mechanisms/finger/movement.h) 
 
-# file(GLOB_RECURSE 
-#      QT5_SOURCES 
-#      RELATIVE 
-#      ${CMAKE_SOURCE_DIR} "include/*.h") # All .cpp files in src/
+    include/devices/analog/device.h
+    include/devices/analog/PCF8591.h
+    include/devices/digital/device.h
+    include/devices/digital/stepper.h
+    include/devices/digital/input.h
+    include/devices/digital/output.h
 
-set(TESTFILES                   # All .cpp files in tests/
+    include/mechanisms/movement.h
+    include/mechanisms/rotation.h
+
+    include/services/service.h
+    include/services/tending_service.h
+    include/services/reset_service.h) 
+
+# All .cpp files in tests/
+set(TESTFILES
     tests/main.cpp)
 
 set(LIBRARY_NAME engine)
 
+# --------------------------------------------------------------------------------
+# Building
+# --------------------------------------------------------------------------------
+
 # Qt5 wrapper
 qt5_wrap_ui(ui_sources_headers ${UI_SOURCES})
-qt5_wrap_cpp(ui_sources_moc ${QT5_SOURCES})
-
-# --------------------------------------------------------------------------------
-#                            Build! (Change as needed)
-# --------------------------------------------------------------------------------
+qt5_wrap_cpp(ui_sources_moc ${HEADERS})
 
 # Compile all sources into a library.
 add_library(${LIBRARY_NAME} OBJECT
@@ -99,13 +137,14 @@ add_library(${LIBRARY_NAME} OBJECT
             ${ui_sources_headers}
             ${ui_sources_moc})
 
-# Lib needs its header files, and users of the library must also see these (PUBLIC). (No change needed)
+# Lib needs its header files, and users of the library must also see these (PUBLIC)
 target_include_directories(${LIBRARY_NAME} PUBLIC
                            ${PROJECT_SOURCE_DIR}/include
                            ${Qt5Widgets_INCLUDES})
 
 # There's also (probably) doctests within the library, so we need to see this as well.
 target_link_libraries(${LIBRARY_NAME} PUBLIC
+                      ${RASPI_LIB}
                       doctest
                       spdlog::spdlog
                       fruit
@@ -125,20 +164,21 @@ add_compile_definitions(BUILD_SHARED_LIBS
                         SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG
                         SPDLOG_FMT_EXTERNAL)
 
-# Create logs directory
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")
-
 # Add an executable for the file app/main.cpp.
 add_executable(main app/main.cpp)
 
 # Link the executable to libraries
 target_link_libraries(main PRIVATE ${LIBRARY_NAME}
+                      ${RASPI_LIB}
                       spdlog::spdlog
                       fmt::fmt
                       fruit
                       yaml::yaml
                       Qt5::Core
                       Qt5::Widgets)
+
+# Precompiled Headers
+cotire(main)
 
 # Set warnings
 spdlog_enable_warnings(main)
@@ -155,5 +195,8 @@ set_target_properties(
         CXX_STANDARD_REQUIRED YES 
         CXX_EXTENSIONS NO)
 
-# Set up tests (see tests/CMakeLists.txt).
+# Set up tests
 add_subdirectory(tests)
+
+# Create logs directory
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/logs")

@@ -1,0 +1,28 @@
+general:
+  name: "Emmerich Tending App"
+  debug: true
+devices:
+  movement:
+    sleep_pin: 16
+    limit_switch_pin:
+      home_x: 5
+      home_y: 19
+      edge: 6
+      bin_detection: 14
+    delay_each_step: 500
+    x:
+      step_pin: 26
+      direction_pin: 13
+      step_per_cm: 62.069
+      reversed: true
+    y:
+      step_pin: 21
+      direction_pin: 20
+      step_per_cm: 62.069
+      reversed: false
+  watering:
+    pump: 12
+  rotation:
+    motor: 11
+    encoder: 0
+  

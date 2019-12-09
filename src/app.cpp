@@ -27,45 +27,136 @@
 #include "app.h"
 
 namespace emmerich {
-class AppImpl : public App {
- private:
-  const std::unique_ptr<QApplication>                 _qApp;
-  const std::unique_ptr<ui::MainWindow>               _window;
-  Config*                                             _config;
-  State*                                              _state;
-  std::unique_ptr<Logger>                             _logger;
-  std::unique_ptr<mechanisms::finger::FingerMovement> _fingerMovement;
+AppImpl::AppImpl(int         argc,
+                 char**      argv,
+                 Config*     config,
+                 Logger*     logger,
+                 State*      state,
+                 Dispatcher* dispatcher)
+    : _qApp(std::make_unique<QApplication>(argc, argv)),
+      _config(std::move(config)),
+      _state(std::move(state)),
+      _logger(std::move(logger)),
+      _dispatcher(std::move(dispatcher)) {
+  _ui = _window->getUi();
 
- public:
-  INJECT(
-      AppImpl(ASSISTED(int) argc,
-              ASSISTED(char**) argv,
-              Config*                                   config,
-              State*                                    state,
-              LoggerFactory                             loggerFactory,
-              mechanisms::finger::FingerMovementFactory fingerMovementFactory))
-      : _qApp(std::make_unique<QApplication>(argc, argv)),
-        _window(std::make_unique<ui::MainWindow>()),
-        _config(config),
-        _state(state),
-        _logger(loggerFactory("App")),
-        _fingerMovement(fingerMovementFactory(nullptr)) {
-    _logger->info("Automated Tending Project v{}.{}.{}.{}",
-                  PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR,
-                  PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK);
-    // _fingerMovementFactoryProvider.get()->moveX(10);
-    // QPushButton* tendingButton
-    // =_window->findChild<QPushButton*>("tending_button");
-    QPushButton* tendingButton = _window->getUi()->tending_button;
-    QObject::connect(tendingButton, &QPushButton::clicked,
-                     [=]() { tendingButton->setText("Hi"); });
-    _window->show();
+  setupLogger();
+  setupSignalsAndSlots();
+  setupServices();
+
+  _window->setWindowState(Qt::WindowMaximized);
+  _window->show();
+
+  _logger->info("Automated Tending Project v{}.{}.{}.{}", PROJECT_VERSION_MAJOR,
+                PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
+                PROJECT_VERSION_TWEAK);
+
+  _state->load();
+}
+
+AppImpl::~AppImpl() {}
+
+void AppImpl::setupLogger() {
+  _logger->getLogger()->sinks().push_back(_qSpdlog);
+
+  for (const auto& log_level_name : SPDLOG_LEVEL_NAMES) {
+    _ui->cmbox_log_level->addItem(log_level_name);
   }
 
-  virtual ~AppImpl() { spdlog::drop_all(); }
+  _ui->cmbox_log_level->setCurrentText(QString::fromStdString(
+      fmt::format(spdlog::level::to_string_view(_logger->level()))));
+  connect(_ui->cmbox_log_level, &QComboBox::currentTextChanged, this,
+          [this](const QString& level) {
+            _logger->set_level(spdlog::level::info);
+            auto level_str = level.toStdString();
+            _logger->info("Log level: " + level_str);
+            _logger->set_level(spdlog::level::from_str(level_str));
+          });
+  connect(_qSpdlog.get(), &QSpdlog::newLogEntry, this, &App::addLogEntry);
+  connect(_ui->btn_clear_log_output, &QPushButton::released,
+          _ui->ptextedit_log_output, &QPlainTextEdit::clear);
+}
 
-  int run() override { return _qApp->exec(); }
-};
+void AppImpl::setupSignalsAndSlots() {
+  QLCDNumber*   stateFingerPositionValueX = _ui->stateFingerPositionValueX;
+  QLCDNumber*   stateFingerPositionValueY = _ui->stateFingerPositionValueY;
+  QLCDNumber*   stateFingerDegreeValue = _ui->stateFingerDegreeValue;
+  QProgressBar* progressBar = _ui->progressBar;
+  QLabel*       stateMachineStatus = _ui->stateMachineStatus;
+
+  progressBar->setRange(0, 100);
+
+  connect(_state, SIGNAL(xHasChanged(QString)), stateFingerPositionValueX,
+          SLOT(display(QString)));
+  connect(_state, SIGNAL(yHasChanged(QString)), stateFingerPositionValueY,
+          SLOT(display(QString)));
+  connect(_state, SIGNAL(degreeHasChanged(QString)), stateFingerDegreeValue,
+          SLOT(display(QString)));
+
+  connect(_state, &State::progressHasChanged, progressBar,
+          &QProgressBar::setValue);
+
+  stateMachineStatus->setText(
+      QString::fromStdString(getTaskStateString(INITIAL_STATE)).toUpper());
+
+  connect(_state, &State::machineStateStringHasChanged, stateMachineStatus,
+          &QLabel::setText);
+  connect(_state, &State::machineStateHasChanged, _dispatcher,
+          &Dispatcher::handleTask);
+}
+
+void AppImpl::setupServices() {
+  QPushButton* tendingButton = _ui->tendingButton;
+  QPushButton* wateringButton = _ui->wateringButton;
+  QPushButton* resetButton = _ui->resetButton;
+  QPushButton* stopButton = _ui->stopButton;
+
+  connect(tendingButton, &QPushButton::released, this,
+          [=]() { _state->setMachineState(task_state::TENDING); });
+  connect(wateringButton, &QPushButton::released, this,
+          [=]() { _state->setMachineState(task_state::WATERING); });
+  connect(resetButton, &QPushButton::released, this,
+          [=]() { _state->setMachineState(task_state::RESET); });
+  connect(stopButton, &QPushButton::released, this,
+          [=]() { _state->setMachineState(task_state::STOP); });
+  connect(_state, &State::machineStateHasChanged, this,
+          [=](const task_state& state) {
+            tendingButton->setEnabled(false);
+            wateringButton->setEnabled(false);
+            stopButton->setEnabled(false);
+            resetButton->setEnabled(false);
+
+            switch (state) {
+              case task_state::STOP:
+                resetButton->setEnabled(true);
+                break;
+
+              case task_state::WATERING:
+              case task_state::TENDING:
+              case task_state::RESET:
+                stopButton->setEnabled(true);
+                break;
+
+              default:
+                tendingButton->setEnabled(true);
+                wateringButton->setEnabled(true);
+                stopButton->setEnabled(false);
+                resetButton->setEnabled(true);
+                break;
+            }
+          });
+}
+
+void AppImpl::addLogEntry(const QString& msg) {
+  auto line_count = _ui->ptextedit_log_output->document()->lineCount();
+  auto msg_formatted =
+      QString("%1 %2").arg(QString::number(line_count), 4).arg(msg);
+  _ui->ptextedit_log_output->insertPlainText(msg_formatted);
+  if (_ui->chkbox_log_autoscroll->isChecked()) {
+    _ui->ptextedit_log_output->verticalScrollBar()->setValue(
+        _ui->ptextedit_log_output->verticalScrollBar()->maximum());
+  }
+}
 
 fruit::Component<AppFactory> getAppComponent() {
   return fruit::createComponent()
@@ -73,6 +164,6 @@ fruit::Component<AppFactory> getAppComponent() {
       .install(getConfigComponent)
       .install(getLoggerComponent)
       .install(getStateComponent)
-      .install(mechanisms::finger::getFingerMovementComponent);
+      .install(getDispatcherComponent);
 }
 }  // namespace emmerich
