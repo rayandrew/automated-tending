@@ -49,6 +49,7 @@ void RotationImpl::run() {
 
   while (_running) {
     _state->setDegree(readRotaryDegree());
+    QThread::msleep(200);
   }
 
   if (_running)
