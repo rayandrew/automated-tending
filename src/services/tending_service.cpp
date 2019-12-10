@@ -78,6 +78,11 @@ void TendingServiceImpl::setupMovementMechanism() {
 void TendingServiceImpl::setupRotationMechanism() {
   _rotationMechanism->moveToThread(_rotationThread.get());
 
+  connect(_movementMechanism.get(), &mechanism::Movement::edgeFinished, this,
+          [this]() {
+            _logger->debug("Starting rotation");
+            _rotationMechanism->start();
+          });
   connect(_rotationMechanism.get(), SIGNAL(started()), _rotationThread.get(),
           SLOT(start()));
   connect(_rotationThread.get(), &QThread::started, _rotationMechanism.get(),
@@ -93,8 +98,6 @@ void TendingServiceImpl::setupRotationMechanism() {
 }
 
 void TendingServiceImpl::run() {
-  _rotationMechanism->start();
-  QThread::usleep(200);
   _movementMechanism->start();
 }
 

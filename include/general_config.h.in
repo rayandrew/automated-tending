@@ -31,4 +31,6 @@
 
 #define PROJECT_CONFIG_FILE "conf/config.yaml"
 #define PROJECT_STATE_FILE "conf/state.yaml"
-#define PROJECT_MOVEMENT_TEMPLATE_FILE "conf/movement.path"
+
+#define PROJECT_MOVEMENT_EDGE_FILE "conf/edge.path"
+#define PROJECT_MOVEMENT_ZIGZAG_FILE "conf/zigzag.path"

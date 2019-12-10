@@ -40,10 +40,9 @@ DispatcherImpl::DispatcherImpl(
 DispatcherImpl::~DispatcherImpl() {}
 
 void DispatcherImpl::handleTask(const task_state& task) {
-  std::cout << "Dispatcher Thread " << this->thread() << std::endl;
-
   switch (task) {
     case task_state::WATERING:
+      // _wateringserviceProvider.get()->execute();
       // noop
       break;
     case task_state::TENDING:
@@ -52,12 +51,11 @@ void DispatcherImpl::handleTask(const task_state& task) {
     case task_state::RESET:
       _resetServiceProvider.get()->execute();
       break;
-    case task_state::IDLE:
-      // noop
-      break;
-    default:
+    case task_state::STOP:
       _resetServiceProvider.get()->stop();
       _tendingServiceProvider.get()->stop();
+      break;
+    default:
       break;
   }
 }
