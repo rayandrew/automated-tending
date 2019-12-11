@@ -160,7 +160,10 @@ void MovementImpl::processPaths(const std::queue<Point>& paths) {
 void MovementImpl::followPaths() {
   _logger->debug("Start moving the stepper according to edge paths");
   processPaths(_edgePaths);
-  emit edgeFinished();
+
+  if (_running)
+    emit edgeFinished();
+
   _logger->debug("Start moving the stepper according to zigzag paths");
   processPaths(_zigzagPaths);
 
@@ -218,6 +221,7 @@ void MovementImpl::stop() {
   reset();
   QThread::msleep(100);
   Worker::stop();
+  _logger->debug("WEWEWEW {}", _running);
 }
 
 fruit::Component<MovementFactory> getMovementMechanismComponent() {

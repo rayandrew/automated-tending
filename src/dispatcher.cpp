@@ -42,8 +42,8 @@ DispatcherImpl::~DispatcherImpl() {}
 void DispatcherImpl::handleTask(const task_state& task) {
   switch (task) {
     case task_state::WATERING:
-      // _wateringserviceProvider.get()->execute();
       // noop
+      // _wateringserviceProvider.get()->execute();
       break;
     case task_state::TENDING:
       _tendingServiceProvider.get()->execute();
