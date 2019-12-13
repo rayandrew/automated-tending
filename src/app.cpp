@@ -24,7 +24,16 @@
  *
  */
 
+#include <QColor>
+#include <QComboBox>
+#include <QLCDNumber>
+#include <QLabel>
+#include <QPalette>
+#include <QProgressBar>
+#include <QPushButton>
+
 #include "app.h"
+#include "general_config.h"
 
 namespace emmerich {
 AppImpl::AppImpl(int         argc,
@@ -53,8 +62,6 @@ AppImpl::AppImpl(int         argc,
 
   _state->load();
 }
-
-AppImpl::~AppImpl() {}
 
 void AppImpl::setupLogger() {
   _logger->getLogger()->sinks().push_back(_qSpdlog);

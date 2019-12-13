@@ -36,16 +36,23 @@ StepperImpl::StepperImpl(int                        step_pin,
       _direction_device(digitalOutputDeviceFactory(direction_pin)),
       _logger(std::move(logger)) {
   _logger->debug(
-      "StepperDevice with step pin {} and direction pin {} is initialized!",
-      step_pin, direction_pin);
+      "Stepper with step pin {} and direction pin {} is initialized!", step_pin,
+      direction_pin);
 }
 
 const Stepper& StepperImpl::setDirection(
     const stepper_direction& step_direction) const {
   _logger->debug("Set step direction : {}",
                  getStepperDirectionString(step_direction));
+
   _direction_device->setActiveState(!_reverseDirection);
-  _direction_device->on();
+
+  if (step_direction == stepper_direction::FORWARD) {
+    _direction_device->on();
+  } else {
+    _direction_device->off();
+  }
+
   return *this;
 }
 

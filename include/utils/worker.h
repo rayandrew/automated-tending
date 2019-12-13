@@ -41,8 +41,8 @@ class Worker : public QObject {
   Q_OBJECT
 
  protected:
-  bool                    _running = false;
-  std::unique_ptr<QMutex> _mutex = std::make_unique<QMutex>();
+  bool _running = false;
+  // std::unique_ptr<QMutex> _mutex = std::make_unique<QMutex>();
 
  public:
   Worker() = default;

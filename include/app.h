@@ -27,25 +27,13 @@
 #ifndef APP_H_
 #define APP_H_
 
-#include <fmt/format.h>
 #include <fruit/fruit.h>
-#include <spdlog/spdlog.h>
-#include <yaml-cpp/yaml.h>
 
 #include <QApplication>
 #include <QObject>
 #include <QString>
 #include <QThread>
 
-#include <QColor>
-#include <QComboBox>
-#include <QLCDNumber>
-#include <QLabel>
-#include <QPalette>
-#include <QProgressBar>
-#include <QPushButton>
-
-#include "general_config.h"
 #include "windows/main_window.h"
 
 #include "config.h"
@@ -53,8 +41,9 @@
 #include "logger.h"
 #include "state.h"
 
+#include "devices/analog/device.h"
+
 #include "utils/qspdlog.h"
-#include "utils/worker.h"
 
 #include "mechanisms/movement.h"
 
@@ -92,11 +81,11 @@ class AppImpl : public App {
  public:
   INJECT(AppImpl(ASSISTED(int) argc,
                  ASSISTED(char**) argv,
-                 Config*               config,
-                 Logger*               logger,
-                 State*                state,
-                 Dispatcher*           dispatcher));
-  virtual ~AppImpl();
+                 Config*     config,
+                 Logger*     logger,
+                 State*      state,
+                 Dispatcher* dispatcher));
+  virtual ~AppImpl() = default;
 
   inline virtual int run() override { return _qApp->exec(); }
 

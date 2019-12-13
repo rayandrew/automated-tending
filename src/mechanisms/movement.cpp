@@ -68,7 +68,8 @@ MovementImpl::MovementImpl(
   _stepperY->setReverseDirection(
       (*config)["devices"]["movement"]["y"]["reversed"].as<bool>());
 
-  loadPathsFromFile();
+  loadPathsFromFile(_edgePaths, PROJECT_MOVEMENT_EDGE_FILE);
+  loadPathsFromFile(_zigzagPaths, PROJECT_MOVEMENT_ZIGZAG_FILE);
 }
 
 MovementImpl::~MovementImpl() {}
@@ -143,10 +144,8 @@ void MovementImpl::move(int x, int y) {
   }
 }
 
-void MovementImpl::followPaths() {
-  std::queue<Point> tempPaths = _paths;
-
-  _logger->debug("Start moving the stepper according to paths");
+void MovementImpl::processPaths(const std::queue<Point>& paths) {
+  std::queue<Point> tempPaths = paths;
 
   _isLimitSwitchEdgeTriggered = _limitSwitchEdge->isActive();
   while (_running && !_isLimitSwitchEdgeTriggered && !tempPaths.empty()) {
@@ -156,6 +155,17 @@ void MovementImpl::followPaths() {
     QThread::usleep(_delay);
     tempPaths.pop();
   }
+}
+
+void MovementImpl::followPaths() {
+  _logger->debug("Start moving the stepper according to edge paths");
+  processPaths(_edgePaths);
+
+  if (_running)
+    emit edgeFinished();
+
+  _logger->debug("Start moving the stepper according to zigzag paths");
+  processPaths(_zigzagPaths);
 
   if (_running)
     finish();
@@ -211,6 +221,7 @@ void MovementImpl::stop() {
   reset();
   QThread::msleep(100);
   Worker::stop();
+  _logger->debug("WEWEWEW {}", _running);
 }
 
 fruit::Component<MovementFactory> getMovementMechanismComponent() {

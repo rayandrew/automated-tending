@@ -6,8 +6,8 @@ devices:
     sleep_pin: 16
     limit_switch_pin:
       home_x: 5
-      home_y: 19
-      edge: 6
+      home_y: 6
+      edge: 11
       bin_detection: 14
     delay_each_step: 500
     x:
@@ -21,8 +21,8 @@ devices:
       step_per_cm: 62.069
       reversed: false
   watering:
-    pump: 12
+    pump: 22
   rotation:
-    motor: 11
+    motor: 12
     encoder: 0
   

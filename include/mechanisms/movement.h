@@ -60,8 +60,33 @@ class Movement : public Worker {
   Q_OBJECT
 
  protected:
-  std::queue<Point> _paths;
+  std::queue<Point> _edgePaths;
+  std::queue<Point> _zigzagPaths;
   useconds_t        _delay = 500;
+
+ protected:
+  static inline void loadPathsFromFile(std::queue<Point>& queue,
+                                       const std::string& filename) {
+    std::ifstream file(filename, std::ifstream::in);
+    std::string   line;
+
+    while (file.is_open() && getline(file, line)) {
+      std::istringstream iss(line);
+      std::string        tempX, tempY;
+
+      iss >> tempX;
+      iss >> tempY;
+
+      const Point point{stoi(tempX), stoi(tempY)};
+
+      queue.push(point);
+    }
+
+    file.close();
+  }
+
+ signals:
+  void edgeFinished();
 
  public:
   Movement() = default;
@@ -74,46 +99,9 @@ class Movement : public Worker {
     return *this;
   }
 
-  virtual const Movement& loadPathsFromFile(
-      const std::string& filename = PROJECT_MOVEMENT_TEMPLATE_FILE) {
-    std::ifstream file(filename);
-    std::string   line;
-
-    while (file.is_open() && getline(file, line)) {
-      std::istringstream iss(line);
-      std::string        tempX, tempY;
-
-      iss >> tempX;
-      iss >> tempY;
-
-      const Point point{stoi(tempX), stoi(tempY)};
-
-      _paths.push(point);
-    }
-
-    file.close();
-
-    return *this;
-  }
-
-  virtual const Movement& clearPaths() {
+  virtual const Movement& clearPaths(std::queue<Point>& paths) {
     std::queue<Point> empty;
-    std::swap(_paths, empty);
-    return *this;
-  }
-
-  virtual const Movement& setPaths(const std::queue<Point>& paths) {
-    _paths = paths;
-    return *this;
-  }
-
-  inline virtual const Movement& setPaths(const std::vector<Point> paths) {
-    clearPaths();
-
-    for (Point point : paths) {
-      _paths.push(point);
-    }
-
+    std::swap(paths, empty);
     return *this;
   }
 };
@@ -148,6 +136,8 @@ class MovementImpl : public Movement {
   static inline bool isHome(bool limitSwitchHomeX, bool limitSwitchHomeY) {
     return limitSwitchHomeX && limitSwitchHomeY;
   }
+
+  void processPaths(const std::queue<Point>& paths);
 
   void reset();
   void move(int x, int y);

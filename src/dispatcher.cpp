@@ -31,20 +31,25 @@ DispatcherImpl::DispatcherImpl(
     State*                            state,
     Logger*                           logger,
     fruit::Provider<service::Service> tendingServiceProvider,
-    fruit::Provider<service::Service> resetServiceProvider)
+    fruit::Provider<service::Service> resetServiceProvider,
+    fruit::Provider<service::Service> rotaryEncoderServiceProvider)
     : _state(std::move(state)),
       _logger(std::move(logger)),
       _tendingServiceProvider(std::move(tendingServiceProvider)),
-      _resetServiceProvider(std::move(resetServiceProvider)) {}
+      _resetServiceProvider(std::move(resetServiceProvider)),
+      _rotaryEncoderServiceProvider(std::move(rotaryEncoderServiceProvider)) {
+  _rotaryEncoderServiceProvider.get()->execute();
+}
 
-DispatcherImpl::~DispatcherImpl() {}
+DispatcherImpl::~DispatcherImpl() {
+  _rotaryEncoderServiceProvider.get()->stop();
+}
 
 void DispatcherImpl::handleTask(const task_state& task) {
-  std::cout << "Dispatcher Thread " << this->thread() << std::endl;
-
   switch (task) {
     case task_state::WATERING:
       // noop
+      // _wateringserviceProvider.get()->execute();
       break;
     case task_state::TENDING:
       _tendingServiceProvider.get()->execute();
@@ -52,12 +57,11 @@ void DispatcherImpl::handleTask(const task_state& task) {
     case task_state::RESET:
       _resetServiceProvider.get()->execute();
       break;
-    case task_state::IDLE:
-      // noop
-      break;
-    default:
+    case task_state::STOP:
       _resetServiceProvider.get()->stop();
       _tendingServiceProvider.get()->stop();
+      break;
+    default:
       break;
   }
 }
@@ -69,6 +73,7 @@ fruit::Component<Dispatcher> getDispatcherComponent() {
       .install(getLoggerComponent)
       .install(mechanism::getMovementMechanismComponent)
       .install(service::getTendingServiceComponent)
-      .install(service::getResetServiceComponent);
+      .install(service::getResetServiceComponent)
+      .install(service::getRotaryEncoderServiceComponent);
 }
 }  // namespace emmerich

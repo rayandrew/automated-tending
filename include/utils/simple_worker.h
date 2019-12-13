@@ -102,7 +102,7 @@ class simple_worker : public worker_object {
  * template arguments aren't necessary.
  */
 template <typename Func, typename... Args>
-simple_worker<Args...> make_worker(Func&& fn, Args&&... args) {
+simple_worker<Args...> make_simple_worker(Func&& fn, Args&&... args) {
   return simple_worker<Args...>(std::forward<Func>(fn),
                                 std::forward<Args>(args)...);
 }
@@ -110,10 +110,10 @@ simple_worker<Args...> make_worker(Func&& fn, Args&&... args) {
 using worker_callback = std::function<void()>;
 using worker_error_callback = std::function<void(const QString&)>;
 
-void start_worker(QObject*                     parent,
-                  worker_object*               work,
-                  const worker_callback&       on_finish,
-                  const worker_error_callback& on_error);
+void start_simple_worker(QObject*                     parent,
+                         worker_object*               work,
+                         const worker_callback&       on_finish,
+                         const worker_error_callback& on_error);
 }  // namespace emmerich
 
 #endif

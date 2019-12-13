@@ -24,70 +24,73 @@
  *
  */
 
-#ifndef MOVEMENT_SERVICE_H_
-#define MOVEMENT_SERVICE_H_
+#ifndef ROTARY_SERVICE_H_
+#define ROTARY_SERVICE_H_
 
 #include <fruit/fruit.h>
 
-#include <QObject>
 #include <QThread>
 
+#include "config.h"
 #include "logger.h"
 #include "state.h"
 
 #include "services/service.h"
 
-#include "mechanisms/movement.h"
-#include "mechanisms/rotation.h"
-
-#include "utils/signal_merge.h"
+#include "devices/analog/PCF8591.h"
+#include "devices/analog/device.h"
 
 namespace emmerich::service {
-struct TendingService {};
+struct RotaryEncoderService {};
 
-class TendingServiceImpl : public Service {
+class RotaryEncoderServiceImpl : public Service {
   Q_OBJECT
 
  private:
-  Logger* _logger;
-  State*  _state;
+  Config*               _config;
+  State*                _state;
+  Logger*               _logger;
+  device::AnalogDevice* _analogDevice;
 
-  const std::unique_ptr<mechanism::Movement> _movementMechanism;
-  const std::unique_ptr<mechanism::Rotation> _rotationMechanism;
-
-  const std::unique_ptr<QThread> _movementThread = std::make_unique<QThread>();
-  const std::unique_ptr<QThread> _rotationThread = std::make_unique<QThread>();
-
-  const std::unique_ptr<SignalMerge> _signalMergeStopped =
-      std::make_unique<SignalMerge>();
+  bool                           _isRunning = false;
+  const std::unique_ptr<QThread> _rotaryEncoderThread =
+      std::make_unique<QThread>();
 
  private:
-  void setupMovementMechanism();
-  void setupRotationMechanism();
+  static inline float mapUnsignedCharToDegree(int value) {
+    return value * 180 / UCHAR_MAX;
+  }
+
+  inline float readRotaryDegree() {
+    return mapUnsignedCharToDegree(_analogDevice->read(
+        (*_config)["devices"]["rotation"]["encoder"].as<unsigned char>()));
+  }
+
+  void setupServiceThread();
+
+ public:
+  INJECT(RotaryEncoderServiceImpl(Config* config,
+                                  Logger* logger,
+                                  State*  state,
+                                  ANNOTATED(device::PCF8591,
+                                            device::AnalogDevice*)
+                                      analogDevice));
+  virtual ~RotaryEncoderServiceImpl();
 
  protected:
   virtual void run() override;
 
  protected slots:
   virtual void onStart() override;
-  virtual void onStopped() override;
   virtual void onFinish() override;
-
- public:
-  INJECT(
-      TendingServiceImpl(Logger*                    logger,
-                         State*                     state,
-                         mechanism::MovementFactory movementMechanismFactory,
-                         mechanism::RotationFactory rotationMechanismFactory));
-  virtual ~TendingServiceImpl();
 
  public slots:
   virtual void execute() override;
   virtual void stop() override;
 };
 
-fruit::Component<fruit::Annotated<TendingService, Service>>
-getTendingServiceComponent();
+fruit::Component<fruit::Annotated<RotaryEncoderService, Service>>
+getRotaryEncoderServiceComponent();
 }  // namespace emmerich::service
 
 #endif

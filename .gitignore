@@ -34,6 +34,7 @@
 
 # Build directory
 build/
+result
 
 # IDE
 .vscode
@@ -42,3 +43,4 @@ build/
 .DS_Store
 
 CMakeLists.txt.user
+Makefile
