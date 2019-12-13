@@ -28,6 +28,8 @@
 
 #include "utils/qspdlog.h"
 
+#include <fmt/format.h>
+
 namespace emmerich {
 void QSpdlog::sink_it_(const spdlog::details::log_msg& msg) {
   spdlog::memory_buf_t formatted;

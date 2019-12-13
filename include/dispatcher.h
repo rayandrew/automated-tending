@@ -34,13 +34,11 @@
 #include "logger.h"
 #include "state.h"
 
-#include "mechanisms/movement.h"
+#include "services/service.h"
 
 #include "services/reset_service.h"
 #include "services/rotary_encoder_service.h"
 #include "services/tending_service.h"
-
-#include "utils/simple_worker.h"
 
 namespace emmerich {
 

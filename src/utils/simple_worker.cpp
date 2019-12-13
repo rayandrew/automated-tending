@@ -28,6 +28,8 @@
 
 #include "utils/simple_worker.h"
 
+#include <QThread>
+
 namespace emmerich {
 void start_simple_worker(QObject*                     parent,
                          worker_object*               thread_worker,

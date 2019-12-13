@@ -27,20 +27,7 @@
 #ifndef MECHANISM_ROTATION_H_
 #define MECHANISM_ROTATION_H_
 
-#include <unistd.h>
-#include <algorithm>
-#include <cmath>
-#include <climits>
-#include <fstream>
-#include <functional>
-#include <queue>
-#include <sstream>
-
-#include <QMutex>
-#include <QMutexLocker>
 #include <QObject>
-#include <QString>
-#include <QThread>
 
 #include <fruit/fruit.h>
 
@@ -50,11 +37,10 @@
 
 #include "utils/worker.h"
 
-#include "devices/analog/device.h"
 #include "devices/analog/PCF8591.h"
-#include "devices/digital/input.h"
+#include "devices/analog/device.h"
+
 #include "devices/digital/output.h"
-#include "devices/digital/stepper.h"
 
 namespace emmerich::mechanism {
 class Rotation : public Worker {
@@ -78,16 +64,6 @@ class RotationImpl : public Rotation {
   const std::unique_ptr<device::DigitalOutputDevice> _motor;
 
  private:
-  // static inline float mapUnsignedCharToDegree(int value) {
-  //   return value * 180 / UCHAR_MAX;
-  // }
-
-  // inline float readRotaryDegree() {
-  //   return
-  //   mapUnsignedCharToDegree(_analogDevice->read((*_config)["devices"]["rotation"]["encoder"].as<unsigned
-  //   char>()));
-  // }
-
   void reset();
 
  public:
@@ -111,6 +87,6 @@ class RotationImpl : public Rotation {
 using RotationFactory = std::function<std::unique_ptr<Rotation>()>;
 
 fruit::Component<RotationFactory> getRotationMechanismComponent();
-}  // namespace emmerich::mechanisms
+}  // namespace emmerich::mechanism
 
 #endif

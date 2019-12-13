@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef ROTARY_SERVICE_H_
-#define ROTARY_SERVICE_H_
+#ifndef ROTARY_ENCODER_SERVICE_H_
+#define ROTARY_ENCODER_SERVICE_H_
 
 #include <fruit/fruit.h>
 
@@ -82,7 +82,7 @@ class RotaryEncoderServiceImpl : public Service {
 
  protected slots:
   virtual void onStart() override;
-  virtual void onFinish() override;
+  virtual void onFinished() override;
 
  public slots:
   virtual void execute() override;

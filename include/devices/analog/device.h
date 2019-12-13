@@ -27,15 +27,6 @@
 #ifndef ANALOG_DEVICE_H_
 #define ANALOG_DEVICE_H_
 
-#include <iostream>
-
-#include <fmt/format.h>
-#include <fruit/fruit.h>
-
-#include "logger.h"
-
-#include "gpio.h"
-
 namespace emmerich::device {
 /** @brief Analog SPI Interface
 

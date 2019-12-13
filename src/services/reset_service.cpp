@@ -44,7 +44,7 @@ ResetServiceImpl::ResetServiceImpl(
   connect(_movementMechanism.get(), &mechanism::Movement::finished,
           _serviceThread.get(), &QThread::quit);
   connect(_movementMechanism.get(), &mechanism::Movement::finished, this,
-          &ResetServiceImpl::onFinish);
+          &ResetServiceImpl::onFinished);
   connect(_movementMechanism.get(), &mechanism::Movement::stopped,
           _serviceThread.get(), &QThread::quit);
   connect(_movementMechanism.get(), &mechanism::Movement::stopped, this,
@@ -69,7 +69,7 @@ void ResetServiceImpl::onStopped() {
   QThread::msleep(100);
 }
 
-void ResetServiceImpl::onFinish() {
+void ResetServiceImpl::onFinished() {
   _state->setMachineState(task_state::IDLE);
   _logger->debug("Reset service is finished");
 }

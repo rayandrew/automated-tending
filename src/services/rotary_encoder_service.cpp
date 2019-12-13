@@ -63,7 +63,7 @@ void RotaryEncoderServiceImpl::setupServiceThread() {
   connect(worker, &worker_object::finished, _rotaryEncoderThread.get(),
           &QThread::quit);
   connect(worker, &worker_object::finished, this,
-          &RotaryEncoderServiceImpl::onFinish);
+          &RotaryEncoderServiceImpl::onFinished);
   connect(worker, &worker_object::finished, worker,
           &worker_object::deleteLater);
   connect(_rotaryEncoderThread.get(), &QThread::finished,
@@ -88,7 +88,7 @@ void RotaryEncoderServiceImpl::onStart() {
   _logger->debug("RotaryEncoderService is starting");
 }
 
-void RotaryEncoderServiceImpl::onFinish() {
+void RotaryEncoderServiceImpl::onFinished() {
   _logger->debug("RotaryEncoderService is finished");
 }
 

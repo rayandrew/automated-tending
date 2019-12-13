@@ -39,7 +39,6 @@ else()
   add_definitions(-DMOCK_GPIO) 
 endif()
 
-
 # Check for LTO support.
 find_lto(CXX)
 

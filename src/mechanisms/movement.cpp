@@ -26,6 +26,8 @@
 
 #include "mechanisms/movement.h"
 
+#include "general_config.h"
+
 namespace emmerich::mechanism {
 MovementImpl::MovementImpl(
     Config*                            config,
@@ -221,7 +223,6 @@ void MovementImpl::stop() {
   reset();
   QThread::msleep(100);
   Worker::stop();
-  _logger->debug("WEWEWEW {}", _running);
 }
 
 fruit::Component<MovementFactory> getMovementMechanismComponent() {

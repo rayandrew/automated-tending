@@ -41,11 +41,7 @@
 #include "logger.h"
 #include "state.h"
 
-#include "devices/analog/device.h"
-
 #include "utils/qspdlog.h"
-
-#include "mechanisms/movement.h"
 
 namespace emmerich {
 class App : public QObject {

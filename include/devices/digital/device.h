@@ -27,16 +27,9 @@
 #ifndef DIGITAL_DEVICE_H_
 #define DIGITAL_DEVICE_H_
 
-#include <exception>
-#include <iostream>
-#include <sstream>
-
-#include <fmt/format.h>
 #include <fruit/fruit.h>
 
 #include "logger.h"
-
-#include "gpio.h"
 
 namespace emmerich::device {
 enum class device_mode {

@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef MOVEMENT_SERVICE_H_
-#define MOVEMENT_SERVICE_H_
+#ifndef TENDING_SERVICE_H_
+#define TENDING_SERVICE_H_
 
 #include <fruit/fruit.h>
 
@@ -58,6 +58,8 @@ class TendingServiceImpl : public Service {
   const std::unique_ptr<QThread> _movementThread = std::make_unique<QThread>();
   const std::unique_ptr<QThread> _rotationThread = std::make_unique<QThread>();
 
+  const std::unique_ptr<SignalMerge> _signalMergeFinished =
+      std::make_unique<SignalMerge>();
   const std::unique_ptr<SignalMerge> _signalMergeStopped =
       std::make_unique<SignalMerge>();
 
@@ -71,7 +73,7 @@ class TendingServiceImpl : public Service {
  protected slots:
   virtual void onStart() override;
   virtual void onStopped() override;
-  virtual void onFinish() override;
+  virtual void onFinished() override;
 
  public:
   INJECT(

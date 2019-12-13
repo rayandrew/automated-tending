@@ -26,6 +26,8 @@
 
 #include "devices/analog/device.h"
 
+#include "gpio.h"
+
 namespace emmerich::device {
 AnalogDevice::AnalogDevice(unsigned char address,
                            unsigned char bus,

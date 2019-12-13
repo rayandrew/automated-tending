@@ -31,11 +31,6 @@
 
 #include <QObject>
 
-#include "logger.h"
-#include "state.h"
-
-// Create like "observer"
-
 namespace emmerich::service {
 class Service : public QObject {
   Q_OBJECT
@@ -45,7 +40,7 @@ class Service : public QObject {
 
  protected slots:
   virtual void onStart() {}
-  virtual void onFinish() {}
+  virtual void onFinished() {}
   virtual void onStopped() {}
 
  public:
@@ -56,7 +51,7 @@ class Service : public QObject {
   virtual void execute() {
     onStart();
     run();
-    onFinish();
+    onFinished();
   }
   virtual void stop() = 0;
 };

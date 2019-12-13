@@ -40,6 +40,10 @@ TendingServiceImpl::TendingServiceImpl(
   setupMovementMechanism();
   setupRotationMechanism();
 
+  _signalMergeFinished->connect(_movementMechanism.get(), SIGNAL(finished()));
+  connect(_signalMergeFinished.get(), &SignalMerge::merged, this,
+          &TendingServiceImpl::onFinished);
+
   _signalMergeStopped->connect(_movementMechanism.get(), SIGNAL(stopped()));
   connect(_signalMergeStopped.get(), &SignalMerge::merged, this,
           &TendingServiceImpl::onStopped);
@@ -58,11 +62,6 @@ void TendingServiceImpl::setupMovementMechanism() {
   connect(_movementThread.get(), &QThread::started, _movementMechanism.get(),
           &mechanism::Movement::followPaths);
 
-  // connect(_movementMechanism.get(), &mechanism::Movement::stopped, this,
-  //         &TendingServiceImpl::onStopped);
-  connect(_movementMechanism.get(), &mechanism::Movement::finished, this,
-          &TendingServiceImpl::onFinish);
-
   connect(_movementMechanism.get(), &mechanism::Movement::finished,
           _movementThread.get(), &QThread::quit);
   connect(_movementMechanism.get(), &mechanism::Movement::stopped,
@@ -75,6 +74,8 @@ void TendingServiceImpl::setupRotationMechanism() {
   connect(_movementMechanism.get(), &mechanism::Movement::edgeFinished, this,
           [this]() {
             _logger->debug("Starting rotation");
+            _signalMergeFinished->connect(_rotationMechanism.get(),
+                                          SIGNAL(finished()));
             _signalMergeStopped->connect(_rotationMechanism.get(),
                                          SIGNAL(stopped()));
             _rotationMechanism->start();
@@ -94,11 +95,7 @@ void TendingServiceImpl::setupRotationMechanism() {
   connect(_rotationMechanism.get(), &mechanism::Rotation::finished,
           _rotationThread.get(), &QThread::quit);
   connect(_rotationMechanism.get(), &mechanism::Rotation::stopped, this,
-          [this]() {
-            _logger->debug("Request to stop rotation thread");
-            _rotationThread->quit();
-          },
-          Qt::DirectConnection);
+          [this]() { _rotationThread->quit(); }, Qt::DirectConnection);
 }
 
 void TendingServiceImpl::run() {
@@ -115,7 +112,7 @@ void TendingServiceImpl::onStopped() {
   _logger->debug("Tending Service is stopped");
 }
 
-void TendingServiceImpl::onFinish() {
+void TendingServiceImpl::onFinished() {
   // set state back to idle
   _state->setMachineState(task_state::IDLE);
   _logger->debug("Tending Service is finished");

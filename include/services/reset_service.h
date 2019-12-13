@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef RESET_SERVICE_H
-#define RESET_SERVICE_H
+#ifndef RESET_SERVICE_H_
+#define RESET_SERVICE_H_
 
 #include <fruit/fruit.h>
 
@@ -57,7 +57,7 @@ class ResetServiceImpl : public Service {
  protected slots:
   virtual void onStart() override;
   virtual void onStopped() override;
-  virtual void onFinish() override;
+  virtual void onFinished() override;
 
  public:
   INJECT(ResetServiceImpl(Logger*                    logger,

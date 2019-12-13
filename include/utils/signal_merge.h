@@ -28,16 +28,11 @@
 #define MERGE_SIGNALS_H
 
 #include <functional>
-#include <iostream>
 
 #include <QMetaObject>
 #include <QMutex>
-#include <QMutexLocker>
 #include <QObject>
 #include <QSet>
-#include <QString>
-
-#include <fmt/format.h>
 
 namespace emmerich {
 typedef QMetaObject::Connection Connection;

@@ -28,17 +28,12 @@
 #define MECHANISM_MOVEMENT_H_
 
 #include <unistd.h>
-#include <algorithm>
-#include <cmath>
 #include <fstream>
-#include <functional>
 #include <queue>
 #include <sstream>
 
 #include <QMutex>
-#include <QMutexLocker>
 #include <QObject>
-#include <QString>
 #include <QThread>
 
 #include <fruit/fruit.h>
@@ -46,8 +41,6 @@
 #include "config.h"
 #include "logger.h"
 #include "state.h"
-
-#include "general_config.h"
 
 #include "utils/worker.h"
 

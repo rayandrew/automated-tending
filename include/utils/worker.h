@@ -28,13 +28,7 @@
 #ifndef WORKER_H_
 #define WORKER_H_
 
-#include <iostream>
-
-#include <QMutex>
-#include <QMutexLocker>
 #include <QObject>
-#include <QThread>
-#include <QWaitCondition>
 
 namespace emmerich {
 class Worker : public QObject {
@@ -42,7 +36,6 @@ class Worker : public QObject {
 
  protected:
   bool _running = false;
-  // std::unique_ptr<QMutex> _mutex = std::make_unique<QMutex>();
 
  public:
   Worker() = default;

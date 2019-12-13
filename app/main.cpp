@@ -31,17 +31,11 @@
 
 #endif
 
-#include <stdlib.h>
-#include <cassert>
-#include <iostream>
+#include <fruit/fruit.h>
 
 #include <QApplication>
 
-#include <fruit/fruit.h>
-#include <spdlog/spdlog.h>
-
 #include "app.h"
-
 #include "gpio.h"
 
 int main(int argc, char** argv) {

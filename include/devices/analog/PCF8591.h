@@ -27,9 +27,6 @@
 #ifndef PCF8591_ANALOG_DEVICE_H_
 #define PCF8591_ANALOG_DEVICE_H_
 
-#include <iostream>
-
-#include <fmt/format.h>
 #include <fruit/fruit.h>
 
 #include "logger.h"

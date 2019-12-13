@@ -27,15 +27,11 @@
 #ifndef DIGITAL_INPUT_DEVICE_H_
 #define DIGITAL_INPUT_DEVICE_H_
 
-#include <exception>
-#include <iostream>
-#include <sstream>
-
-#include <fmt/format.h>
 #include <fruit/fruit.h>
 
-#include "devices/digital/device.h"
 #include "logger.h"
+
+#include "devices/digital/device.h"
 
 namespace emmerich::device {
 class DigitalInputDevice {

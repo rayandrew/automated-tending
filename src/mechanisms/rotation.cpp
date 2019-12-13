@@ -26,6 +26,8 @@
 
 #include "mechanisms/rotation.h"
 
+#include <QThread>
+
 namespace emmerich::mechanism {
 RotationImpl::RotationImpl(
     Config*                            config,
@@ -73,7 +75,6 @@ void RotationImpl::finish() {
 
 void RotationImpl::stop() {
   reset();
-  QThread::sleep(1);
   Worker::stop();
 }
 

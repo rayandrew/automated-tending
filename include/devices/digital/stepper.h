@@ -27,17 +27,11 @@
 #ifndef STEPPER_DEVICE_H_
 #define STEPPER_DEVICE_H_
 
-#include <unistd.h>
-
-#include <QObject>
-#include <QString>
-#include <QThread>
-
-#include <fmt/format.h>
 #include <fruit/fruit.h>
 
-#include "devices/digital/output.h"
 #include "logger.h"
+
+#include "devices/digital/output.h"
 
 namespace emmerich::device {
 enum class stepper_direction {

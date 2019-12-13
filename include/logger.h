@@ -27,19 +27,10 @@
 #ifndef LOGGER_H_
 #define LOGGER_H_
 
-#include <iostream>
-#include <memory>
-
 #include <fmt/format.h>
 #include <fruit/fruit.h>
 
-#include <spdlog/async.h>
 #include <spdlog/spdlog.h>
-
-#include <spdlog/sinks/rotating_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-
-#include "config.h"
 
 namespace emmerich {
 class Logger {

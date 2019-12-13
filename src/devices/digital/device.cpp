@@ -26,6 +26,11 @@
 
 #include "devices/digital/device.h"
 
+#include <sstream>
+#include <string>
+
+#include "gpio.h"
+
 namespace emmerich::device {
 DigitalDeviceException::DigitalDeviceException(Logger*              logger,
                                                const std::string&   message,

@@ -29,13 +29,10 @@
 #ifndef QSPDLOG_H_
 #define QSPDLOG_H_
 
-#include <memory>
+#include <mutex>
 
-#include <QString>
 #include <QWidget>
 
-#include <fmt/format.h>
-#include <spdlog/async_logger.h>
 #include <spdlog/sinks/base_sink.h>
 
 namespace emmerich {

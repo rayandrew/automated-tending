@@ -29,14 +29,11 @@
 #ifndef SIMPLE_WORKER_H_
 #define SIMPLE_WORKER_H_
 
-#include <iostream>
-
 #include <functional>
 #include <tuple>
 
 #include <QObject>
 #include <QString>
-#include <QThread>
 
 namespace emmerich {
 class worker_object : public QObject {

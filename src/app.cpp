@@ -24,6 +24,8 @@
  *
  */
 
+#include "app.h"
+
 #include <QColor>
 #include <QComboBox>
 #include <QLCDNumber>
@@ -32,7 +34,6 @@
 #include <QProgressBar>
 #include <QPushButton>
 
-#include "app.h"
 #include "general_config.h"
 
 namespace emmerich {

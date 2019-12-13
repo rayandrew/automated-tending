@@ -26,6 +26,11 @@
 
 #include "config.h"
 
+#include <iostream>
+#include <memory>
+
+#include "general_config.h"
+
 namespace emmerich {
 class ConfigImpl : public Config {
  public:

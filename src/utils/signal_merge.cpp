@@ -26,6 +26,8 @@
 
 #include "utils/signal_merge.h"
 
+#include <QMutexLocker>
+
 namespace emmerich {
 /**
  * 0. Base signal merge
