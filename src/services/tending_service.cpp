@@ -27,7 +27,6 @@
 #include "services/tending_service.h"
 
 namespace emmerich::service {
-
 TendingServiceImpl::TendingServiceImpl(
     Logger*                    logger,
     State*                     state,

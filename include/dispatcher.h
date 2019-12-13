@@ -39,6 +39,7 @@
 #include "services/reset_service.h"
 #include "services/rotary_encoder_service.h"
 #include "services/tending_service.h"
+#include "services/watering_service.h"
 
 namespace emmerich {
 
@@ -56,21 +57,26 @@ class DispatcherImpl : public Dispatcher {
   State*  _state;
   Logger* _logger;
 
-  fruit::Provider<service::Service> _tendingServiceProvider;
+  // services
   fruit::Provider<service::Service> _resetServiceProvider;
   fruit::Provider<service::Service> _rotaryEncoderServiceProvider;
+  fruit::Provider<service::Service> _tendingServiceProvider;
+  fruit::Provider<service::Service> _wateringServiceProvider;
+
+  task_state _lastTask = task_state::IDLE;
 
  public:
   INJECT(DispatcherImpl(
       State*  state,
       Logger* logger,
-      ANNOTATED(service::TendingService, fruit::Provider<service::Service>)
-          tendingServiceProvider,
       ANNOTATED(service::ResetService, fruit::Provider<service::Service>)
           resetServiceProvider,
       ANNOTATED(service::RotaryEncoderService,
-                fruit::Provider<service::Service>)
-          rotaryEncoderServiceProvider));
+                fruit::Provider<service::Service>) rotaryEncoderServiceProvider,
+      ANNOTATED(service::TendingService, fruit::Provider<service::Service>)
+          tendingServiceProvider,
+      ANNOTATED(service::WateringService, fruit::Provider<service::Service>)
+          wateringServiceProvider));
   ~DispatcherImpl();
 
  public slots:

@@ -83,7 +83,8 @@ set(SOURCES
     src/services/service.cpp
     src/services/tending_service.cpp
     src/services/reset_service.cpp
-    src/services/rotary_encoder_service.cpp) 
+    src/services/rotary_encoder_service.cpp
+    src/services/watering_service.cpp) 
 
 # All .ui files in resources/ui
 set(UI_SOURCES
@@ -118,7 +119,8 @@ set(HEADERS
     include/services/service.h
     include/services/tending_service.h
     include/services/reset_service.h
-    include/services/rotary_encoder_service.h) 
+    include/services/rotary_encoder_service.h
+    include/services/watering_service.h) 
 
 # All .cpp files in tests/
 set(TESTFILES

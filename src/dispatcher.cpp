@@ -30,14 +30,16 @@ namespace emmerich {
 DispatcherImpl::DispatcherImpl(
     State*                            state,
     Logger*                           logger,
-    fruit::Provider<service::Service> tendingServiceProvider,
     fruit::Provider<service::Service> resetServiceProvider,
-    fruit::Provider<service::Service> rotaryEncoderServiceProvider)
+    fruit::Provider<service::Service> rotaryEncoderServiceProvider,
+    fruit::Provider<service::Service> tendingServiceProvider,
+    fruit::Provider<service::Service> wateringServiceProvider)
     : _state(std::move(state)),
       _logger(std::move(logger)),
-      _tendingServiceProvider(std::move(tendingServiceProvider)),
       _resetServiceProvider(std::move(resetServiceProvider)),
-      _rotaryEncoderServiceProvider(std::move(rotaryEncoderServiceProvider)) {
+      _rotaryEncoderServiceProvider(std::move(rotaryEncoderServiceProvider)),
+      _tendingServiceProvider(std::move(tendingServiceProvider)),
+      _wateringServiceProvider(std::move(wateringServiceProvider)) {
   _rotaryEncoderServiceProvider.get()->execute();
 }
 
@@ -48,8 +50,7 @@ DispatcherImpl::~DispatcherImpl() {
 void DispatcherImpl::handleTask(const task_state& task) {
   switch (task) {
     case task_state::WATERING:
-      // noop
-      // _wateringserviceProvider.get()->execute();
+      _wateringServiceProvider.get()->execute();
       break;
     case task_state::TENDING:
       _tendingServiceProvider.get()->execute();
@@ -58,12 +59,19 @@ void DispatcherImpl::handleTask(const task_state& task) {
       _resetServiceProvider.get()->execute();
       break;
     case task_state::STOP:
-      _resetServiceProvider.get()->stop();
-      _tendingServiceProvider.get()->stop();
+      if (_lastTask == task_state::RESET) {
+        _resetServiceProvider.get()->stop();
+      } else if (_lastTask == task_state::TENDING) {
+        _tendingServiceProvider.get()->stop();
+      } else if (_lastTask == task_state::WATERING) {
+        _wateringServiceProvider.get()->stop();
+      }
       break;
     default:
+      // noop
       break;
   }
+  _lastTask = task;
 }
 
 fruit::Component<Dispatcher> getDispatcherComponent() {
@@ -72,8 +80,9 @@ fruit::Component<Dispatcher> getDispatcherComponent() {
       .install(getStateComponent)
       .install(getLoggerComponent)
       .install(mechanism::getMovementMechanismComponent)
-      .install(service::getTendingServiceComponent)
       .install(service::getResetServiceComponent)
-      .install(service::getRotaryEncoderServiceComponent);
+      .install(service::getRotaryEncoderServiceComponent)
+      .install(service::getTendingServiceComponent)
+      .install(service::getWateringServiceComponent);
 }
 }  // namespace emmerich
