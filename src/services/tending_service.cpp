@@ -115,6 +115,7 @@ void TendingServiceImpl::onStopped() {
 void TendingServiceImpl::onFinished() {
   // set state back to idle
   _state->setMachineState(task_state::IDLE);
+  _state->save();
   _logger->debug("Tending Service is finished");
 }
 

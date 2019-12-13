@@ -71,6 +71,7 @@ void ResetServiceImpl::onStopped() {
 
 void ResetServiceImpl::onFinished() {
   _state->setMachineState(task_state::IDLE);
+  _state->save();
   _logger->debug("Reset service is finished");
 }
 
