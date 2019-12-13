@@ -29,12 +29,14 @@ include(Yaml)
 
 set(RASPI_LIB "")
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  add_definitions(-DMOCK_GPIO)
-else()
+EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE arch)
+
+if (${arch} MATCHES "^arm")
   find_package(pigpio REQUIRED)
   LIST(APPEND RASPI_LIB "pigpio")
   LIST(APPEND RASPI_LIB "rt")
+else()
+  add_definitions(-DMOCK_GPIO) 
 endif()
 
 
@@ -81,7 +83,8 @@ set(SOURCES
 
     src/services/service.cpp
     src/services/tending_service.cpp
-    src/services/reset_service.cpp) 
+    src/services/reset_service.cpp
+    src/services/rotary_encoder_service.cpp) 
 
 # All .ui files in resources/ui
 set(UI_SOURCES
@@ -115,7 +118,8 @@ set(HEADERS
 
     include/services/service.h
     include/services/tending_service.h
-    include/services/reset_service.h) 
+    include/services/reset_service.h
+    include/services/rotary_encoder_service.h) 
 
 # All .cpp files in tests/
 set(TESTFILES
@@ -190,7 +194,7 @@ target_enable_lto(main optimized)
 # Set the properties that applied to library and main
 set_target_properties(
     ${LIBRARY_NAME} main 
-      PROPERTIES 
+      PROPERTIES
         CXX_STANDARD 17 
         CXX_STANDARD_REQUIRED YES 
         CXX_EXTENSIONS NO)

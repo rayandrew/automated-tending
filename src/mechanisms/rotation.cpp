@@ -42,13 +42,10 @@ RotationImpl::RotationImpl(
   _logger->debug("Rotation mechanism is initialized!");
 }
 
-RotationImpl::~RotationImpl() {}
-
 void RotationImpl::run() {
   _motor->on();
 
   while (_running) {
-    _state->setDegree(readRotaryDegree());
     QThread::msleep(200);
   }
 
@@ -71,15 +68,12 @@ void RotationImpl::start() {
 
 void RotationImpl::finish() {
   reset();
-  QThread::sleep(1);
-  _state->setDegree(readRotaryDegree());
   Worker::finish();
 }
 
 void RotationImpl::stop() {
   reset();
   QThread::sleep(1);
-  _state->setDegree(readRotaryDegree());
   Worker::stop();
 }
 

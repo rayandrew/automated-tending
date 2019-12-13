@@ -37,7 +37,10 @@
 #include "mechanisms/movement.h"
 
 #include "services/reset_service.h"
+#include "services/rotary_encoder_service.h"
 #include "services/tending_service.h"
+
+#include "utils/simple_worker.h"
 
 namespace emmerich {
 
@@ -55,27 +58,21 @@ class DispatcherImpl : public Dispatcher {
   State*  _state;
   Logger* _logger;
 
-  // mechanisms::Movement* _movementMechanism;
-  // task_state            _prevTaskState = task_state::IDLE;
-
   fruit::Provider<service::Service> _tendingServiceProvider;
   fruit::Provider<service::Service> _resetServiceProvider;
-
-  // const std::unique_ptr<QThread> _movementThread =
-  // std::make_unique<QThread>();
-
-  // private:
-  // void setupMovementMechanism();
+  fruit::Provider<service::Service> _rotaryEncoderServiceProvider;
 
  public:
   INJECT(DispatcherImpl(
       State*  state,
       Logger* logger,
-      // mechanisms::Movement* movementMechanism,
       ANNOTATED(service::TendingService, fruit::Provider<service::Service>)
           tendingServiceProvider,
       ANNOTATED(service::ResetService, fruit::Provider<service::Service>)
-          resetServiceProvider));
+          resetServiceProvider,
+      ANNOTATED(service::RotaryEncoderService,
+                fruit::Provider<service::Service>)
+          rotaryEncoderServiceProvider));
   ~DispatcherImpl();
 
  public slots:

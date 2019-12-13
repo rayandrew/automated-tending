@@ -31,13 +31,19 @@ DispatcherImpl::DispatcherImpl(
     State*                            state,
     Logger*                           logger,
     fruit::Provider<service::Service> tendingServiceProvider,
-    fruit::Provider<service::Service> resetServiceProvider)
+    fruit::Provider<service::Service> resetServiceProvider,
+    fruit::Provider<service::Service> rotaryEncoderServiceProvider)
     : _state(std::move(state)),
       _logger(std::move(logger)),
       _tendingServiceProvider(std::move(tendingServiceProvider)),
-      _resetServiceProvider(std::move(resetServiceProvider)) {}
+      _resetServiceProvider(std::move(resetServiceProvider)),
+      _rotaryEncoderServiceProvider(std::move(rotaryEncoderServiceProvider)) {
+  _rotaryEncoderServiceProvider.get()->execute();
+}
 
-DispatcherImpl::~DispatcherImpl() {}
+DispatcherImpl::~DispatcherImpl() {
+  _rotaryEncoderServiceProvider.get()->stop();
+}
 
 void DispatcherImpl::handleTask(const task_state& task) {
   switch (task) {
@@ -67,6 +73,7 @@ fruit::Component<Dispatcher> getDispatcherComponent() {
       .install(getLoggerComponent)
       .install(mechanism::getMovementMechanismComponent)
       .install(service::getTendingServiceComponent)
-      .install(service::getResetServiceComponent);
+      .install(service::getResetServiceComponent)
+      .install(service::getRotaryEncoderServiceComponent);
 }
 }  // namespace emmerich

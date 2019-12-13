@@ -41,7 +41,6 @@ TendingServiceImpl::TendingServiceImpl(
   setupRotationMechanism();
 
   _signalMergeStopped->connect(_movementMechanism.get(), SIGNAL(stopped()));
-  _signalMergeStopped->connect(_rotationMechanism.get(), SIGNAL(stopped()));
   connect(_signalMergeStopped.get(), &SignalMerge::merged, this,
           &TendingServiceImpl::onStopped);
 }
@@ -76,6 +75,8 @@ void TendingServiceImpl::setupRotationMechanism() {
   connect(_movementMechanism.get(), &mechanism::Movement::edgeFinished, this,
           [this]() {
             _logger->debug("Starting rotation");
+            _signalMergeStopped->connect(_rotationMechanism.get(),
+                                         SIGNAL(stopped()));
             _rotationMechanism->start();
           });
 
@@ -84,15 +85,20 @@ void TendingServiceImpl::setupRotationMechanism() {
   connect(_rotationThread.get(), &QThread::started, _rotationMechanism.get(),
           &mechanism::Rotation::run);
 
-  // connect(_movementMechanism.get(), &mechanism::Movement::stopped,
-  //         [this]() { _rotationMechanism->stop(); });
+  connect(_movementMechanism.get(), &mechanism::Movement::stopped,
+          [this]() { _rotationMechanism->stop(); });
+
   connect(_movementMechanism.get(), &mechanism::Movement::finished,
           [this]() { _rotationMechanism->finish(); });
 
   connect(_rotationMechanism.get(), &mechanism::Rotation::finished,
           _rotationThread.get(), &QThread::quit);
-  connect(_rotationMechanism.get(), &mechanism::Rotation::stopped,
-          _rotationThread.get(), &QThread::quit);
+  connect(_rotationMechanism.get(), &mechanism::Rotation::stopped, this,
+          [this]() {
+            _logger->debug("Request to stop rotation thread");
+            _rotationThread->quit();
+          },
+          Qt::DirectConnection);
 }
 
 void TendingServiceImpl::run() {
@@ -106,7 +112,7 @@ void TendingServiceImpl::onStart() {
 
 void TendingServiceImpl::onStopped() {
   QThread::msleep(100);
-  _logger->debug("Tending Service is stoppeddddd");
+  _logger->debug("Tending Service is stopped");
 }
 
 void TendingServiceImpl::onFinish() {
@@ -122,7 +128,6 @@ void TendingServiceImpl::execute() {
 
 void TendingServiceImpl::stop() {
   _movementMechanism->stop();
-  _rotationMechanism->stop();
 }
 
 fruit::Component<fruit::Annotated<TendingService, Service>>

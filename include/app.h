@@ -27,10 +27,7 @@
 #ifndef APP_H_
 #define APP_H_
 
-#include <fmt/format.h>
 #include <fruit/fruit.h>
-#include <spdlog/spdlog.h>
-#include <yaml-cpp/yaml.h>
 
 #include <QApplication>
 #include <QObject>
@@ -53,8 +50,10 @@
 #include "logger.h"
 #include "state.h"
 
+#include "devices/analog/device.h"
+
 #include "utils/qspdlog.h"
-#include "utils/worker.h"
+#include "utils/simple_worker.h"
 
 #include "mechanisms/movement.h"
 
@@ -84,6 +83,9 @@ class AppImpl : public App {
   Dispatcher*                         _dispatcher;
   const std::shared_ptr<QSpdlog>      _qSpdlog = std::make_shared<QSpdlog>();
 
+  // const std::unique_ptr<QThread> _rotaryEncoderThread =
+  //     std::make_unique<QThread>();
+
  private:
   void setupLogger();
   void setupSignalsAndSlots();
@@ -92,10 +94,10 @@ class AppImpl : public App {
  public:
   INJECT(AppImpl(ASSISTED(int) argc,
                  ASSISTED(char**) argv,
-                 Config*               config,
-                 Logger*               logger,
-                 State*                state,
-                 Dispatcher*           dispatcher));
+                 Config*     config,
+                 Logger*     logger,
+                 State*      state,
+                 Dispatcher* dispatcher));
   virtual ~AppImpl();
 
   inline virtual int run() override { return _qApp->exec(); }

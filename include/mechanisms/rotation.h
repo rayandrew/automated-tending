@@ -70,36 +70,38 @@ class Rotation : public Worker {
 class RotationImpl : public Rotation {
   Q_OBJECT
 
-private: // injected state
+ private:  // injected state
   Config*                                            _config;
   State*                                             _state;
   Logger*                                            _logger;
   device::AnalogDevice*                              _analogDevice;
   const std::unique_ptr<device::DigitalOutputDevice> _motor;
 
-private:
-  static inline float mapUnsignedCharToDegree(int value) {
-    return value * 180 / UCHAR_MAX;
-  }
+ private:
+  // static inline float mapUnsignedCharToDegree(int value) {
+  //   return value * 180 / UCHAR_MAX;
+  // }
 
-  inline float readRotaryDegree() {
-    return mapUnsignedCharToDegree(_analogDevice->read((*_config)["devices"]["rotation"]["encoder"].as<unsigned char>()));
-  }
-  
+  // inline float readRotaryDegree() {
+  //   return
+  //   mapUnsignedCharToDegree(_analogDevice->read((*_config)["devices"]["rotation"]["encoder"].as<unsigned
+  //   char>()));
+  // }
+
   void reset();
-  
-public:
-  INJECT(RotationImpl(
-           Config* config,
-           State* state,
-           Logger* logger,
-           ANNOTATED(device::PCF8591, device::AnalogDevice*) analogDevice,
-           device::DigitalOutputDeviceFactory digitalOutputDeviceFactory));
 
-  virtual ~RotationImpl();
+ public:
+  INJECT(RotationImpl(
+      Config* config,
+      State*  state,
+      Logger* logger,
+      ANNOTATED(device::PCF8591, device::AnalogDevice*) analogDevice,
+      device::DigitalOutputDeviceFactory digitalOutputDeviceFactory));
+
+  virtual ~RotationImpl() = default;
   virtual void homing() override;
-                                                                          
-public slots:
+
+ public slots:
   virtual void run() override;
   virtual void start() override;
   virtual void finish() override;

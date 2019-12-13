@@ -29,10 +29,10 @@
 #include "utils/simple_worker.h"
 
 namespace emmerich {
-void start_worker(QObject*                     parent,
-                  worker_object*               thread_worker,
-                  const worker_callback&       on_finish,
-                  const worker_error_callback& on_error) {
+void start_simple_worker(QObject*                     parent,
+                         worker_object*               thread_worker,
+                         const worker_callback&       on_finish,
+                         const worker_error_callback& on_error) {
   auto* worker_thread = new QThread;
   thread_worker->moveToThread(worker_thread);
   QObject::connect(thread_worker, &worker_object::error, parent, on_error);
