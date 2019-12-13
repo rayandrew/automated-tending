@@ -47,8 +47,7 @@ int PCF8591Impl::write(unsigned char pin, unsigned int val) {
   unsigned char command[2];
   command[0] = 0x40 | (pin & 0x03);
   command[1] = val;
-  writeDevice(reinterpret_cast<char*>(&command), 2);
-  return readByte();
+  return writeDevice(reinterpret_cast<char*>(&command), 2);
 }
 
 fruit::Component<fruit::Annotated<PCF8591, AnalogDevice>>
