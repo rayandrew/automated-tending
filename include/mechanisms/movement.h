@@ -67,7 +67,7 @@ class Movement : public Worker {
  protected:
   static inline void loadPathsFromFile(std::queue<Point>& queue,
                                        const std::string& filename) {
-    std::ifstream file(filename);
+    std::ifstream file(filename, std::ifstream::in);
     std::string   line;
 
     while (file.is_open() && getline(file, line)) {

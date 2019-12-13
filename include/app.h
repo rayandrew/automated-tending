@@ -34,15 +34,6 @@
 #include <QString>
 #include <QThread>
 
-#include <QColor>
-#include <QComboBox>
-#include <QLCDNumber>
-#include <QLabel>
-#include <QPalette>
-#include <QProgressBar>
-#include <QPushButton>
-
-#include "general_config.h"
 #include "windows/main_window.h"
 
 #include "config.h"
@@ -53,7 +44,6 @@
 #include "devices/analog/device.h"
 
 #include "utils/qspdlog.h"
-#include "utils/simple_worker.h"
 
 #include "mechanisms/movement.h"
 
@@ -83,9 +73,6 @@ class AppImpl : public App {
   Dispatcher*                         _dispatcher;
   const std::shared_ptr<QSpdlog>      _qSpdlog = std::make_shared<QSpdlog>();
 
-  // const std::unique_ptr<QThread> _rotaryEncoderThread =
-  //     std::make_unique<QThread>();
-
  private:
   void setupLogger();
   void setupSignalsAndSlots();
@@ -98,7 +85,7 @@ class AppImpl : public App {
                  Logger*     logger,
                  State*      state,
                  Dispatcher* dispatcher));
-  virtual ~AppImpl();
+  virtual ~AppImpl() = default;
 
   inline virtual int run() override { return _qApp->exec(); }
 
