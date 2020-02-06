@@ -61,11 +61,11 @@ void StepperImpl::setReverseDirection(bool reverseDirection) {
   _reverseDirection = reverseDirection;
 }
 
-void StepperImpl::pulseHigh() {
+void StepperImpl::pulseHigh() const {
   _step_device->on();
 }
 
-void StepperImpl::pulseLow() {
+void StepperImpl::pulseLow() const {
   _step_device->off();
 }
 

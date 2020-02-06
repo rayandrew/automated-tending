@@ -28,6 +28,7 @@
 #define MECHANISM_MOVEMENT_H_
 
 #include <unistd.h>
+#include <chrono>
 #include <fstream>
 #include <queue>
 #include <sstream>
@@ -99,6 +100,33 @@ class Movement : public Worker {
   }
 };
 
+struct MovementState {
+  bool                                               startMove;
+  long                                               targetPosition;
+  long                                               currentPosition;
+  long                                               decelerationDistance;
+  int                                                directionScaler;
+  float                                              currentStepPeriod;
+  float                                              desiredStepPeriod;
+  float                                              acceleration;
+  float                                              speed;
+  int                                                stepPerMm;
+  std::chrono::time_point<std::chrono::system_clock> rampLastStepTime;
+  float                                              rampInitialStepPeriod;
+  float                                              rampNextStepPeriod;
+
+  inline bool motionComplete() { return currentPosition == targetPosition; }
+
+  inline double getPercentage() {
+    if (motionComplete())
+      return 100.0;
+
+    long tempTargetPosition = abs(targetPosition);
+    return round(abs(currentPosition) * 100 /
+                 (tempTargetPosition == 0 ? 1 : tempTargetPosition));
+  }
+};
+
 class MovementImpl : public Movement {
   Q_OBJECT
 
@@ -113,26 +141,37 @@ class MovementImpl : public Movement {
   const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchEdge;
   const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchBinDetection;
   const std::unique_ptr<device::DigitalOutputDevice> _sleepDevice;
-  const int                                          _xStepPerCm;
-  const int                                          _yStepPerCm;
 
  private:  // internal state
-  bool _isLimitSwitchEdgeTriggered = false;
+  bool          _isLimitSwitchEdgeTriggered = false;
+  MovementState XMovementState = {};
+  MovementState YMovementState = {};
+  MovementState ZMovementState = {};
 
  private:
-  static inline int cmToSteps(int cm, int stepPerCm) { return cm * stepPerCm; }
+  static inline long mmToSteps(long mm, int stepPerMm) {
+    return mm * stepPerMm;
+  }
 
-  static inline int stepsToCm(int steps, int stepPerCm) {
-    return steps / stepPerCm;
+  static inline long stepsToMm(long steps, long stepPerMm) {
+    return steps / stepPerMm;
   }
 
   static inline bool isHome(bool limitSwitchHomeX, bool limitSwitchHomeY) {
     return limitSwitchHomeX && limitSwitchHomeY;
   }
 
-  void processPaths(const std::queue<Point>& paths);
-
   void reset();
+  void processPaths(const std::queue<Point>& paths);
+  void setupMoveInSteps(const device::Stepper* stepper,
+                        MovementState&         movementState,
+                        long                   absolutePositionToMoveInSteps);
+  void setupMoveInMillimeters(const device::Stepper* stepper,
+                              MovementState&         movementState,
+                              float absolutePositionToMoveToInMillimeters);
+  bool motionComplete(const MovementState& movementState);
+  bool processMovement(const device::Stepper* stepper,
+                       MovementState&         movementState);
   void move(int x, int y);
   void move(const Point& point);
 
@@ -145,7 +184,7 @@ class MovementImpl : public Movement {
       device::DigitalOutputDeviceFactory digitalOutputDeviceFactory,
       device::StepperFactory             stepperFactory));
 
-  virtual ~MovementImpl();
+  virtual ~MovementImpl() = default;
   virtual void homing() override;
   virtual void followPaths() override;
 

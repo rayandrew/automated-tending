@@ -61,7 +61,7 @@ AppImpl::AppImpl(int         argc,
                 PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH,
                 PROJECT_VERSION_TWEAK);
 
-  _state->load();
+  // _state->load();
 }
 
 void AppImpl::setupLogger() {
