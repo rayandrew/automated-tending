@@ -101,6 +101,8 @@ void MovementImpl::move(int x, int y) {
 
   while (_running && !_isLimitSwitchEdgeTriggered &&
          (_xMovement->isMotionOngoing() || _yMovement->isMotionOngoing())) {
+    _logger->debug("Test ongoing {} {}", _xMovement->isMotionOngoing(),
+                   _yMovement->isMotionOngoing());
     if (_xMovement->isMotionOngoing())
       _xMovement->processMovement();
 
