@@ -29,6 +29,7 @@
 
 #include <unistd.h>
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <queue>
 #include <sstream>
@@ -48,6 +49,8 @@
 #include "devices/digital/input.h"
 #include "devices/digital/output.h"
 #include "devices/digital/stepper.h"
+
+#include "mechanisms/_helper/movement.h"
 
 namespace emmerich::mechanism {
 class Movement : public Worker {
@@ -100,32 +103,7 @@ class Movement : public Worker {
   }
 };
 
-struct MovementState {
-  bool                                               startMove;
-  long                                               targetPosition;
-  long                                               currentPosition;
-  long                                               decelerationDistance;
-  int                                                directionScaler;
-  float                                              currentStepPeriod;
-  float                                              desiredStepPeriod;
-  float                                              acceleration;
-  float                                              speed;
-  int                                                stepPerMm;
-  std::chrono::time_point<std::chrono::system_clock> rampLastStepTime;
-  float                                              rampInitialStepPeriod;
-  float                                              rampNextStepPeriod;
-
-  inline bool motionComplete() { return currentPosition == targetPosition; }
-
-  inline double getPercentage() {
-    if (motionComplete())
-      return 100.0;
-
-    long tempTargetPosition = abs(targetPosition);
-    return round(abs(currentPosition) * 100 /
-                 (tempTargetPosition == 0 ? 1 : tempTargetPosition));
-  }
-};
+enum AXIS_MOVEMENT_STATE { X_ONLY, Y_ONLY, BOTH };
 
 class MovementImpl : public Movement {
   Q_OBJECT
@@ -143,10 +121,9 @@ class MovementImpl : public Movement {
   const std::unique_ptr<device::DigitalOutputDevice> _sleepDevice;
 
  private:  // internal state
-  bool          _isLimitSwitchEdgeTriggered = false;
-  MovementState XMovementState = {};
-  MovementState YMovementState = {};
-  MovementState ZMovementState = {};
+  bool                              _isLimitSwitchEdgeTriggered = false;
+  std::unique_ptr<helper::Movement> _xMovement;
+  std::unique_ptr<helper::Movement> _yMovement;
 
  private:
   static inline long mmToSteps(long mm, int stepPerMm) {
@@ -163,15 +140,6 @@ class MovementImpl : public Movement {
 
   void reset();
   void processPaths(const std::queue<Point>& paths);
-  void setupMoveInSteps(const device::Stepper* stepper,
-                        MovementState&         movementState,
-                        long                   absolutePositionToMoveInSteps);
-  void setupMoveInMillimeters(const device::Stepper* stepper,
-                              MovementState&         movementState,
-                              float absolutePositionToMoveToInMillimeters);
-  bool motionComplete(const MovementState& movementState);
-  bool processMovement(const device::Stepper* stepper,
-                       MovementState&         movementState);
   void move(int x, int y);
   void move(const Point& point);
 

@@ -80,6 +80,8 @@ set(SOURCES
     src/mechanisms/movement.cpp
     src/mechanisms/rotation.cpp
 
+    src/mechanisms/_helper/movement.cpp
+
     src/services/service.cpp
     src/services/tending_service.cpp
     src/services/reset_service.cpp

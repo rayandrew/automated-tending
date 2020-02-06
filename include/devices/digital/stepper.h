@@ -59,7 +59,7 @@ class Stepper {
   virtual ~Stepper() = default;
   virtual const Stepper& setDirection(
       const stepper_direction& step_direction) const = 0;
-  virtual void        setReverseDirection(bool reverseDirectnion) = 0;
+  virtual void        setReverseDirection(bool reverseDirection) = 0;
   inline virtual void pulseHigh() const {}
   inline virtual void pulseLow() const {}
 };
