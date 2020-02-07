@@ -33,8 +33,8 @@ class SpeedyStepper : public Movement {
                        ASSISTED(float) speed,
                        ASSISTED(float) acceleration));
   virtual ~SpeedyStepper() override = default;
-  virtual void setupMove(unsigned long steps, unsigned long time = 0) override;
-  virtual long processMovement() override;
+  virtual void   setupMove(long steps, long time = 0) override;
+  virtual long   processMovement() override;
   virtual double getPercentage() const override;
 };
 

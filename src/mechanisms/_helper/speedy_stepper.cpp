@@ -9,10 +9,10 @@ SpeedyStepper::SpeedyStepper(const device::Stepper* stepper,
       _speed(speed),
       _acceleration(acceleration) {}
 
-void SpeedyStepper::setupMove(unsigned long steps, unsigned long time) {
+void SpeedyStepper::setupMove(long target, long time) {
   long distanceToTravel;
 
-  _targetPosition = steps;
+  _targetPosition = target;
 
   _highestPosValue = std::abs(_targetPosition);
   if (std::abs(_currentPosition) > std::abs(_targetPosition)) {

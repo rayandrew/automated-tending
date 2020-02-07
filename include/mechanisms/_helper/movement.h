@@ -26,9 +26,10 @@ class Movement {
   float                  _stepsPerCm = 0.0;
 
  protected:
-  static inline unsigned long mmToSteps(float mm, float stepPerMm) {
-    return static_cast<unsigned long>(round(mm * stepPerMm));
+  static inline long mmToSteps(float mm, float stepPerMm) {
+    return static_cast<long>(round(mm * stepPerMm));
   }
+
   static inline float stepsToMm(long steps, float stepPerMm) {
     return static_cast<float>(steps) / stepPerMm;
   }
@@ -39,9 +40,8 @@ class Movement {
 
  public:
   virtual long processMovement() = 0;
-  virtual void setupMove(unsigned long steps, unsigned long time = 0) = 0;
-  inline virtual void setupMoveInMillimeters(float         mms,
-                                             unsigned long time = 0) {
+  virtual void        setupMove(long target, long time = 0) = 0;
+  inline virtual void setupMoveInMillimeters(float mms, long time = 0) {
     setupMove(mmToSteps(mms, _stepsPerMm), time);
   }
 
