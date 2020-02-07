@@ -51,6 +51,7 @@
 #include "devices/digital/stepper.h"
 
 #include "mechanisms/_helper/movement.h"
+#include "mechanisms/_helper/speedy_stepper.h"
 
 namespace emmerich::mechanism {
 class Movement : public Worker {
@@ -145,12 +146,13 @@ class MovementImpl : public Movement {
 
  public:
   INJECT(MovementImpl(
-      Config*                            config,
-      State*                             state,
-      Logger*                            logger,
-      device::DigitalInputDeviceFactory  digitalInputDeviceFactory,
-      device::DigitalOutputDeviceFactory digitalOutputDeviceFactory,
-      device::StepperFactory             stepperFactory));
+      Config*                                 config,
+      State*                                  state,
+      Logger*                                 logger,
+      device::DigitalInputDeviceFactory       digitalInputDeviceFactory,
+      device::DigitalOutputDeviceFactory      digitalOutputDeviceFactory,
+      device::StepperFactory                  stepperFactory,
+      helper::algorithm::SpeedyStepperFactory movementAlgorithmFactory));
 
   virtual ~MovementImpl() = default;
   virtual void homing() override;

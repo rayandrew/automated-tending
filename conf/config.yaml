@@ -10,8 +10,8 @@ devices:
       edge: 11
       bin_detection: 14
     delay_each_step: 500
-    speed: 10.0
-    acceleration: 10.0
+    speed: 200.0
+    acceleration: 1000.0
     x:
       step_pin: 26
       direction_pin: 13

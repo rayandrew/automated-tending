@@ -10,46 +10,40 @@
 #include "devices/digital/stepper.h"
 
 namespace emmerich::mechanism::helper {
+namespace movement {
+enum class Mode { CONSTANT_SPEED, LINEAR_SPEED };
+enum class State { STOPPED, ACCELERATING, CRUISING, DECELERATING };
+}  // namespace movement
 
 class Movement {
- private:
-  const device::Stepper*                             _stepper;
-  bool                                               _startMove;
-  long                                               _targetPosition = 0;
-  long                                               _currentPosition = 0;
-  long                                               _decelerationDistance = 0;
-  int                                                _directionScaler = 1;
-  float                                              _currentStepPeriod = 0.0;
-  float                                              _desiredStepPeriod = 0.0;
-  float                                              _acceleration = 0.0;
-  float                                              _speed = 0.0;
-  float                                              _stepsPerMm = 0.0;
-  float                                              _stepsPerCm = 0.0;
-  std::chrono::time_point<std::chrono::system_clock> _rampLastStepTime;
-  float _rampInitialStepPeriod = 0.0;
-  float _rampNextStepPeriod = 0.0;
-  long  _highestPosValue = 0.0;
+ protected:
+  const device::Stepper* _stepper;
+  movement::Mode         _mode = movement::Mode::CONSTANT_SPEED;
+  movement::State        _state = movement::State::STOPPED;
+  long                   _targetPosition = 0;
+  long                   _currentPosition = 0;
+  float                  _stepsPerMm = 0.0;
+  float                  _stepsPerCm = 0.0;
 
- private:
-  static inline long mmToSteps(long mm, int stepPerMm) {
-    return mm * stepPerMm;
+ protected:
+  static inline unsigned long mmToSteps(float mm, float stepPerMm) {
+    return static_cast<unsigned long>(round(mm * stepPerMm));
   }
-
-  static inline long stepsToMm(long steps, long stepPerMm) {
-    return steps / stepPerMm;
+  static inline float stepsToMm(long steps, float stepPerMm) {
+    return static_cast<float>(steps) / stepPerMm;
   }
 
  public:
-  Movement(const device::Stepper* stepper,
-           float                  speed,
-           float                  acceleration,
-           float                  stepsPerMm);
-  ~Movement() = default;
-  void setupRelativeMoveInSteps(long distanceInSteps);
-  void setupRelativeMoveInMillimeters(float distanceInMillimeters);
-  void setupMoveInSteps(long absolutePositionToMoveInSteps);
-  void setupMoveInMillimeters(float absolutePositionInMillimeters);
-  bool processMovement();
+  Movement(const device::Stepper* stepper, float stepsPerMm);
+  virtual ~Movement() = default;
+
+ public:
+  virtual long processMovement() = 0;
+  virtual void setupMove(unsigned long steps, unsigned long time = 0) = 0;
+  inline virtual void setupMoveInMillimeters(float         mms,
+                                             unsigned long time = 0) {
+    setupMove(mmToSteps(mms, _stepsPerMm), time);
+  }
 
   inline float getStepPerMm() const { return _stepsPerMm; }
   inline float getStepPerCm() const { return _stepsPerCm; }
@@ -65,6 +59,7 @@ class Movement {
     return _currentPosition / static_cast<long>(_stepsPerCm);
   }
   inline long getTargetPosition() const { return _targetPosition; }
+  inline bool isCompleted() const { return _state == movement::State::STOPPED; }
   inline bool isMotionCompleted() const {
     return _currentPosition == _targetPosition;
   }
@@ -76,21 +71,7 @@ class Movement {
     return (_currentPosition % static_cast<long>(ceil(_stepsPerMm))) == 0;
   }
 
-  inline double getPercentage() {
-    if (isMotionCompleted())
-      return 100.0;
-
-    const long absTargetPosition = std::abs(_targetPosition);
-    const long absCurrentPosition = std::abs(_currentPosition);
-
-    if (_highestPosValue == absTargetPosition) {
-      return round(absCurrentPosition * 100 / absTargetPosition);
-    } else {
-      return round((1.0 - (static_cast<float>(absCurrentPosition) /
-                           static_cast<float>(_highestPosValue))) *
-                   100);
-    }
-  }
+  virtual double getPercentage() const = 0;
 };
 }  // namespace emmerich::mechanism::helper
 

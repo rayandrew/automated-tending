@@ -81,6 +81,7 @@ set(SOURCES
     src/mechanisms/rotation.cpp
 
     src/mechanisms/_helper/movement.cpp
+    src/mechanisms/_helper/speedy_stepper.cpp
 
     src/services/service.cpp
     src/services/tending_service.cpp

@@ -28,14 +28,17 @@
 
 #include "general_config.h"
 
+#include "mechanisms/_helper/speedy_stepper.h"
+
 namespace emmerich::mechanism {
 MovementImpl::MovementImpl(
-    Config*                            config,
-    State*                             state,
-    Logger*                            logger,
-    device::DigitalInputDeviceFactory  digitalInputDeviceFactory,
-    device::DigitalOutputDeviceFactory digitalOutputDeviceFactory,
-    device::StepperFactory             stepperFactory)
+    Config*                                 config,
+    State*                                  state,
+    Logger*                                 logger,
+    device::DigitalInputDeviceFactory       digitalInputDeviceFactory,
+    device::DigitalOutputDeviceFactory      digitalOutputDeviceFactory,
+    device::StepperFactory                  stepperFactory,
+    helper::algorithm::SpeedyStepperFactory movementAlgorithmFactory)
     : _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
@@ -66,15 +69,17 @@ MovementImpl::MovementImpl(
   _stepperY->setReverseDirection(
       (*config)["devices"]["movement"]["y"]["reversed"].as<bool>());
 
-  _xMovement = std::make_unique<helper::Movement>(
-      _stepperX.get(), (*config)["devices"]["movement"]["speed"].as<float>(),
-      (*config)["devices"]["movement"]["acceleration"].as<float>(),
-      ceil((*config)["devices"]["movement"]["x"]["step_per_mm"].as<float>()));
+  _xMovement = movementAlgorithmFactory(
+      _stepperX.get(),
+      ceil((*config)["devices"]["movement"]["x"]["step_per_mm"].as<float>()),
+      (*config)["devices"]["movement"]["speed"].as<float>(),
+      (*config)["devices"]["movement"]["acceleration"].as<float>());
 
-  _yMovement = std::make_unique<helper::Movement>(
-      _stepperY.get(), (*config)["devices"]["movement"]["speed"].as<float>(),
-      (*config)["devices"]["movement"]["acceleration"].as<float>(),
-      ceil((*config)["devices"]["movement"]["y"]["step_per_mm"].as<float>()));
+  _yMovement = movementAlgorithmFactory(
+      _stepperY.get(),
+      ceil((*config)["devices"]["movement"]["y"]["step_per_mm"].as<float>()),
+      (*config)["devices"]["movement"]["speed"].as<float>(),
+      (*config)["devices"]["movement"]["acceleration"].as<float>());
 
   loadPathsFromFile(_edgePaths, PROJECT_MOVEMENT_EDGE_FILE);
   loadPathsFromFile(_zigzagPaths, PROJECT_MOVEMENT_ZIGZAG_FILE);
@@ -101,8 +106,6 @@ void MovementImpl::move(int x, int y) {
 
   while (_running && !_isLimitSwitchEdgeTriggered &&
          (_xMovement->isMotionOngoing() || _yMovement->isMotionOngoing())) {
-    _logger->debug("Test ongoing {} {}", _xMovement->isMotionOngoing(),
-                   _yMovement->isMotionOngoing());
     if (_xMovement->isMotionOngoing())
       _xMovement->processMovement();
 
@@ -230,6 +233,7 @@ fruit::Component<MovementFactory> getMovementMechanismComponent() {
       .install(getLoggerComponent)
       .install(device::getDigitalInputDeviceComponent)
       .install(device::getDigitalOutputDeviceComponent)
-      .install(device::getStepperComponent);
+      .install(device::getStepperComponent)
+      .install(helper::algorithm::getSpeedyStepperMovementAlgorithmComponent);
 }
 }  // namespace emmerich::mechanism
