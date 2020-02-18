@@ -33,7 +33,7 @@ devices:
       reversed: true
       speed: 200.0
       acceleration: 1000.0
-      height: 300
+      height: 18
   watering:
       pump: 19
   rotation:
