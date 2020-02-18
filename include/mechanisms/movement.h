@@ -151,6 +151,12 @@ class MovementImpl : public Movement {
     return steps / stepPerMm;
   }
 
+  static inline long mmToCm(long mm) { return mm * 10; }
+
+  static inline bool isHome(bool limitSwitchHomeX, bool limitSwitchHomeY) {
+    return limitSwitchHomeX && limitSwitchHomeY;
+  }
+
   static inline bool isHome(bool limitSwitchHomeX,
                             bool limitSwitchHomeY,
                             bool limitSwitchHomeZ) {

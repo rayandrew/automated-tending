@@ -16,14 +16,14 @@ devices:
       step_pin: 26
       direction_pin: 13
       step_per_mm: 6.2069
-      reversed: true
+      reversed: false
       speed: 200.0
       acceleration: 1000.0
     y:
       step_pin: 21
       direction_pin: 20
       step_per_mm: 6.2069
-      reversed: false
+      reversed: true
       speed: 200.0
       acceleration: 1000.0
     z:

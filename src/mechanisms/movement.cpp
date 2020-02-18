@@ -157,9 +157,9 @@ void MovementImpl::move(int x, int y, int z) {
   }
 
   if (_running && !_isLimitSwitchEdgeTriggered) {
-    _state->setX(x);
-    _state->setY(y);
-    _state->setZ(z);
+    _state->setX(mmToCm(x));
+    _state->setY(mmToCm(y));
+    _state->setZ(mmToCm(z));
   }
 }
 
@@ -216,9 +216,8 @@ void MovementImpl::homing() {
 
   _state->setZ(0);
 
-  while (_running &&
-         !isHome(_limitSwitchHomeX->isActive(), _limitSwitchHomeY->isActive(),
-                 _limitSwitchHomeZ->isActive())) {
+  while (_running && !isHome(_limitSwitchHomeX->isActive(),
+                             _limitSwitchHomeY->isActive())) {
     if (!_limitSwitchHomeX->isActive())
       _stepperX->pulseHigh();
     if (!_limitSwitchHomeY->isActive())

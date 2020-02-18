@@ -60,10 +60,10 @@ void SpeedyStepper::setupMove(long target, long time) {
   if (distanceToTravel < 0) {
     distanceToTravel = -distanceToTravel;
     _directionScaler = -1;
-    _stepper->setDirection(device::stepper_direction::FORWARD);
+    _stepper->setDirection(device::stepper_direction::BACKWARD);
   } else {
     _directionScaler = 1;
-    _stepper->setDirection(device::stepper_direction::BACKWARD);
+    _stepper->setDirection(device::stepper_direction::FORWARD);
   }
 
   // check if travel distance is too short to
