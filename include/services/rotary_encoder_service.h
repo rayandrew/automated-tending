@@ -58,7 +58,7 @@ class RotaryEncoderServiceImpl : public Service {
 
  private:
   static inline float mapUnsignedCharToDegree(int value) {
-    return value * 180 / UCHAR_MAX;
+    return static_cast<float>(value * 180 / UCHAR_MAX);
   }
 
   inline float readRotaryDegree() {
