@@ -41,7 +41,7 @@
 
 #include "logger.h"
 
-#include "general_config.h"
+#include "common.h"
 
 namespace emmerich {
 struct Point;

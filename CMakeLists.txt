@@ -28,6 +28,7 @@ include(Ucm)
 include(Warnings)
 include(Yaml)
 
+# enable unity build
 set(UCM_UNITY_BUILD ON)
 
 set(RASPI_LIB "")

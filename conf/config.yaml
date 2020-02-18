@@ -30,7 +30,7 @@ devices:
       step_pin: 27
       direction_pin: 17
       step_per_mm: 0
-      reversed: false
+      reversed: true
       speed: 200.0
       acceleration: 1000.0
       height: 300

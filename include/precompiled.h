@@ -93,9 +93,9 @@
 // 3. internal
 //// 3.1. global
 #include "app.h"
+#include "common.h"
 #include "config.h"
 #include "dispatcher.h"
-#include "general_config.h"
 #include "gpio.h"
 #include "logger.h"
 #include "state.h"

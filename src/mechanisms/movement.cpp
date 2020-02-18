@@ -28,7 +28,7 @@
 
 #include "mechanisms/movement.h"
 
-#include "general_config.h"
+#include "common.h"
 
 namespace emmerich::mechanism {
 MovementImpl::MovementImpl(
@@ -78,20 +78,20 @@ MovementImpl::MovementImpl(
   _xMovement = movementAlgorithmFactory(
       _stepperX.get(),
       ceil((*config)["devices"]["movement"]["x"]["step_per_mm"].as<float>()),
-      (*config)["devices"]["movement"]["speed"].as<float>(),
-      (*config)["devices"]["movement"]["acceleration"].as<float>());
+      (*config)["devices"]["movement"]["x"]["speed"].as<float>(),
+      (*config)["devices"]["movement"]["x"]["acceleration"].as<float>());
 
   _yMovement = movementAlgorithmFactory(
       _stepperY.get(),
       ceil((*config)["devices"]["movement"]["y"]["step_per_mm"].as<float>()),
-      (*config)["devices"]["movement"]["speed"].as<float>(),
-      (*config)["devices"]["movement"]["acceleration"].as<float>());
+      (*config)["devices"]["movement"]["y"]["speed"].as<float>(),
+      (*config)["devices"]["movement"]["y"]["acceleration"].as<float>());
 
   _zMovement = movementAlgorithmFactory(
       _stepperZ.get(),
       ceil((*config)["devices"]["movement"]["z"]["step_per_mm"].as<float>()),
-      (*config)["devices"]["movement"]["speed"].as<float>(),
-      (*config)["devices"]["movement"]["acceleration"].as<float>());
+      (*config)["devices"]["movement"]["z"]["speed"].as<float>(),
+      (*config)["devices"]["movement"]["z"]["acceleration"].as<float>());
 
   loadPathsFromFile(_edgePaths, PROJECT_MOVEMENT_EDGE_FILE);
   loadPathsFromFile(_zigzagPaths, PROJECT_MOVEMENT_ZIGZAG_FILE);
@@ -178,6 +178,7 @@ void MovementImpl::processPaths(const std::queue<Point>& paths) {
 
 void MovementImpl::followPaths() {
   _logger->debug("Lowering the finger");
+  _stepperZ->setDirection(device::stepper_direction::FORWARD);
   move(0, 0, _zHeight);
 
   _logger->debug("Start moving the stepper according to edge paths");

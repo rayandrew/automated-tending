@@ -36,7 +36,7 @@
 #include <QProgressBar>
 #include <QPushButton>
 
-#include "general_config.h"
+#include "common.h"
 
 namespace emmerich {
 AppImpl::AppImpl(int         argc,
