@@ -75,7 +75,7 @@ class Movement : public Worker {
       iss >> tempX;
       iss >> tempY;
 
-      const Point point{stoi(tempX), stoi(tempY)};
+      const Point point{stoi(tempX), stoi(tempY), 0};
 
       queue.push(point);
     }
@@ -104,7 +104,20 @@ class Movement : public Worker {
   }
 };
 
-enum AXIS_MOVEMENT_STATE { X_ONLY, Y_ONLY, BOTH };
+enum class axis_state {
+  NONE = 0b0000000,
+  X_ONLY = 0b0000001,
+  Y_ONLY = 0b0000010,
+  Z_ONLY = 0b0000100,
+  X_AND_Y = X_ONLY | Y_ONLY,
+  X_AND_Z = X_ONLY | Z_ONLY,
+  Y_AND_Z = Y_ONLY | Z_ONLY,
+  ALTOGETHER = X_ONLY | Y_ONLY | Z_ONLY
+};
+
+inline axis_state operator|(axis_state a, axis_state b) {
+  return static_cast<axis_state>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 class MovementImpl : public Movement {
   Q_OBJECT
@@ -115,16 +128,19 @@ class MovementImpl : public Movement {
   Logger*                                            _logger;
   const std::unique_ptr<device::Stepper>             _stepperX;
   const std::unique_ptr<device::Stepper>             _stepperY;
+  const std::unique_ptr<device::Stepper>             _stepperZ;
   const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchHomeX;
   const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchHomeY;
+  const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchHomeZ;
   const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchEdge;
-  const std::unique_ptr<device::DigitalInputDevice>  _limitSwitchBinDetection;
   const std::unique_ptr<device::DigitalOutputDevice> _sleepDevice;
+  const int                                          _zHeight;
 
  private:  // internal state
   bool                              _isLimitSwitchEdgeTriggered = false;
   std::unique_ptr<helper::Movement> _xMovement;
   std::unique_ptr<helper::Movement> _yMovement;
+  std::unique_ptr<helper::Movement> _zMovement;
 
  private:
   static inline long mmToSteps(long mm, int stepPerMm) {
@@ -135,13 +151,44 @@ class MovementImpl : public Movement {
     return steps / stepPerMm;
   }
 
-  static inline bool isHome(bool limitSwitchHomeX, bool limitSwitchHomeY) {
-    return limitSwitchHomeX && limitSwitchHomeY;
+  static inline bool isHome(bool limitSwitchHomeX,
+                            bool limitSwitchHomeY,
+                            bool limitSwitchHomeZ) {
+    return limitSwitchHomeX && limitSwitchHomeY && limitSwitchHomeZ;
+  }
+
+  static inline double getProgress(axis_state        state,
+                                   helper::Movement* x,
+                                   helper::Movement* y,
+                                   helper::Movement* z) {
+    double progress = 0.0;
+
+    double xProgress = x->getPercentage();
+    double yProgress = y->getPercentage();
+    double zProgress = z->getPercentage();
+
+    if (state == axis_state::X_ONLY) {
+      progress = xProgress;
+    } else if (state == axis_state::Y_ONLY) {
+      progress = yProgress;
+    } else if (state == axis_state::Z_ONLY) {
+      progress = zProgress;
+    } else if (state == axis_state::X_AND_Y) {
+      progress = round((xProgress / 2) + (yProgress / 2));
+    } else if (state == axis_state::X_AND_Z) {
+      progress = round((xProgress / 2) + (zProgress / 2));
+    } else if (state == axis_state::Y_AND_Z) {
+      progress = round((yProgress / 2) + (zProgress / 2));
+    } else if (state == axis_state::ALTOGETHER) {
+      progress = round((xProgress / 3) + (yProgress / 3) + (zProgress / 3));
+    }
+
+    return progress;
   }
 
   void reset();
   void processPaths(const std::queue<Point>& paths);
-  void move(int x, int y);
+  void move(int x, int y, int z);
   void move(const Point& point);
 
  public:

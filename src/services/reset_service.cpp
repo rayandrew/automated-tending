@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "services/reset_service.h"
 
 namespace emmerich::service {

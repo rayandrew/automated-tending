@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #ifdef MOCK_GPIO
 
 // General

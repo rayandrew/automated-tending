@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "services/tending_service.h"
 
 namespace emmerich::service {

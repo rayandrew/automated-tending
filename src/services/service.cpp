@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "services/service.h"
 
 namespace emmerich::service {}  // namespace emmerich::service

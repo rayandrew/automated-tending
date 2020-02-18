@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "devices/digital/output.h"
 
 namespace emmerich::device {

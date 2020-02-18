@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "utils/worker.h"
 
 namespace emmerich {

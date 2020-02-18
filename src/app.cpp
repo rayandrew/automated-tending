@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "app.h"
 
 #include <QColor>

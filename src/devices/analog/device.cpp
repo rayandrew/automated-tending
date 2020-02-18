@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "devices/analog/device.h"
 
 #include "gpio.h"

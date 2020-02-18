@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "mechanisms/rotation.h"
 
 #include <QThread>

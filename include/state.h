@@ -28,7 +28,6 @@
 #define STATE_H_
 
 #include <fstream>
-#include <map>
 
 #include <QObject>
 #include <QString>
@@ -56,6 +55,7 @@ namespace emmerich {
 struct Point {
   int x = 0;
   int y = 0;
+  int z = 0;
 };
 
 enum class task_state { IDLE, WATERING, TENDING, RESET, STOP };
@@ -105,6 +105,7 @@ class State : public QObject {
   inline const Point& getCoordinate() const { return _coordinate; }
   inline int          getX() const { return _coordinate.x; }
   inline int          getY() const { return _coordinate.y; }
+  inline int          getZ() const { return _coordinate.z; }
 
   // Formatter
   friend std::ostream&  operator<<(std::ostream& os, const State& state);
@@ -122,6 +123,7 @@ class State : public QObject {
   virtual void setDegree(float degree) = 0;
   virtual void setX(int x) = 0;
   virtual void setY(int y) = 0;
+  virtual void setZ(int y) = 0;
   virtual void setCoordinate(const Point& coordinate) = 0;
 
  signals:
@@ -134,6 +136,7 @@ class State : public QObject {
   void degreeHasChanged(const QString& new_degree);
   void xHasChanged(const QString& new_x);
   void yHasChanged(const QString& new_y);
+  void zHasChanged(const QString& new_z);
 };
 
 class StateImpl : public State {
@@ -156,6 +159,7 @@ class StateImpl : public State {
   virtual void setDegree(float degree) override;
   virtual void setX(int x) override;
   virtual void setY(int y) override;
+  virtual void setZ(int z) override;
   virtual void setCoordinate(const Point& coordinate) override;
 };
 

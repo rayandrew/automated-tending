@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "config.h"
 
 #include <iostream>

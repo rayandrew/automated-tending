@@ -18,14 +18,17 @@ include(Colors)
 include(Cotire)
 include(CTest)
 include(Doctest)
-include(Fruit)
 include(Documentation)
 include(Fmt)
+include(Fruit)
 include(LTO)
 include(Misc)
 include(Spdlog)
+include(Ucm)
 include(Warnings)
 include(Yaml)
+
+set(UCM_UNITY_BUILD ON)
 
 set(RASPI_LIB "")
 
@@ -55,39 +58,41 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # --------------------------------------------------------------------------------
 
 # All .cpp files in src/
-set(SOURCES
-    src/app.cpp
-    src/config.cpp
-    src/state.cpp
-    src/logger.cpp
-    src/gpio.cpp
-    src/dispatcher.cpp
+ucm_add_files(
+  "src/app.cpp"
+  "src/config.cpp"
+  "src/state.cpp"
+  "src/logger.cpp"
+  "src/gpio.cpp"
+  "src/dispatcher.cpp"
     
-    src/utils/qspdlog.cpp
-    src/utils/worker.cpp
-    src/utils/simple_worker.cpp
-    src/utils/signal_merge.cpp
+  "src/utils/qspdlog.cpp"
+  "src/utils/worker.cpp"
+  "src/utils/simple_worker.cpp"
+  "src/utils/signal_merge.cpp"
 
-    src/windows/main_window.cpp
+  "src/windows/main_window.cpp"
 
-    src/devices/analog/device.cpp
-    src/devices/analog/PCF8591.cpp
-    src/devices/digital/device.cpp
-    src/devices/digital/stepper.cpp
-    src/devices/digital/input.cpp
-    src/devices/digital/output.cpp
+  "src/devices/analog/device.cpp"
+  "src/devices/analog/PCF8591.cpp"
+  "src/devices/digital/device.cpp"
+  "src/devices/digital/stepper.cpp"
+  "src/devices/digital/input.cpp"
+  "src/devices/digital/output.cpp"
 
-    src/mechanisms/movement.cpp
-    src/mechanisms/rotation.cpp
+  "src/mechanisms/movement.cpp"
+  "src/mechanisms/rotation.cpp"
 
-    src/mechanisms/_helper/movement.cpp
-    src/mechanisms/_helper/speedy_stepper.cpp
+  "src/mechanisms/_helper/movement.cpp"
+  "src/mechanisms/_helper/speedy_stepper.cpp"
 
-    src/services/service.cpp
-    src/services/tending_service.cpp
-    src/services/reset_service.cpp
-    src/services/rotary_encoder_service.cpp
-    src/services/watering_service.cpp) 
+  "src/services/service.cpp"
+  "src/services/tending_service.cpp"
+  "src/services/reset_service.cpp"
+  "src/services/rotary_encoder_service.cpp"
+  "src/services/watering_service.cpp"
+
+  TO SOURCES) 
 
 # All .ui files in resources/ui
 set(UI_SOURCES
@@ -95,39 +100,39 @@ set(UI_SOURCES
 
 # All .h files in include/
 set(HEADERS
-    include/app.h
-    include/config.h
-    include/state.h
-    include/logger.h
-    include/gpio.h
-    include/dispatcher.h
+    "include/app.h"
+    "include/config.h"
+    "include/state.h"
+    "include/logger.h"
+    "include/gpio.h"
+    "include/dispatcher.h"
 
-    include/utils/qspdlog.h
-    include/utils/worker.h
-    include/utils/simple_worker.h
-    include/utils/signal_merge.h
+    "include/utils/qspdlog.h"
+    "include/utils/worker.h"
+    "include/utils/simple_worker.h"
+    "include/utils/signal_merge.h"
     
-    include/windows/main_window.h
+    "include/windows/main_window.h"
 
-    include/devices/analog/device.h
-    include/devices/analog/PCF8591.h
-    include/devices/digital/device.h
-    include/devices/digital/stepper.h
-    include/devices/digital/input.h
-    include/devices/digital/output.h
+    "include/devices/analog/device.h"
+    "include/devices/analog/PCF8591.h"
+    "include/devices/digital/device.h"
+    "include/devices/digital/stepper.h"
+    "include/devices/digital/input.h"
+    "include/devices/digital/output.h"
 
-    include/mechanisms/movement.h
-    include/mechanisms/rotation.h
+    "include/mechanisms/movement.h"
+    "include/mechanisms/rotation.h"
 
-    include/services/service.h
-    include/services/tending_service.h
-    include/services/reset_service.h
-    include/services/rotary_encoder_service.h
-    include/services/watering_service.h) 
+    "include/services/service.h"
+    "include/services/tending_service.h"
+    "include/services/reset_service.h"
+    "include/services/rotary_encoder_service.h"
+    "include/services/watering_service.h") 
 
 # All .cpp files in tests/
 set(TESTFILES
-    tests/main.cpp)
+    "tests/main.cpp")
 
 set(LIBRARY_NAME engine)
 
@@ -140,10 +145,16 @@ qt5_wrap_ui(ui_sources_headers ${UI_SOURCES})
 qt5_wrap_cpp(ui_sources_moc ${HEADERS})
 
 # Compile all sources into a library.
-add_library(${LIBRARY_NAME} OBJECT
-            ${SOURCES}
-            ${ui_sources_headers}
-            ${ui_sources_moc})
+ucm_add_target(
+  NAME ${LIBRARY_NAME}
+  TYPE STATIC
+  SOURCES "${SOURCES}" "${ui_sources_headers}" "${ui_sources_moc}"
+  UNITY CPP_PER_UNITY 20
+  PCH_FILE "include/precompiled.h")
+# add_library(${LIBRARY_NAME} OBJECT
+#             ${SOURCES}
+#             ${ui_sources_headers}
+#             ${ui_sources_moc})
 
 # Lib needs its header files, and users of the library must also see these (PUBLIC)
 target_include_directories(${LIBRARY_NAME} PUBLIC
@@ -172,8 +183,14 @@ add_compile_definitions(BUILD_SHARED_LIBS
                         SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG
                         SPDLOG_FMT_EXTERNAL)
 
-# Add an executable for the file app/main.cpp.
-add_executable(main app/main.cpp)
+# Add an executable for the file app/main.cpp
+ucm_add_files("app/main.cpp" TO MAIN_SOURCES)
+ucm_add_target(
+  NAME main
+  TYPE EXECUTABLE
+  SOURCES "${MAIN_SOURCES}"
+  PCH_FILE "include/precompiled.h")
+# add_executable(main app/main.cpp)
 
 # Link the executable to libraries
 target_link_libraries(main PRIVATE ${LIBRARY_NAME}
@@ -184,9 +201,6 @@ target_link_libraries(main PRIVATE ${LIBRARY_NAME}
                       yaml::yaml
                       Qt5::Core
                       Qt5::Widgets)
-
-# Precompiled Headers
-cotire(main)
 
 # Set warnings
 spdlog_enable_warnings(main)

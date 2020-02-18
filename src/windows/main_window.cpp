@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "windows/main_window.h"
 
 MainWindow::MainWindow(QWidget* parent)

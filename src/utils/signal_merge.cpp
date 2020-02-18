@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "utils/signal_merge.h"
 
 #include <QMutexLocker>
