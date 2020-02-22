@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "devices/analog/PCF8591.h"
 
 namespace emmerich::device {

@@ -24,11 +24,11 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "mechanisms/movement.h"
 
-#include "general_config.h"
-
-#include "mechanisms/_helper/speedy_stepper.h"
+#include "common.h"
 
 namespace emmerich::mechanism {
 MovementImpl::MovementImpl(
@@ -50,67 +50,88 @@ MovementImpl::MovementImpl(
       _stepperY(stepperFactory(
           (*config)["devices"]["movement"]["y"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["y"]["direction_pin"].as<int>())),
+      _stepperZ(stepperFactory(
+          (*config)["devices"]["movement"]["z"]["step_pin"].as<int>(),
+          (*config)["devices"]["movement"]["z"]["direction_pin"].as<int>())),
       _limitSwitchHomeX(digitalInputDeviceFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"]["home_x"]
               .as<int>())),
       _limitSwitchHomeY(digitalInputDeviceFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"]["home_y"]
               .as<int>())),
+      _limitSwitchHomeZ(digitalInputDeviceFactory(
+          (*config)["devices"]["movement"]["limit_switch_pin"]["home_z"]
+              .as<int>())),
       _limitSwitchEdge(digitalInputDeviceFactory(
           (*config)["devices"]["movement"]["limit_switch_pin"]["edge"]
               .as<int>())),
-      _limitSwitchBinDetection(digitalInputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_pin"]["bin_detection"]
-              .as<int>())) {
+      _zHeight((*config)["devices"]["movement"]["z"]["height"].as<int>()) {
   _logger->debug("Movement mechanism is initialized!");
   _sleepDevice->setActiveState(false);
   _stepperX->setReverseDirection(
       (*config)["devices"]["movement"]["x"]["reversed"].as<bool>());
   _stepperY->setReverseDirection(
       (*config)["devices"]["movement"]["y"]["reversed"].as<bool>());
+  _stepperZ->setReverseDirection(
+      (*config)["devices"]["movement"]["z"]["reversed"].as<bool>());
 
   _xMovement = movementAlgorithmFactory(
       _stepperX.get(),
       ceil((*config)["devices"]["movement"]["x"]["step_per_mm"].as<float>()),
-      (*config)["devices"]["movement"]["speed"].as<float>(),
-      (*config)["devices"]["movement"]["acceleration"].as<float>());
+      (*config)["devices"]["movement"]["x"]["speed"].as<float>(),
+      (*config)["devices"]["movement"]["x"]["acceleration"].as<float>());
 
   _yMovement = movementAlgorithmFactory(
       _stepperY.get(),
       ceil((*config)["devices"]["movement"]["y"]["step_per_mm"].as<float>()),
-      (*config)["devices"]["movement"]["speed"].as<float>(),
-      (*config)["devices"]["movement"]["acceleration"].as<float>());
+      (*config)["devices"]["movement"]["y"]["speed"].as<float>(),
+      (*config)["devices"]["movement"]["y"]["acceleration"].as<float>());
+
+  _zMovement = movementAlgorithmFactory(
+      _stepperZ.get(),
+      ceil((*config)["devices"]["movement"]["z"]["step_per_mm"].as<float>()),
+      (*config)["devices"]["movement"]["z"]["speed"].as<float>(),
+      (*config)["devices"]["movement"]["z"]["acceleration"].as<float>());
 
   loadPathsFromFile(_edgePaths, PROJECT_MOVEMENT_EDGE_FILE);
   loadPathsFromFile(_zigzagPaths, PROJECT_MOVEMENT_ZIGZAG_FILE);
 }
 
 void MovementImpl::move(const Point& point) {
-  move(point.x, point.y);
+  move(point.x, point.y, point.z);
 }
 
-void MovementImpl::move(int x, int y) {
-  _xMovement->setupMoveInMillimeters(static_cast<float>(x * 10));
-  _yMovement->setupMoveInMillimeters(static_cast<float>(y * 10));
+void MovementImpl::move(int x, int y, int z) {
+  _xMovement->setupMoveInMillimeters(static_cast<float>(x));
+  _yMovement->setupMoveInMillimeters(static_cast<float>(y));
+  _zMovement->setupMoveInMillimeters(static_cast<float>(z));
 
   _isLimitSwitchEdgeTriggered = _limitSwitchEdge->isActive();
 
-  AXIS_MOVEMENT_STATE axisMovementState = BOTH;
-  if (_xMovement->isMotionCompleted()) {
-    axisMovementState = Y_ONLY;
+  axis_state axisState = axis_state::NONE;
+  if (_xMovement->isMotionOngoing()) {
+    axisState = axisState | axis_state::X_ONLY;
   }
 
-  if (_yMovement->isMotionCompleted()) {
-    axisMovementState = X_ONLY;
+  if (_yMovement->isMotionOngoing()) {
+    axisState = axisState | axis_state::Y_ONLY;
+  }
+
+  if (_zMovement->isMotionOngoing()) {
+    axisState = axisState | axis_state::Z_ONLY;
   }
 
   while (_running && !_isLimitSwitchEdgeTriggered &&
-         (_xMovement->isMotionOngoing() || _yMovement->isMotionOngoing())) {
+         (_xMovement->isMotionOngoing() || _yMovement->isMotionOngoing() ||
+          _zMovement->isMotionOngoing())) {
     if (_xMovement->isMotionOngoing())
       _xMovement->processMovement();
 
     if (_yMovement->isMotionOngoing())
       _yMovement->processMovement();
+
+    if (_zMovement->isMotionOngoing())
+      _zMovement->processMovement();
 
     if (_xMovement->isMotionOngoing() && _xMovement->isStepsDivisibleByCm()) {
       _state->setX(_xMovement->getCurrentPositionInCm());
@@ -120,17 +141,12 @@ void MovementImpl::move(int x, int y) {
       _state->setY(_yMovement->getCurrentPositionInCm());
     }
 
-    double percentage;
-
-    if (axisMovementState == BOTH) {
-      percentage = round((_xMovement->getPercentage() / 2) +
-                         (_yMovement->getPercentage() / 2));
-    } else if (axisMovementState == X_ONLY) {
-      percentage = _xMovement->getPercentage();
-    } else {
-      percentage = _yMovement->getPercentage();
+    if (_zMovement->isMotionOngoing() && _zMovement->isStepsDivisibleByCm()) {
+      _state->setZ(_zMovement->getCurrentPositionInCm());
     }
 
+    double percentage = getProgress(axisState, _xMovement.get(),
+                                    _yMovement.get(), _zMovement.get());
     _state->setProgress(percentage);
     _isLimitSwitchEdgeTriggered = _limitSwitchEdge->isActive();
   }
@@ -141,8 +157,9 @@ void MovementImpl::move(int x, int y) {
   }
 
   if (_running && !_isLimitSwitchEdgeTriggered) {
-    _state->setX(x);
-    _state->setY(y);
+    _state->setX(mmToCm(x));
+    _state->setY(mmToCm(y));
+    _state->setZ(mmToCm(z));
   }
 }
 
@@ -152,7 +169,7 @@ void MovementImpl::processPaths(const std::queue<Point>& paths) {
   _isLimitSwitchEdgeTriggered = _limitSwitchEdge->isActive();
   while (_running && !_isLimitSwitchEdgeTriggered && !tempPaths.empty()) {
     const Point point = tempPaths.front();
-    _logger->debug("Moving to x: {} y: {}", point.x, point.y);
+    _logger->debug("Moving to x: {} y: {} z: {}", point.x, point.y, point.z);
     move(point);
     QThread::usleep(_delay);
     tempPaths.pop();
@@ -160,6 +177,10 @@ void MovementImpl::processPaths(const std::queue<Point>& paths) {
 }
 
 void MovementImpl::followPaths() {
+  _logger->debug("Lowering the finger");
+  _stepperZ->setDirection(device::stepper_direction::FORWARD);
+  move(0, 0, _zHeight);
+
   _logger->debug("Start moving the stepper according to edge paths");
   processPaths(_edgePaths);
 
@@ -176,22 +197,37 @@ void MovementImpl::followPaths() {
 void MovementImpl::homing() {
   _stepperX->setDirection(device::stepper_direction::BACKWARD);
   _stepperY->setDirection(device::stepper_direction::BACKWARD);
+  _stepperZ->setDirection(device::stepper_direction::BACKWARD);
   QThread::msleep(100);
 
-  while (_running && _limitSwitchBinDetection->isActive()) {
-    _logger->info(
-        "Retry homing every 2s because of bin is still inside the frame");
-    QThread::sleep(2);
+  // while (_running) {
+  //   _logger->info(
+  //       "Retry homing every 2s because of bin is still inside the frame");
+  //   QThread::sleep(2);
+  // }
+
+  _logger->info("Homing z axis");
+  while (_running && !_limitSwitchHomeZ->isActive()) {
+    _stepperZ->pulseHigh();
+    QThread::usleep(_delay);
+    _stepperZ->pulseLow();
+    QThread::usleep(_delay);
   }
+
+  _state->setZ(0);
 
   while (_running && !isHome(_limitSwitchHomeX->isActive(),
                              _limitSwitchHomeY->isActive())) {
-    _stepperX->pulseHigh();
-    _stepperY->pulseHigh();
+    if (!_limitSwitchHomeX->isActive())
+      _stepperX->pulseHigh();
+    if (!_limitSwitchHomeY->isActive())
+      _stepperY->pulseHigh();
     QThread::usleep(_delay);
 
-    _stepperX->pulseLow();
-    _stepperY->pulseLow();
+    if (!_limitSwitchHomeX->isActive())
+      _stepperX->pulseLow();
+    if (!_limitSwitchHomeY->isActive())
+      _stepperY->pulseLow();
     QThread::usleep(_delay);
   }
 

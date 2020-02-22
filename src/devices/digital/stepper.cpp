@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "devices/digital/stepper.h"
 
 namespace emmerich::device {

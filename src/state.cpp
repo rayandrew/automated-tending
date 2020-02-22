@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "state.h"
 
 namespace emmerich {
@@ -131,7 +133,6 @@ void StateImpl::setMachineState(const task_state& new_state) {
 
 void StateImpl::setX(int x) {
   QMutexLocker locker(_mutex.get());
-
   if (x != _coordinate.x) {
     _coordinate.x = x;
     emit xHasChanged(QString::number(x));
@@ -143,6 +144,14 @@ void StateImpl::setY(int y) {
   if (y != _coordinate.y) {
     _coordinate.y = y;
     emit yHasChanged(QString::number(y));
+  }
+}
+
+void StateImpl::setZ(int z) {
+  QMutexLocker locker(_mutex.get());
+  if (z != _coordinate.z) {
+    _coordinate.z = z;
+    emit zHasChanged(QString::number(z));
   }
 }
 

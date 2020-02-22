@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "services/watering_service.h"
 
 namespace emmerich::service {

@@ -24,12 +24,14 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "config.h"
 
 #include <iostream>
 #include <memory>
 
-#include "general_config.h"
+#include "common.h"
 
 namespace emmerich {
 class ConfigImpl : public Config {

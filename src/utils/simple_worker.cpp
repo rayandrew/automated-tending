@@ -26,6 +26,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "utils/simple_worker.h"
 
 #include <QThread>

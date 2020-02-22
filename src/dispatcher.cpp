@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "dispatcher.h"
 
 namespace emmerich {

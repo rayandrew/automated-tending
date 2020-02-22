@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "app.h"
 
 #include <QColor>
@@ -34,7 +36,7 @@
 #include <QProgressBar>
 #include <QPushButton>
 
-#include "general_config.h"
+#include "common.h"
 
 namespace emmerich {
 AppImpl::AppImpl(int         argc,

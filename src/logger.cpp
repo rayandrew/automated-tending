@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "logger.h"
 
 #include <iostream>

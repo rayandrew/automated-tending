@@ -26,6 +26,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "utils/qspdlog.h"
 
 #include <fmt/format.h>

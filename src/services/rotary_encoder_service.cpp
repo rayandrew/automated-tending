@@ -24,6 +24,8 @@
  *
  */
 
+#include "precompiled.h"
+
 #include "services/rotary_encoder_service.h"
 
 #include "utils/simple_worker.h"
