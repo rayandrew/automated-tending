@@ -49,27 +49,63 @@ int gpioWrite(int gpio, int level) {
 }
 
 // SPI
-int i2cOpen(unsigned i2cBus, unsigned i2cAddr, unsigned i2cFlags) {
+int i2cOpen(unsigned int i2cBus, unsigned int i2cAddr, unsigned int i2cFlags) {
   return 0;
 }
 
-int i2cClose(unsigned handle) {
+int i2cClose(unsigned int handle) {
   return 0;
 }
 
-int i2cWriteDevice(unsigned handle, char* buf, unsigned count) {
+int i2cWriteDevice(unsigned int handle, char* buf, unsigned int count) {
   return 0;
 }
 
-int i2cReadDevice(unsigned handle, char* buf, unsigned count) {
+int i2cReadDevice(unsigned int handle, char* buf, unsigned int count) {
   return 0;
 }
 
-int i2cWriteByte(unsigned handle, unsigned bVal) {
+int i2cWriteByte(unsigned int handle, unsigned int bVal) {
   return 0;
 }
 
-int i2cReadByte(unsigned handle) {
+int i2cReadByte(unsigned int handle) {
+  return 0;
+}
+
+// PWM
+
+int gpioPWM(unsigned int user_gpio, unsigned int dutycycle) {
+  return 0;
+}
+
+int gpioGetPWMdutycycle(unsigned int user_gpio) {
+  return 0;
+}
+
+int gpioSetPWMrange(unsigned int user_gpio, unsigned int range) {
+  return 0;
+}
+
+int gpioGetPWMrange(unsigned int user_gpio) {
+  return 0;
+}
+
+int gpioGetPWMrealRange(unsigned int user_gpio) {
+  return 0;
+}
+
+int gpioSetPWMfrequency(unsigned int user_gpio, unsigned int frequency) {
+  return 0;
+}
+
+int gpioGetPWMfrequency(unsigned int user_gpio) {
+  return 0;
+}
+
+int gpioHardwarePWM(unsigned int gpio,
+                    unsigned int PWMfreq,
+                    unsigned int PWMduty) {
   return 0;
 }
 
