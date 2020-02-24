@@ -34,10 +34,6 @@
 // vendors
 #include <fruit/fruit.h>
 
-#include "logger.h"
-
-#include "utils/type.h"
-
 namespace emmerich::device {
 enum class device_mode {
   INPUT,
@@ -85,7 +81,6 @@ inline bool getOutputModeBool(const device_output& output) {
 template <bool withOutput = false, typename T = device_output>
 class DigitalDeviceException : public std::exception {
  private:
-  Logger*           _logger;
   const std::string _message;
   const int         _pin;
   const int         _errcode;
@@ -94,27 +89,23 @@ class DigitalDeviceException : public std::exception {
 
  public:
   template <typename = std::enable_if<withOutput, bool>>
-  DigitalDeviceException(Logger*            logger,
-                         const std::string& message,
+  DigitalDeviceException(const std::string& message,
                          const int          pin,
                          const device_mode& mode,
                          const T&           output,
                          const int          errcode)
-      : _logger(std::move(logger)),
-        _message(std::move(message)),
+      : _message(std::move(message)),
         _pin(pin),
         _mode(std::move(mode)),
         _output(std::move(output)),
         _errcode(errcode) {}
 
   template <typename = std::enable_if<!withOutput, bool>>
-  DigitalDeviceException(Logger*            logger,
-                         const std::string& message,
+  DigitalDeviceException(const std::string& message,
                          const int          pin,
                          const device_mode& mode,
                          const int          errcode)
-      : _logger(std::move(logger)),
-        _message(std::move(message)),
+      : _message(std::move(message)),
         _pin(pin),
         _mode(std::move(mode)),
         _errcode(errcode) {}
@@ -132,7 +123,6 @@ class DigitalDeviceException : public std::exception {
     temp << "}]" << std::endl;
 
     std::string message = temp.str();
-    _logger->error(message);
     return message.c_str();
   }
 };
@@ -174,13 +164,9 @@ class DigitalDevice {
 };
 
 class DigitalDeviceImpl : public DigitalDevice {
- private:
-  Logger* _logger;
-
  public:
   INJECT(DigitalDeviceImpl(ASSISTED(int) pin,
-                           ASSISTED(const device_mode&) mode,
-                           Logger* logger));
+                           ASSISTED(const device_mode&) mode));
   DigitalDeviceImpl(int pin) : DigitalDevice(pin) {}
   virtual ~DigitalDeviceImpl() = default;
 

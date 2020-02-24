@@ -76,10 +76,12 @@ ucm_add_files(
 
   "src/devices/analog/device.cpp"
   "src/devices/analog/PCF8591.cpp"
+  
   "src/devices/digital/device.cpp"
-  "src/devices/digital/stepper.cpp"
   "src/devices/digital/input.cpp"
   "src/devices/digital/output.cpp"
+  "src/devices/digital/pwm.cpp"
+  "src/devices/digital/stepper.cpp"
 
   "src/mechanisms/movement.cpp"
   "src/mechanisms/rotation.cpp"
@@ -117,10 +119,12 @@ set(HEADERS
 
     "include/devices/analog/device.h"
     "include/devices/analog/PCF8591.h"
+    
     "include/devices/digital/device.h"
-    "include/devices/digital/stepper.h"
     "include/devices/digital/input.h"
     "include/devices/digital/output.h"
+    "include/devices/digital/pwm.h"
+    "include/devices/digital/stepper.h"
 
     "include/mechanisms/movement.h"
     "include/mechanisms/rotation.h"

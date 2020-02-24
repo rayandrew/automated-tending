@@ -110,6 +110,7 @@
 #include "devices/digital/device.h"
 #include "devices/digital/input.h"
 #include "devices/digital/output.h"
+#include "devices/digital/pwm.h"
 #include "devices/digital/stepper.h"
 
 // 3.3. mechanisms

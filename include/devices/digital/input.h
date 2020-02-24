@@ -68,6 +68,11 @@ class DigitalInputDeviceImpl : public DigitalInputDevice {
     return output;
   }
 
+  // todo getStatus sampling n samples
+  // this is good for checking noise data
+  // virtual inline device_output getStatusSampling(float mostValPercentage)
+  // const override;
+
   virtual inline bool isActive() const override {
     return getOutputModeBool(getStatus());
   }

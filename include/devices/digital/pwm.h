@@ -27,12 +27,65 @@
 #ifndef DIGITAL_PWM_DEVICE_H_
 #define DIGITAL_PWM_DEVICE_H_
 
+// vendors
 #include <fruit/fruit.h>
 
 #include "logger.h"
 
-#include "devices/digital/output.h"
+#include "devices/digital/device.h"
 
-namespace emmerich::device {}  // namespace emmerich::device
+namespace emmerich::device {
+class PWMDevice {
+ public:
+  PWMDevice() = default;
+  virtual ~PWMDevice() = default;
+
+  // PWM
+  virtual void setPWMDutyCycle(unsigned int dutyCycle) = 0;
+  virtual int  getPWMDutyCycle() = 0;
+
+  virtual void setPWMRange(unsigned int range) = 0;
+  virtual int  getPWMRange() = 0;
+
+  virtual int getPWMRealRange() = 0;
+
+  virtual void setPWMFrequency(unsigned int frequency) = 0;
+  virtual int  getPWMFrequency() = 0;
+
+  virtual void setPWMHardware(unsigned int frequency,
+                              unsigned int dutyCycle) = 0;
+};
+
+class PWMDeviceImpl : public PWMDevice {
+ private:
+  std::unique_ptr<DigitalDevice> _device;
+  Logger*                        _logger;
+
+ public:
+  INJECT(PWMDeviceImpl(ASSISTED(int) pin,
+                       Logger*              logger,
+                       DigitalDeviceFactory digitalDeviceFactory));
+  virtual ~PWMDeviceImpl() override = default;
+
+  // PWM
+  virtual void setPWMDutyCycle(unsigned int dutyCycle) override;
+  virtual int  getPWMDutyCycle() override;
+
+  virtual void setPWMRange(unsigned int range) override;
+  virtual int  getPWMRange() override;
+
+  virtual int getPWMRealRange() override;
+
+  virtual void setPWMFrequency(unsigned int frequency) override;
+  virtual int  getPWMFrequency() override;
+
+  virtual void setPWMHardware(unsigned int frequency,
+                              unsigned int dutyCycle) override;
+};
+
+using PWMDeviceFactory = std::function<std::unique_ptr<PWMDevice>(int)>;
+
+fruit::Component<PWMDeviceFactory> getPWMDeviceComponent();
+}  // namespace emmerich::device
 
 #endif
