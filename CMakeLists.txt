@@ -1,7 +1,26 @@
 cmake_minimum_required(VERSION 3.8.2 FATAL_ERROR)
 
+# Definitions
+set(PROJECT_TITLE           "AUTOMATED_TENDING_MACHINE")
+set(LIBRARY_NAME            "${PROJECT_TITLE}-lib")
+set(APP_NAME                "emmerich_atm")
+set(FUNCTIONALITY_TEST_NAME "test_functionality")
+# string(TOLOWER "${PROJECT_TITLE}"         APP_NAME)
+set(PROJECT_ALT_TITLE       "Automated Tending Machine")
+set(PROJECT_DESCRIPTION     "Emmerich Automated Tending Machine")
+set(PROJECT_AUTHOR          "emmerich")
+set(PROJECT_NAMESPACE       ${PROJECT_AUTHOR})
+set(PROJECT_VERSION_MAJOR   0)
+set(PROJECT_VERSION_MINOR   0)
+set(PROJECT_VERSION_PATCH   1)
+set(PROJECT_VERSION_TWEAK   0)
+set(PROJECT_VERSION         "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}")
+
 # Set project name, version and languages
-project(AUTOMATED_TENDING_MACHINE VERSION 0.0.0.1 LANGUAGES CXX)
+project(${PROJECT_TITLE}
+  VERSION ${PROJECT_VERSION}
+  DESCRIPTION ${PROJECT_DESCRIPTION}
+  LANGUAGES CXX)
 
 # Options: Things you can set via commandline options to cmake (e.g. -DENABLE_LTO=[ON|OFF])
 option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defines.
@@ -9,6 +28,8 @@ option(ENABLE_WARNINGS_SETTINGS "Allow target_set_warnings to add flags and defi
 option(ENABLE_LTO "Enable link time optimization" ON)
 option(ENABLE_DOCTESTS "Include tests in the library. Setting this to OFF will remove all doctest related code. Tests in tests/*.cpp will still be enabled." OFF)
 option(BUILD_SHARED_LIBS "Build shared libs in order for some libraries to work" ON)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Include stuffs
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -66,11 +87,13 @@ ucm_add_files(
   "src/logger.cpp"
   "src/gpio.cpp"
   "src/dispatcher.cpp"
-    
+
+  "src/utils/pid.cpp"
   "src/utils/qspdlog.cpp"
   "src/utils/worker.cpp"
   "src/utils/simple_worker.cpp"
   "src/utils/signal_merge.cpp"
+  "src/utils/sma.cpp"
 
   "src/windows/main_window.cpp"
 
@@ -110,6 +133,8 @@ set(HEADERS
     "include/gpio.h"
     "include/dispatcher.h"
 
+    "include/utils/math.h"
+    "include/utils/pid.h"
     "include/utils/qspdlog.h"
     "include/utils/worker.h"
     "include/utils/simple_worker.h"
@@ -134,12 +159,6 @@ set(HEADERS
     "include/services/reset_service.h"
     "include/services/rotary_encoder_service.h"
     "include/services/watering_service.h") 
-
-# All .cpp files in tests/
-set(TESTFILES
-    "tests/main.cpp")
-
-set(LIBRARY_NAME engine)
 
 # --------------------------------------------------------------------------------
 # Building
@@ -191,14 +210,14 @@ add_compile_definitions(BUILD_SHARED_LIBS
 # Add an executable for the file app/main.cpp
 ucm_add_files("app/main.cpp" TO MAIN_SOURCES)
 ucm_add_target(
-  NAME main
+  NAME "${APP_NAME}"
   TYPE EXECUTABLE
   SOURCES "${MAIN_SOURCES}"
   PCH_FILE "include/precompiled.h")
 # add_executable(main app/main.cpp)
 
 # Link the executable to libraries
-target_link_libraries(main PRIVATE ${LIBRARY_NAME}
+target_link_libraries(${APP_NAME} PRIVATE ${LIBRARY_NAME}
                       ${RASPI_LIB}
                       spdlog::spdlog
                       fmt::fmt
@@ -208,15 +227,15 @@ target_link_libraries(main PRIVATE ${LIBRARY_NAME}
                       Qt5::Widgets)
 
 # Set warnings
-spdlog_enable_warnings(main)
+spdlog_enable_warnings(${APP_NAME})
 # target_set_warnings(main DISABLE Annoying)
 
 # enable link-time-optimization if available for non-debug configurations
-target_enable_lto(main optimized)
+target_enable_lto(${APP_NAME} optimized)
 
 # Set the properties that applied to library and main
 set_target_properties(
-    ${LIBRARY_NAME} main 
+    ${LIBRARY_NAME} ${APP_NAME}
       PROPERTIES
         CXX_STANDARD 17 
         CXX_STANDARD_REQUIRED YES 

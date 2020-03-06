@@ -10,7 +10,12 @@ set(TEST_RUNNER_PARAMS "")
 # --------------------------------------------------------------------------------
 #                         Make Tests (no change needed).
 # --------------------------------------------------------------------------------
-add_executable(${TEST_MAIN} ${TESTFILES})
+ucm_add_target(
+  NAME "${TEST_MAIN}"
+  TYPE EXECUTABLE
+  SOURCES "${TESTFILES}"
+  PCH_FILE "../include/precompiled.h")
+# add_executable(${TEST_MAIN} ${TESTFILES})
 target_link_libraries(${TEST_MAIN} PRIVATE ${LIBRARY_NAME} doctest)
 set_target_properties(${TEST_MAIN} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 # target_set_warnings(${TEST_MAIN} ENABLE ALL AS_ERROR ALL DISABLE Annoying) # Set warnings (if needed).

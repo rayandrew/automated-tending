@@ -40,7 +40,9 @@ RotaryEncoderServiceImpl::RotaryEncoderServiceImpl(
     : _config(std::move(config)),
       _logger(std::move(logger)),
       _state(std::move(state)),
-      _analogDevice(std::move(analogDevice)) {
+      _analogDevice(std::move(analogDevice)),
+      _rotaryEncoderPin(
+          (*_config)["devices"]["rotation"]["encoder"].as<int>()) {
   _logger->debug("RotaryEncoderService is initialized!");
   setupServiceThread();
 }

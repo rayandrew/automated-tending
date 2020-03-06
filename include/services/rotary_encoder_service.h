@@ -40,6 +40,8 @@
 #include "devices/analog/PCF8591.h"
 #include "devices/analog/device.h"
 
+#include "utils/math.h"
+
 namespace emmerich::service {
 struct RotaryEncoderService {};
 
@@ -51,19 +53,15 @@ class RotaryEncoderServiceImpl : public Service {
   State*                _state;
   Logger*               _logger;
   device::AnalogDevice* _analogDevice;
+  const int             _rotaryEncoderPin;
 
   bool                           _isRunning = false;
   const std::unique_ptr<QThread> _rotaryEncoderThread =
       std::make_unique<QThread>();
 
  private:
-  static inline float mapUnsignedCharToDegree(int value) {
-    return static_cast<float>(value * 180 / UCHAR_MAX);
-  }
-
   inline float readRotaryDegree() {
-    return mapUnsignedCharToDegree(_analogDevice->read(
-        (*_config)["devices"]["rotation"]["encoder"].as<unsigned char>()));
+    return math::convertToDeg(_analogDevice->read(_rotaryEncoderPin));
   }
 
   void setupServiceThread();

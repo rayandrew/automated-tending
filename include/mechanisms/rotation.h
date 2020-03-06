@@ -31,6 +31,8 @@
 
 #include <fruit/fruit.h>
 
+#include "common.h"
+
 #include "config.h"
 #include "logger.h"
 #include "state.h"
@@ -41,6 +43,10 @@
 #include "devices/analog/device.h"
 
 #include "devices/digital/output.h"
+#include "devices/digital/pwm.h"
+
+#include "utils/math.h"
+#include "utils/pid.h"
 
 namespace emmerich::mechanism {
 class Rotation : public Worker {
@@ -61,9 +67,15 @@ class RotationImpl : public Rotation {
   State*                                             _state;
   Logger*                                            _logger;
   device::AnalogDevice*                              _analogDevice;
-  const std::unique_ptr<device::DigitalOutputDevice> _motor;
+  const int                                          _rotaryEncoderPin;
+  const std::unique_ptr<device::PWMDevice>           _motor;
+  const std::unique_ptr<device::DigitalOutputDevice> _motorComplementer;
+  // PID*                                               _pid;
 
  private:
+  inline float readRotaryDegree() {
+    return math::convertToDeg(_analogDevice->read(_rotaryEncoderPin));
+  }
   void reset();
 
  public:
@@ -72,9 +84,10 @@ class RotationImpl : public Rotation {
       State*  state,
       Logger* logger,
       ANNOTATED(device::PCF8591, device::AnalogDevice*) analogDevice,
+      device::PWMDeviceFactory           pwmDeviceFactory,
       device::DigitalOutputDeviceFactory digitalOutputDeviceFactory));
 
-  virtual ~RotationImpl() = default;
+  virtual ~RotationImpl() override;
   virtual void homing() override;
 
  public slots:

@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -129,9 +130,12 @@
 #include "services/watering_service.h"
 
 // 3.4. utils
+#include "utils/math.h"
+#include "utils/pid.h"
 #include "utils/qspdlog.h"
 #include "utils/signal_merge.h"
 #include "utils/simple_worker.h"
+#include "utils/sma.h"
 #include "utils/worker.h"
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
  * Copyright (c) 2019 Ray Andrew
@@ -24,30 +24,15 @@
  *
  */
 
-#ifndef COMMON_H_
-#define COMMON_H_
+#ifndef MECHANISM_HELPER_GEN_SPEED_REALTIME_H_
+#define MECHANISM_HELPER_GEN_SPEED_REALTIME_H_
 
-#define PROJECT_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
-#define PROJECT_VERSION_MINOR @PROJECT_VERSION_MINOR@
-#define PROJECT_VERSION_PATCH @PROJECT_VERSION_PATCH@
-#define PROJECT_VERSION_TWEAK @PROJECT_VERSION_TWEAK@
+#include <cmath>
 
-#define PROJECT_CONFIG_FILE "@PROJECT_CONFIG_FILE@"
-#define PROJECT_STATE_FILE "@PROJECT_STATE_FILE@"
+#include "mechanisms/_helper/movement.h"
 
-#define PROJECT_MOVEMENT_EDGE_FILE "@PROJECT_MOVEMENT_EDGE_FILE@"
-#define PROJECT_MOVEMENT_ZIGZAG_FILE "@PROJECT_MOVEMENT_ZIGZAG_FILE@"
-
-#define NAMESPACE_BEGIN       namespace @PROJECT_NAMESPACE@ {
-#define NAMESPACE_END         }
-#define ns(T)                 @PROJECT_NAMESPACE@::T
-#define USE_NAMESPACE         using namespace @PROJECT_NAMESPACE@;
-
-static const char* APP_AUTHOR = "@PROJECT_AUTHOR@";
-static const char* LOGS_DIR   = "logs";
-static const char* APP_NAME   = "@PROJECT_ALT_TITLE@";
-static const char* APP_DESC   = "@PROJECT_DESCRIPTION@";
-
-static const float MAX_DEGREE = 180.0;
+namespace emmerich::mechanism::helper::algorithm {
+class GenSpeedRealTime : public Movement {};
+}
 
 #endif

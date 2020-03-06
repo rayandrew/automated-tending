@@ -33,6 +33,9 @@
 
 #endif
 
+#include <csignal>
+
+// vendors
 #include <fruit/fruit.h>
 
 #include <QApplication>
@@ -40,12 +43,25 @@
 #include "app.h"
 #include "gpio.h"
 
+void appSigIntHandler(int s) {
+  gpioTerminate();
+  exit(1);
+}
+
 int main(int argc, char** argv) {
   qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", "1");
   QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
   if (gpioInitialise() < 0)
     return 1;
+
+  // define the sigint handler
+  struct sigaction sigIntHandler;
+  sigIntHandler.sa_handler = appSigIntHandler;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+
+  sigaction(SIGINT, &sigIntHandler, NULL);
 
   fruit::Injector<emmerich::AppFactory> injector(emmerich::getAppComponent);
   emmerich::AppFactory                  appFactory(injector);

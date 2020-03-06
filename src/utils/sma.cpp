@@ -1,8 +1,8 @@
 /*
- * Licensed under the MIT License <http: //opensource.org/licenses/MIT>.
+ * Licensed under the MIT License <http://opensource.org/licenses/MIT>.
  * SPDX-License-Identifier: MIT
  *
- * Copyright (c) 2019 Ray Andrew
+ * Copyright (c) 2019 by Ray Andrew
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,30 +24,25 @@
  *
  */
 
-#ifndef COMMON_H_
-#define COMMON_H_
+#include "precompiled.h"
 
-#define PROJECT_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
-#define PROJECT_VERSION_MINOR @PROJECT_VERSION_MINOR@
-#define PROJECT_VERSION_PATCH @PROJECT_VERSION_PATCH@
-#define PROJECT_VERSION_TWEAK @PROJECT_VERSION_TWEAK@
+#include "utils/sma.h"
 
-#define PROJECT_CONFIG_FILE "@PROJECT_CONFIG_FILE@"
-#define PROJECT_STATE_FILE "@PROJECT_STATE_FILE@"
+#include <sstream>
 
-#define PROJECT_MOVEMENT_EDGE_FILE "@PROJECT_MOVEMENT_EDGE_FILE@"
-#define PROJECT_MOVEMENT_ZIGZAG_FILE "@PROJECT_MOVEMENT_ZIGZAG_FILE@"
+NAMESPACE_BEGIN
 
-#define NAMESPACE_BEGIN       namespace @PROJECT_NAMESPACE@ {
-#define NAMESPACE_END         }
-#define ns(T)                 @PROJECT_NAMESPACE@::T
-#define USE_NAMESPACE         using namespace @PROJECT_NAMESPACE@;
+namespace sma {
+// Exception
+SMAException::SMAException(const std::string& message)
+    : _message(std::move(message)) {}
 
-static const char* APP_AUTHOR = "@PROJECT_AUTHOR@";
-static const char* LOGS_DIR   = "logs";
-static const char* APP_NAME   = "@PROJECT_ALT_TITLE@";
-static const char* APP_DESC   = "@PROJECT_DESCRIPTION@";
+const char* SMAException::what() const noexcept {
+  std::stringstream temp;
+  temp << "[SMAException: " << _message << "]" << std::endl;
+  std::string message = temp.str();
+  return message.c_str();
+}
+}  // namespace sma
 
-static const float MAX_DEGREE = 180.0;
-
-#endif
+NAMESPACE_END

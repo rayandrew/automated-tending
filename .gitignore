@@ -44,3 +44,9 @@ result
 
 CMakeLists.txt.user
 Makefile
+
+*.json
+
+*.ccls
+.ccls-*
+*.emacs.*

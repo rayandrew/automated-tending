@@ -36,18 +36,36 @@ RotationImpl::RotationImpl(
     State*                             state,
     Logger*                            logger,
     device::AnalogDevice*              analogDevice,
+    device::PWMDeviceFactory           pwmDeviceFactory,
     device::DigitalOutputDeviceFactory digitalOutputDeviceFactory)
     : _config(std::move(config)),
       _state(std::move(state)),
       _logger(std::move(logger)),
       _analogDevice(std::move(analogDevice)),
-      _motor(digitalOutputDeviceFactory(
-          (*config)["devices"]["rotation"]["motor"].as<int>())) {
+      _motor(
+          pwmDeviceFactory((*config)["devices"]["rotation"]["pwm"].as<int>())),
+      _motorComplementer(digitalOutputDeviceFactory(
+          (*config)["devices"]["rotation"]["nonpwm"].as<int>())),
+      _rotaryEncoderPin(
+          (*_config)["devices"]["rotation"]["encoder"].as<int>()) {
   _logger->debug("Rotation mechanism is initialized!");
+  _motorComplementer->off();
+  // _pid = PIDBuilder<DefaultPID>::create()
+  //            .setKP(0.1)
+  //            .setKI(0.2)
+  //            .setKD(0.3)
+  //            .setSamplingTime(100.0)
+  //            .setOutputLimit(0.0, 255.0)
+  //            .initialize();
+}
+
+RotationImpl::~RotationImpl() {
+  // delete _pid;
 }
 
 void RotationImpl::run() {
-  _motor->on();
+  // _motor->on();
+  _motor->setPWMDutyCycle(255);
 
   while (_running) {
     QThread::msleep(200);
@@ -58,12 +76,23 @@ void RotationImpl::run() {
 }
 
 void RotationImpl::homing() {
+  // _pid->setSetPoint(0.0);
+  float        deg = readRotaryDegree();
+  unsigned int dutyCycle = 20;
+  // unsigned char dutyCycle = math::map<unsigned char>();
+  while (_running && (deg != 0.0)) {
+    // dutyCycle =
+    _motor->setPWMDutyCycle(dutyCycle);
+    deg = readRotaryDegree();
+  }
+
   if (_running)
     finish();
 }
 
 void RotationImpl::reset() {
-  _motor->off();
+  // _motor->off();
+  _motorComplementer->off();
 }
 
 void RotationImpl::start() {
@@ -87,6 +116,7 @@ fruit::Component<RotationFactory> getRotationMechanismComponent() {
       .install(getStateComponent)
       .install(getLoggerComponent)
       .install(device::getDigitalOutputDeviceComponent)
+      .install(device::getPWMDeviceComponent)
       .install(device::getPCF8591DeviceComponent);
 }
 }  // namespace emmerich::mechanism

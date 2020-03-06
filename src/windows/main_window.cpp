@@ -26,6 +26,8 @@
 
 #include "precompiled.h"
 
+#include "gpio.h"
+
 #include "windows/main_window.h"
 
 MainWindow::MainWindow(QWidget* parent)
@@ -38,5 +40,6 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::on_actionExit_triggered() {
+  gpioTerminate();
   this->close();
 }
