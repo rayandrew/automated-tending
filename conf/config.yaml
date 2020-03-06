@@ -7,12 +7,9 @@ devices:
   movement:
     delay_each_step: 500
     sleep_pin: 16
-    limit_switch_pin:
-      home_x: 5
-      home_y: 6
-      home_z: 19
-      edge: 11
+    edge_limit_switch_pin: 11
     x:
+      homing_pin: 5
       step_pin: 26
       direction_pin: 13
       step_per_mm: 6.2069
@@ -20,6 +17,7 @@ devices:
       speed: 200.0
       acceleration: 1000.0
     y:
+      homing_pin: 6
       step_pin: 21
       direction_pin: 20
       step_per_mm: 6.2069
@@ -27,6 +25,7 @@ devices:
       speed: 200.0
       acceleration: 1000.0
     z:
+      homing_pin: 19
       step_pin: 27
       direction_pin: 17
       step_per_mm: 0
@@ -39,5 +38,6 @@ devices:
   rotation:
     pwm: 12
     nonpwm: 12
+    speed: 50
     encoder: 0
   

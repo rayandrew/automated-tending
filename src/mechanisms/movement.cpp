@@ -54,17 +54,13 @@ MovementImpl::MovementImpl(
           (*config)["devices"]["movement"]["z"]["step_pin"].as<int>(),
           (*config)["devices"]["movement"]["z"]["direction_pin"].as<int>())),
       _limitSwitchHomeX(digitalInputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_pin"]["home_x"]
-              .as<int>())),
+          (*config)["devices"]["movement"]["x"]["homing_pin"].as<int>())),
       _limitSwitchHomeY(digitalInputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_pin"]["home_y"]
-              .as<int>())),
+          (*config)["devices"]["movement"]["y"]["homing_pin"].as<int>())),
       _limitSwitchHomeZ(digitalInputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_pin"]["home_z"]
-              .as<int>())),
+          (*config)["devices"]["movement"]["z"]["homing_pin"].as<int>())),
       _limitSwitchEdge(digitalInputDeviceFactory(
-          (*config)["devices"]["movement"]["limit_switch_pin"]["edge"]
-              .as<int>())),
+          (*config)["devices"]["movement"]["edge_limit_switch_pin"].as<int>())),
       _zHeight((*config)["devices"]["movement"]["z"]["height"].as<int>()) {
   _logger->debug("Movement mechanism is initialized!");
   _sleepDevice->setActiveState(false);

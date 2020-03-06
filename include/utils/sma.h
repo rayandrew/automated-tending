@@ -27,6 +27,7 @@
 #ifndef SMA_H_
 #define SMA_H_
 
+#include <chrono>
 #include <cstddef>
 #include <string>
 #include <type_traits>
@@ -45,7 +46,6 @@ class SMAException : public std::exception {
 
 // this class is taken from RosettaCode
 // https://rosettacode.org/wiki/Averages/Simple_moving_average#C.2B.2B
-// change to support reading from other thread
 template <typename T,
           typename = typename std::enable_if<std::is_floating_point<T>::value,
                                              T>::type>
@@ -79,7 +79,7 @@ class SMA {
   }
 
   // Adds a value to the average, pushing one out if nescessary
-  void add(T val) {
+  void add(const T& val) {
     // Special case: Initialization
     if (_head == NULL) {
       _head = _window;
@@ -120,7 +120,7 @@ class SMA {
  public:
   SMA(unsigned int period)
       : _period(period),
-        _window(new double[period]),
+        _window(new T[period]),
         _head(NULL),
         _tail(NULL),
         _total(0.0) {
@@ -141,6 +141,16 @@ class SMA {
   }
 };
 
+template <typename T>
+void thread_func(SMA<T>&                   sma,
+                 const bool&               running,
+                 const std::function<T()>& callback,
+                 const unsigned long&      wait_time = 50) {
+  while (running) {
+    sma(callback());
+    std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+  }
+}
 }  // namespace sma
 
 NAMESPACE_END

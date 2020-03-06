@@ -67,6 +67,7 @@ class RotationImpl : public Rotation {
   State*                                             _state;
   Logger*                                            _logger;
   device::AnalogDevice*                              _analogDevice;
+  const unsigned int                                 _motorSpeed;
   const int                                          _rotaryEncoderPin;
   const std::unique_ptr<device::PWMDevice>           _motor;
   const std::unique_ptr<device::DigitalOutputDevice> _motorComplementer;

@@ -34,6 +34,8 @@
 NAMESPACE_BEGIN
 
 namespace math {
+static unsigned char MAX_CHAR = UCHAR_MAX;
+
 // taken from Arduino `map` function
 // https://www.arduino.cc/reference/en/language/functions/math/map/
 template <typename T>
